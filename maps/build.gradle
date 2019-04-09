@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 
-version = "0.0.1"
+version = "0.0.2"
 
 android {
     compileSdkVersion 28
@@ -28,7 +28,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha04'
-    implementation 'org.osmdroid:osmdroid-android:6.0.3'
+    api 'org.osmdroid:osmdroid-android:6.0.3'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.robolectric:robolectric:4.2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
