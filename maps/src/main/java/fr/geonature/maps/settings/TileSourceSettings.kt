@@ -8,18 +8,19 @@ import android.os.Parcelable
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-data class TileSourceSettings(var name: String, var label: String) : Parcelable {
+data class TileSourceSettings(var name: String,
+                              var label: String) : Parcelable {
 
     private constructor(source: Parcel) : this(
         source.readString() ?: "",
-        source.readString() ?: ""
-    )
+        source.readString() ?: "")
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
+    override fun writeToParcel(dest: Parcel?,
+                               flags: Int) {
         dest?.writeString(name)
         dest?.writeString(label)
     }

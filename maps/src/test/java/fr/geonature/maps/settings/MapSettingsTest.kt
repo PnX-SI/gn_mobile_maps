@@ -16,69 +16,106 @@ import org.robolectric.annotation.Config
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest=Config.NONE)
+@Config(manifest = Config.NONE)
 class MapSettingsTest {
 
     @Test
     fun testBuilder() {
-        val nwGeoPoint = GeoPoint(47.253369,
-                -1.605721)
-        val seGeoPoint = GeoPoint(47.173845,
-                -1.482811)
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721)
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811)
+
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder()
-                .displayScale(false)
-                .zoom(8.0)
-                .minimumZoomEditing(10.0)
-                .maxBounds(arrayListOf(nwGeoPoint,
-                        seGeoPoint))
-                .center(GeoPoint.fromCenterBetween(nwGeoPoint,
-                        seGeoPoint))
-                .addTileSource("nantes.mbtiles",
-                        "Nantes")
-                .build()
+            .displayScale(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint))
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint))
+            .addTileSource(
+                "nantes.mbtiles",
+                "Nantes")
+            // with identical tile source
+            .addTileSource(
+                "nantes.mbtiles",
+                "Nantes 2")
+            .build()
 
+        // then
         assertNotNull(mapSettings)
-        assertEquals(MapSettings(arrayListOf(TileSourceSettings("nantes.mbtiles",
-                "Nantes")),
+        assertEquals(
+            MapSettings(
+                arrayListOf(
+                    TileSourceSettings(
+                        "nantes.mbtiles",
+                        "Nantes")),
                 false,
                 8.0,
+                7.0,
+                12.0,
                 10.0,
-                BoundingBox.fromGeoPoints(arrayListOf(nwGeoPoint,
+                BoundingBox.fromGeoPoints(
+                    arrayListOf(
+                        nwGeoPoint,
                         seGeoPoint)),
-                GeoPoint.fromCenterBetween(nwGeoPoint,
-                        seGeoPoint)),
-                mapSettings)
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint)),
+            mapSettings)
     }
 
     @Test
     fun testParcelable() {
-        val nwGeoPoint = GeoPoint(47.253369,
-                -1.605721)
-        val seGeoPoint = GeoPoint(47.173845,
-                -1.482811)
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721)
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811)
 
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder()
-                .displayScale(false)
-                .zoom(8.0)
-                .minimumZoomEditing(10.0)
-                .maxBounds(arrayListOf(nwGeoPoint,
-                        seGeoPoint))
-                .center(GeoPoint.fromCenterBetween(nwGeoPoint,
-                        seGeoPoint))
-                .addTileSource("nantes.mbtiles",
-                        "Nantes")
-                .build()
+            .displayScale(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint))
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint))
+            .addTileSource(
+                "nantes.mbtiles",
+                "Nantes")
+            .build()
 
         // when we obtain a Parcel object to write the MapSettings instance to it
         val parcel = Parcel.obtain()
-        mapSettings.writeToParcel(parcel, 0)
+        mapSettings.writeToParcel(
+            parcel,
+            0)
 
         // reset the parcel for reading
         parcel.setDataPosition(0)
 
         // then
-        assertEquals(mapSettings, MapSettings.CREATOR.createFromParcel(parcel))
+        assertEquals(
+            mapSettings,
+            MapSettings.CREATOR.createFromParcel(parcel))
     }
 }

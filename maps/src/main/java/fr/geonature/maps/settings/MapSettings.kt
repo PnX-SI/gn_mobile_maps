@@ -10,54 +10,56 @@ import org.osmdroid.util.GeoPoint
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-data class MapSettings(
-    val tileSourceSettings: List<TileSourceSettings>,
-    val displayScale: Boolean = true,
-    val zoom: Double = 0.0,
-    val minimumZoomEditing: Double = 0.0,
-    val maxBounds: BoundingBox?,
-    val center: GeoPoint?
-) : Parcelable {
+data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
+                       val displayScale: Boolean = true,
+                       val zoom: Double = 0.0,
+                       val minZoomLevel: Double = 0.0,
+                       val maxZoomLevel: Double = 0.0,
+                       val minZoomEditing: Double = 0.0,
+                       val maxBounds: BoundingBox?,
+                       val center: GeoPoint?) : Parcelable {
 
     private constructor(builder: MapSettings.Builder) : this(
         builder.tileSourceSettings,
         builder.displayScale,
         builder.zoom,
-        builder.minimumZoomEditing,
+        builder.minZoomLevel,
+        builder.maxZoomLevel,
+        builder.minZoomEditing,
         builder.maxBounds,
-        builder.center
-    )
+        builder.center)
 
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readByte() == Integer.valueOf(1).toByte(),
         source.readDouble(),
         source.readDouble(),
+        source.readDouble(),
+        source.readDouble(),
         source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox,
-        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint
-    ) {
+        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint) {
         source.readTypedList(
             tileSourceSettings,
-            TileSourceSettings.CREATOR
-        )
+            TileSourceSettings.CREATOR)
     }
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
+    override fun writeToParcel(dest: Parcel?,
+                               flags: Int) {
         dest?.writeByte((if (displayScale) 1 else 0).toByte()) // as boolean value
         dest?.writeDouble(zoom)
-        dest?.writeDouble(minimumZoomEditing)
+        dest?.writeDouble(minZoomLevel)
+        dest?.writeDouble(maxZoomLevel)
+        dest?.writeDouble(minZoomEditing)
         dest?.writeParcelable(
             maxBounds,
-            0
-        )
+            0)
         dest?.writeParcelable(
             center,
-            0
-        )
+            0)
         dest?.writeTypedList(tileSourceSettings)
     }
 
@@ -70,7 +72,9 @@ data class MapSettings(
         if (tileSourceSettings != other.tileSourceSettings) return false
         if (displayScale != other.displayScale) return false
         if (zoom != other.zoom) return false
-        if (minimumZoomEditing != other.minimumZoomEditing) return false
+        if (minZoomLevel != other.minZoomLevel) return false
+        if (maxZoomLevel != other.maxZoomLevel) return false
+        if (minZoomEditing != other.minZoomEditing) return false
 
         if (maxBounds != null && other.maxBounds != null) {
             if (maxBounds.latNorth != other.maxBounds.latNorth) return false
@@ -91,42 +95,49 @@ data class MapSettings(
         var result = tileSourceSettings.hashCode()
         result = 31 * result + displayScale.hashCode()
         result = 31 * result + zoom.hashCode()
-        result = 31 * result + minimumZoomEditing.hashCode()
+        result = 31 * result + minZoomLevel.hashCode()
+        result = 31 * result + maxZoomLevel.hashCode()
+        result = 31 * result + minZoomEditing.hashCode()
         result = 31 * result + (maxBounds?.hashCode() ?: 0)
         result = 31 * result + (center?.hashCode() ?: 0)
 
         return result
     }
 
-    data class Builder(
-        val tileSourceSettings: MutableList<TileSourceSettings> = mutableListOf(),
-        var displayScale: Boolean = true,
-        var zoom: Double = 0.0,
-        var minimumZoomEditing: Double = 0.0,
-        var maxBounds: BoundingBox? = null,
-        var center: GeoPoint? = null
-    ) {
+    data class Builder(val tileSourceSettings: MutableList<TileSourceSettings> = mutableListOf(),
+                       var displayScale: Boolean = true,
+                       var zoom: Double = 0.0,
+                       var minZoomLevel: Double = 0.0,
+                       var maxZoomLevel: Double = 0.0,
+                       var minZoomEditing: Double = 0.0,
+                       var maxBounds: BoundingBox? = null,
+                       var center: GeoPoint? = null) {
         fun displayScale(displayScale: Boolean) = apply { this.displayScale = displayScale }
         fun zoom(zoom: Double) = apply { this.zoom = zoom }
-        fun minimumZoomEditing(minimumZoomEditing: Double) =
-            apply { this.minimumZoomEditing = minimumZoomEditing }
+        fun minZoomLevel(minZoomLevel: Double) = apply { this.minZoomLevel = minZoomLevel }
+        fun maxZoomLevel(maxZoomLevel: Double) = apply { this.maxZoomLevel = maxZoomLevel }
+        fun minZoomEditing(minZoomEditing: Double) = apply { this.minZoomEditing = minZoomEditing }
 
         fun maxBounds(geoPoints: List<GeoPoint>) =
             apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
 
         fun center(center: GeoPoint?) = apply { this.center = center }
-        fun addTileSource(
-            name: String, label: String
-        ) = apply {
-            this.tileSourceSettings.add(
+        fun addTileSource(name: String,
+                          label: String) = apply {
+            addTileSource(
                 TileSourceSettings(
                     name,
-                    label
-                )
-            )
+                    label))
         }
 
+        fun addTileSource(tileSourceSettings: TileSourceSettings) =
+            apply { if (!this.tileSourceSettings.any { it.name == tileSourceSettings.name }) this.tileSourceSettings.add(tileSourceSettings) }
+
         fun build() = MapSettings(this)
+
+        companion object {
+            fun newInstance(): Builder = Builder()
+        }
     }
 
     companion object {

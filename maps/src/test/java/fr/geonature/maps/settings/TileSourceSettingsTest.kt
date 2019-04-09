@@ -21,23 +21,17 @@ class TileSourceSettingsTest {
         assertEquals(
             TileSourceSettings(
                 "nantes.mbtiles",
-                "Nantes"
-            ),
+                "Nantes"),
             TileSourceSettings(
                 "nantes.mbtiles",
-                "Nantes"
-            )
-        )
+                "Nantes"))
         assertNotEquals(
             TileSourceSettings(
                 "nantes.mbtiles",
-                "Nantes"
-            ),
+                "Nantes"),
             TileSourceSettings(
                 "nantes.mbtiles",
-                "nantes"
-            )
-        )
+                "nantes"))
     }
 
     @Test
@@ -45,15 +39,13 @@ class TileSourceSettingsTest {
         // given tile source settings
         val tileSourceSettings = TileSourceSettings(
             "nantes.mbtiles",
-            "Nantes"
-        )
+            "Nantes")
 
         // when we obtain a Parcel object to write the TileSourceSettings instance to it
         val parcel = Parcel.obtain()
         tileSourceSettings.writeToParcel(
             parcel,
-            0
-        )
+            0)
 
         // reset the parcel for reading
         parcel.setDataPosition(0)
@@ -61,7 +53,6 @@ class TileSourceSettingsTest {
         // then
         assertEquals(
             tileSourceSettings,
-            TileSourceSettings.CREATOR.createFromParcel(parcel)
-        )
+            TileSourceSettings.CREATOR.createFromParcel(parcel))
     }
 }
