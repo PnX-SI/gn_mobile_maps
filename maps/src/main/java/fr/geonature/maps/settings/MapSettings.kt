@@ -11,6 +11,7 @@ import org.osmdroid.util.GeoPoint
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
+                       val baseTilesPath: String?,
                        val displayScale: Boolean = true,
                        val zoom: Double = 0.0,
                        val minZoomLevel: Double = 0.0,
@@ -21,6 +22,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
 
     private constructor(builder: MapSettings.Builder) : this(
         builder.tileSourceSettings,
+        builder.baseTilesPath,
         builder.displayScale,
         builder.zoom,
         builder.minZoomLevel,
@@ -31,6 +33,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
 
     private constructor(source: Parcel) : this(
         mutableListOf(),
+        source.readString(),
         source.readByte() == Integer.valueOf(1).toByte(),
         source.readDouble(),
         source.readDouble(),
@@ -49,6 +52,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
 
     override fun writeToParcel(dest: Parcel?,
                                flags: Int) {
+        dest?.writeString(baseTilesPath)
         dest?.writeByte((if (displayScale) 1 else 0).toByte()) // as boolean value
         dest?.writeDouble(zoom)
         dest?.writeDouble(minZoomLevel)
@@ -70,6 +74,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
         other as MapSettings
 
         if (tileSourceSettings != other.tileSourceSettings) return false
+        if (baseTilesPath != other.baseTilesPath) return false
         if (displayScale != other.displayScale) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
@@ -93,6 +98,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
 
     override fun hashCode(): Int {
         var result = tileSourceSettings.hashCode()
+        result = 31 * result + baseTilesPath.hashCode()
         result = 31 * result + displayScale.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
@@ -105,6 +111,7 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
     }
 
     data class Builder(val tileSourceSettings: MutableList<TileSourceSettings> = mutableListOf(),
+                       var baseTilesPath: String? = null,
                        var displayScale: Boolean = true,
                        var zoom: Double = 0.0,
                        var minZoomLevel: Double = 0.0,
@@ -112,23 +119,32 @@ data class MapSettings(val tileSourceSettings: List<TileSourceSettings>,
                        var minZoomEditing: Double = 0.0,
                        var maxBounds: BoundingBox? = null,
                        var center: GeoPoint? = null) {
+        fun baseTilesPath(baseTilesPath: String) = apply { this.baseTilesPath = baseTilesPath }
         fun displayScale(displayScale: Boolean) = apply { this.displayScale = displayScale }
         fun zoom(zoom: Double) = apply { this.zoom = zoom }
         fun minZoomLevel(minZoomLevel: Double) = apply { this.minZoomLevel = minZoomLevel }
         fun maxZoomLevel(maxZoomLevel: Double) = apply { this.maxZoomLevel = maxZoomLevel }
         fun minZoomEditing(minZoomEditing: Double) = apply { this.minZoomEditing = minZoomEditing }
-
         fun maxBounds(geoPoints: List<GeoPoint>) =
             apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
 
         fun center(center: GeoPoint?) = apply { this.center = center }
         fun addTileSource(name: String,
-                          label: String) = apply {
-            addTileSource(
-                TileSourceSettings(
-                    name,
-                    label))
-        }
+                          label: String,
+                          minZoomLevel: Double = 0.0,
+                          maxZoomLevel: Double = 0.0,
+                          tileSizePixels: Int = 256,
+                          imageExtension: String = TileSourceSettings.DEFAULT_IMAGE_EXTENSION) =
+            apply {
+                addTileSource(
+                    TileSourceSettings(
+                        name,
+                        label,
+                        minZoomLevel,
+                        maxZoomLevel,
+                        tileSizePixels,
+                        imageExtension))
+            }
 
         fun addTileSource(tileSourceSettings: TileSourceSettings) =
             apply { if (!this.tileSourceSettings.any { it.name == tileSourceSettings.name }) this.tileSourceSettings.add(tileSourceSettings) }

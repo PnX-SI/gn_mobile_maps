@@ -46,6 +46,50 @@ class MapSettingsReaderTest {
                     TileSourceSettings(
                         "nantes.mbtiles",
                         "Nantes")),
+                null,
+                false,
+                8.0,
+                7.0,
+                12.0,
+                10.0,
+                BoundingBox.fromGeoPoints(
+                    arrayListOf(
+                        GeoPoint(
+                            47.253369,
+                            -1.605721),
+                        GeoPoint(
+                            47.173845,
+                            -1.482811))),
+                GeoPoint(
+                    47.225827,
+                    -1.554470)),
+            mapSettings)
+    }
+
+    @Test
+    fun testReadMapSettingsFromJsonStringWithInvalidLayers() {
+        // given a JSON settings with some invalid layers settings
+        val json = getFixture("map_settings_with_invalid_layers.json")
+
+        // when read the JSON as MapSettings
+        val mapSettings = mapSettingsReader.read(json)
+
+        // then
+        assertNotNull(mapSettings)
+        assertEquals(
+            MapSettings(
+                arrayListOf(
+                    TileSourceSettings(
+                        "nantes.mbtiles",
+                        "Nantes",
+                        7.0,
+                        12.0,
+                        512,
+                        "jpg"),
+                    TileSourceSettings(
+                        "nantes.wkt",
+                        "nantes.wkt")),
+                null,
                 false,
                 8.0,
                 7.0,

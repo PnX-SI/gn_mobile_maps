@@ -29,7 +29,8 @@ class MapSettingsTest {
             -1.482811)
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder()
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
             .displayScale(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -60,6 +61,7 @@ class MapSettingsTest {
                     TileSourceSettings(
                         "nantes.mbtiles",
                         "Nantes")),
+                "/mnt/sdcard",
                 false,
                 8.0,
                 7.0,
@@ -85,7 +87,8 @@ class MapSettingsTest {
             -1.482811)
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder()
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
             .displayScale(false)
             .zoom(8.0)
             .minZoomLevel(7.0)

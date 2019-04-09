@@ -9,6 +9,7 @@ import org.osmdroid.util.GeoPoint
 import java.io.IOException
 import java.io.Reader
 import java.io.StringReader
+import java.lang.IllegalArgumentException
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
@@ -158,26 +159,31 @@ class MapSettingsReader {
     private fun readTileSourceSettings(reader: JsonReader): TileSourceSettings? {
         reader.beginObject()
 
-        var name: String? = null
-        var label: String? = null
+        val builder = TileSourceSettings.Builder.newInstance()
 
         while (reader.hasNext()) {
             val keyName = reader.nextName()
 
             when (keyName) {
-                "name" -> name = reader.nextString()
-                "label" -> label = reader.nextString()
+                "name" -> builder.name(reader.nextString())
+                "label" -> builder.label(reader.nextString())
+                "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
+                "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
+                "tile_size" -> builder.tileSizePixels(reader.nextInt())
+                "image_extension" -> builder.imageExtension(reader.nextString())
             }
         }
 
         reader.endObject()
 
-        return if (!isEmpty(name) && !isEmpty(label)) {
-            TileSourceSettings(
-                name!!,
-                label!!)
+        return try {
+            builder.build()
         }
-        else null
+        catch (iae: IllegalArgumentException) {
+            Log.w(TAG, iae.message)
+
+            null
+        }
     }
 
     companion object {
