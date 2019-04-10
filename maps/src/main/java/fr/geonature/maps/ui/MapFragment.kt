@@ -5,9 +5,13 @@ import android.os.Bundle
 import android.os.Environment
 import android.preference.PreferenceManager
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.BuildConfig
@@ -48,6 +52,48 @@ class MapFragment : Fragment() {
     private var fab: FloatingActionButton? = null
     private val pois = HashMap<String, GeoPoint>()
     private var selectedPoi: String? = null
+
+    private var actionMode: ActionMode? = null
+    private val actionModeCallback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode?,
+                                        menu: Menu?): Boolean {
+            mode?.menuInflater?.inflate(
+                R.menu.map_action_mode,
+                menu)
+
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode?,
+                                         menu: Menu?): Boolean {
+            return false
+        }
+
+        override fun onActionItemClicked(mode: ActionMode?,
+                                         item: MenuItem?): Boolean {
+            return when (item?.itemId) {
+                R.id.action_poi_delete -> {
+                    pois.remove(selectedPoi)
+                    val selectedMarker =
+                        mapView?.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
+                    deselectMarker(selectedMarker)
+                    selectedMarker?.remove(mapView)
+
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode?) {
+            actionMode = null
+
+            val selectedMarker =
+                mapView?.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
+
+            deselectMarker(selectedMarker)
+        }
+    }
 
     private val mapEventReceiver = object : MapEventsReceiver {
         override fun longPressHelper(p: GeoPoint?): Boolean {
@@ -266,6 +312,11 @@ class MapFragment : Fragment() {
 
         val context = context ?: return
 
+        if (actionMode == null) {
+            actionMode = (activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+            actionMode?.setTitle(R.string.action_title_poi_edit)
+        }
+
         setMarkerIcon(
             marker,
             getAccentColor(context),
@@ -275,6 +326,7 @@ class MapFragment : Fragment() {
     private fun deselectMarker(marker: Marker?) {
         if (!fab?.isOrWillBeShown!!) fab?.show()
         selectedPoi = null
+        actionMode?.finish()
 
         val context = context ?: return
 
