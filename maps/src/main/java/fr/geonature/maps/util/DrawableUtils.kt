@@ -18,12 +18,23 @@ object DrawableUtils {
     fun createScaledDrawable(context: Context,
                              @DrawableRes drawableResourceId: Int,
                              @ColorInt tintColor: Int,
-                             scale: Float = 1.0f): Drawable? {
+                             scale: Float = 1.0f): Drawable {
 
         val drawable = context.resources.getDrawable(
             drawableResourceId,
             context.theme)
         drawable.setTint(tintColor)
+
+        return scaleDrawable(
+            context,
+            drawable,
+            scale)
+    }
+
+    private fun scaleDrawable(context: Context,
+                              drawable: Drawable,
+                              scale: Float = 1.0f): Drawable {
+
         val bitmap = Bitmap.createBitmap(
             (drawable.intrinsicWidth * scale).toInt(),
             (drawable.intrinsicHeight * scale).toInt(),

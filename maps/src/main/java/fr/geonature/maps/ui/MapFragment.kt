@@ -7,22 +7,29 @@ import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.ColorInt
 import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.util.DrawableUtils.createScaledDrawable
-import fr.geonature.maps.util.ThemeUtils
+import fr.geonature.maps.util.ThemeUtils.getAccentColor
+import fr.geonature.maps.util.ThemeUtils.getPrimaryColor
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.io.File
+import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -38,12 +45,30 @@ class MapFragment : Fragment() {
 
     private var listener: OnMapFragmentListener? = null
     private var mapView: MapView? = null
-    private val pois = ArrayList<Marker>()
+    private var fab: FloatingActionButton? = null
+    private val pois = HashMap<String, GeoPoint>()
+    private var selectedPoi: String? = null
+
+    private val mapEventReceiver = object : MapEventsReceiver {
+        override fun longPressHelper(p: GeoPoint?): Boolean {
+            // nothing to do...
+            return false
+        }
+
+        override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+            val selectedMarker =
+                mapView?.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
+
+            deselectMarker(selectedMarker)
+
+            return true
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val context = requireContext()
+        val context = context ?: return
 
         Configuration.getInstance()
             .load(
@@ -65,8 +90,8 @@ class MapFragment : Fragment() {
             false)
 
         mapView = view.findViewById(R.id.map)
-        view.findViewById<View>(R.id.fab)
-            .setOnClickListener { addPoi() }
+        fab = view.findViewById(R.id.fab)
+        fab?.setOnClickListener { addPoi() }
 
         configureMapView()
         configureTileProvider()
@@ -117,6 +142,9 @@ class MapFragment : Fragment() {
         val rotationGestureOverlay = RotationGestureOverlay(mapView)
         rotationGestureOverlay.isEnabled = true
         mapView.overlays.add(rotationGestureOverlay)
+
+        val overlayEvents = MapEventsOverlay(mapEventReceiver)
+        mapView.overlays.add(overlayEvents)
 
         val mapSettings = listener?.getMapSettings() ?: return
 
@@ -176,44 +204,84 @@ class MapFragment : Fragment() {
         val context = context ?: return
         val mapView = mapView ?: return
 
-        val accentColor = ThemeUtils.getAccentColor(context)
         val poiMarker = Marker(mapView)
+        poiMarker.id = UUID.randomUUID()
+            .toString()
         poiMarker.position = mapView.mapCenter as GeoPoint
         poiMarker.setAnchor(
             Marker.ANCHOR_CENTER,
             Marker.ANCHOR_BOTTOM)
-        poiMarker.icon = createScaledDrawable(
-            context,
-            R.drawable.ic_poi,
-            accentColor,
+        setMarkerIcon(
+            poiMarker,
+            getPrimaryColor(context),
             2.0f)
         poiMarker.isDraggable = true
         poiMarker.infoWindow = null
+        poiMarker.setOnMarkerClickListener { marker, _ ->
+            if (selectedPoi !== marker.id) {
+                selectedPoi = marker.id
+                selectMarker(marker)
+            }
+
+            true
+        }
         poiMarker.setOnMarkerDragListener(object : Marker.OnMarkerDragListener {
             override fun onMarkerDragEnd(marker: Marker?) {
-                marker?.alpha = 1.0f
-                marker?.icon = createScaledDrawable(
-                    context,
-                    R.drawable.ic_poi,
-                    accentColor,
-                    2.0f)
+                if (marker == null) return
+
+                marker.alpha = 1.0f
+                deselectMarker(marker)
+
+                pois[marker.id] = marker.position
             }
 
             override fun onMarkerDragStart(marker: Marker?) {
                 marker?.alpha = 0.5f
-                marker?.icon = createScaledDrawable(
-                    context,
-                    R.drawable.ic_poi,
-                    accentColor,
-                    2.5f)
+                selectMarker(marker)
             }
 
             override fun onMarkerDrag(marker: Marker?) {
-
+                // nothing to do...
             }
         })
+
         mapView.overlays.add(poiMarker)
-        pois.add(poiMarker)
+        pois[poiMarker.id] = poiMarker.position
+    }
+
+    private fun setMarkerIcon(marker: Marker?,
+                              @ColorInt tintColor: Int,
+                              scale: Float = 1.0f) {
+        val context = context ?: return
+
+        marker?.icon = createScaledDrawable(
+            context,
+            R.drawable.ic_poi,
+            tintColor,
+            scale)
+    }
+
+    private fun selectMarker(marker: Marker?) {
+        if (!fab?.isOrWillBeHidden!!) fab?.hide()
+
+        val context = context ?: return
+
+        setMarkerIcon(
+            marker,
+            getAccentColor(context),
+            2.5f)
+    }
+
+    private fun deselectMarker(marker: Marker?) {
+        if (!fab?.isOrWillBeShown!!) fab?.show()
+        selectedPoi = null
+
+        val context = context ?: return
+
+        setMarkerIcon(
+            marker,
+            getPrimaryColor(context),
+            2.0f)
     }
 
     /**
