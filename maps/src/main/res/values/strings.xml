@@ -3,7 +3,9 @@
 
     <string name="app_name" translatable="false">maps</string>
 
+    <string name="action_undo">Undo</string>
     <string name="action_title_poi_edit">Edit POI</string>
     <string name="action_poi_delete">Delete POI</string>
+    <string name="action_poi_deleted">POI deleted</string>
 
 </resources>

@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
@@ -48,6 +49,7 @@ import kotlin.collections.HashMap
 class MapFragment : Fragment() {
 
     private var listener: OnMapFragmentListener? = null
+    private var container: View? = null
     private var mapView: MapView? = null
     private var fab: FloatingActionButton? = null
     private val pois = HashMap<String, GeoPoint>()
@@ -73,11 +75,12 @@ class MapFragment : Fragment() {
                                          item: MenuItem?): Boolean {
             return when (item?.itemId) {
                 R.id.action_poi_delete -> {
-                    pois.remove(selectedPoi)
+                    val geoPoint = pois.remove(selectedPoi)
                     val selectedMarker =
                         mapView?.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
                     deselectMarker(selectedMarker)
                     selectedMarker?.remove(mapView)
+                    showSnackbarForDeletedPoi(geoPoint)
 
                     true
                 }
@@ -135,9 +138,10 @@ class MapFragment : Fragment() {
             container,
             false)
 
-        mapView = view.findViewById(R.id.map)
-        fab = view.findViewById(R.id.fab)
-        fab?.setOnClickListener { addPoi() }
+        this.container = view.findViewById(android.R.id.content)
+        this.mapView = view.findViewById(R.id.map)
+        this.fab = view.findViewById(R.id.fab)
+        this.fab?.setOnClickListener { addPoi() }
 
         configureMapView()
         configureTileProvider()
@@ -246,14 +250,30 @@ class MapFragment : Fragment() {
         mapView.tileProvider = tileProvider
     }
 
-    private fun addPoi() {
+    private fun showSnackbarForDeletedPoi(geoPoint: GeoPoint?) {
+        val container = container ?: return
+        if (geoPoint == null) return
+
+        val snackbar = Snackbar.make(
+            container,
+            R.string.action_poi_deleted,
+            Snackbar.LENGTH_SHORT)
+        snackbar.setAction(
+            R.string.action_undo
+        ) {
+            addPoi(geoPoint)
+        }
+        snackbar.show()
+    }
+
+    private fun addPoi(geoPoint: GeoPoint? = null) {
         val context = context ?: return
         val mapView = mapView ?: return
 
         val poiMarker = Marker(mapView)
         poiMarker.id = UUID.randomUUID()
             .toString()
-        poiMarker.position = mapView.mapCenter as GeoPoint
+        poiMarker.position = geoPoint ?: mapView.mapCenter as GeoPoint
         poiMarker.setAnchor(
             Marker.ANCHOR_CENTER,
             Marker.ANCHOR_BOTTOM)
@@ -313,7 +333,8 @@ class MapFragment : Fragment() {
         val context = context ?: return
 
         if (actionMode == null) {
-            actionMode = (activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+            actionMode =
+                (activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
             actionMode?.setTitle(R.string.action_title_poi_edit)
         }
 
