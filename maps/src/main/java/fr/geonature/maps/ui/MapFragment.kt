@@ -11,11 +11,15 @@ import androidx.fragment.app.Fragment
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.util.DrawableUtils.createScaledDrawable
+import fr.geonature.maps.util.ThemeUtils
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
+import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.io.File
@@ -34,6 +38,7 @@ class MapFragment : Fragment() {
 
     private var listener: OnMapFragmentListener? = null
     private var mapView: MapView? = null
+    private val pois = ArrayList<Marker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +65,8 @@ class MapFragment : Fragment() {
             false)
 
         mapView = view.findViewById(R.id.map)
+        view.findViewById<View>(R.id.fab)
+            .setOnClickListener { addPoi() }
 
         configureMapView()
         configureTileProvider()
@@ -153,17 +160,60 @@ class MapFragment : Fragment() {
         }
 
         val baseTilePath = mapSettings.baseTilesPath
-            // TODO: set the right default storage directory to use as fallback
+        // TODO: set the right default storage directory to use as fallback
             ?: "${Environment.getExternalStorageDirectory().absolutePath}/osmdroid"
 
         val tileSources = mapSettings.tileSourceSettings.map { File("$baseTilePath/${it.name}") }
 
         val tileProvider = OfflineTileProvider(
             SimpleRegisterReceiver(context),
-            tileSources.toTypedArray()
-        )
+            tileSources.toTypedArray())
 
         mapView.tileProvider = tileProvider
+    }
+
+    private fun addPoi() {
+        val context = context ?: return
+        val mapView = mapView ?: return
+
+        val accentColor = ThemeUtils.getAccentColor(context)
+        val poiMarker = Marker(mapView)
+        poiMarker.position = mapView.mapCenter as GeoPoint
+        poiMarker.setAnchor(
+            Marker.ANCHOR_CENTER,
+            Marker.ANCHOR_BOTTOM)
+        poiMarker.icon = createScaledDrawable(
+            context,
+            R.drawable.ic_poi,
+            accentColor,
+            2.0f)
+        poiMarker.isDraggable = true
+        poiMarker.infoWindow = null
+        poiMarker.setOnMarkerDragListener(object : Marker.OnMarkerDragListener {
+            override fun onMarkerDragEnd(marker: Marker?) {
+                marker?.alpha = 1.0f
+                marker?.icon = createScaledDrawable(
+                    context,
+                    R.drawable.ic_poi,
+                    accentColor,
+                    2.0f)
+            }
+
+            override fun onMarkerDragStart(marker: Marker?) {
+                marker?.alpha = 0.5f
+                marker?.icon = createScaledDrawable(
+                    context,
+                    R.drawable.ic_poi,
+                    accentColor,
+                    2.5f)
+            }
+
+            override fun onMarkerDrag(marker: Marker?) {
+
+            }
+        })
+        mapView.overlays.add(poiMarker)
+        pois.add(poiMarker)
     }
 
     /**
