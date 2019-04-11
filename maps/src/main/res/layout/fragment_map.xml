@@ -13,8 +13,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <fr.geonature.maps.ui.overlay.RotateCompassOverlay
+        android:id="@+id/fab_compass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/fab_margin"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_gravity="top|end"
+        app:backgroundTint="@android:color/white"
+        app:fabSize="mini"
+        app:elevation="@dimen/fab_elevation" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fab_poi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/fab_margin"

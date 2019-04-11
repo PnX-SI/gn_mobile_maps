@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="compass_north">N</string>
+
     <string name="action_undo">Annuler</string>
     <string name="action_title_poi_edit">Éditer le marqueur</string>
     <string name="action_poi_delete">Supprimer le marqueur</string>

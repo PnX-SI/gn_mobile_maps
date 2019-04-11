@@ -18,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.overlay.RotateCompassOverlay
 import fr.geonature.maps.util.DrawableUtils.createScaledDrawable
 import fr.geonature.maps.util.ThemeUtils.getAccentColor
 import fr.geonature.maps.util.ThemeUtils.getPrimaryColor
@@ -51,7 +52,9 @@ class MapFragment : Fragment() {
     private var listener: OnMapFragmentListener? = null
     private var container: View? = null
     private var mapView: MapView? = null
-    private var fab: FloatingActionButton? = null
+    private var poiFab: FloatingActionButton? = null
+    private var rotateCompassOverlay: RotateCompassOverlay? = null
+
     private val pois = HashMap<String, GeoPoint>()
     private var selectedPoi: String? = null
 
@@ -140,8 +143,9 @@ class MapFragment : Fragment() {
 
         this.container = view.findViewById(android.R.id.content)
         this.mapView = view.findViewById(R.id.map)
-        this.fab = view.findViewById(R.id.fab)
-        this.fab?.setOnClickListener { addPoi() }
+        this.rotateCompassOverlay = view.findViewById(R.id.fab_compass)
+        this.poiFab = view.findViewById(R.id.fab_poi)
+        this.poiFab?.setOnClickListener { addPoi() }
 
         configureMapView()
         configureTileProvider()
@@ -151,6 +155,7 @@ class MapFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+
         if (context is OnMapFragmentListener) {
             listener = context
         }
@@ -195,6 +200,8 @@ class MapFragment : Fragment() {
 
         val overlayEvents = MapEventsOverlay(mapEventReceiver)
         mapView.overlays.add(overlayEvents)
+
+        rotateCompassOverlay?.setMapView(mapView)
 
         val mapSettings = listener?.getMapSettings() ?: return
 
@@ -328,7 +335,7 @@ class MapFragment : Fragment() {
     }
 
     private fun selectMarker(marker: Marker?) {
-        if (!fab?.isOrWillBeHidden!!) fab?.hide()
+        if (!poiFab?.isOrWillBeHidden!!) poiFab?.hide()
 
         val context = context ?: return
 
@@ -345,7 +352,7 @@ class MapFragment : Fragment() {
     }
 
     private fun deselectMarker(marker: Marker?) {
-        if (!fab?.isOrWillBeShown!!) fab?.show()
+        if (!poiFab?.isOrWillBeShown!!) poiFab?.show()
         selectedPoi = null
         actionMode?.finish()
 
