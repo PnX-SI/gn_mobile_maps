@@ -72,6 +72,7 @@ class RotateCompassOverlay(
 
         val canvas = Canvas(bitmap)
 
+        // show "N" if map orientation is near from north
         if (mapOrientation.absoluteValue * 100 / 360 < 2f) {
             val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             textPaint.style = Paint.Style.FILL

@@ -201,17 +201,21 @@ class MapFragment : Fragment() {
         val overlayEvents = MapEventsOverlay(mapEventReceiver)
         mapView.overlays.add(overlayEvents)
 
-        rotateCompassOverlay?.setMapView(mapView)
-
         val mapSettings = listener?.getMapSettings() ?: return
 
         // configure and display scale bar
-        if (mapSettings.displayScale) {
+        if (mapSettings.showScale) {
             val scaleBarOverlay = ScaleBarOverlay(mapView)
             scaleBarOverlay.setCentred(false)
             scaleBarOverlay.setAlignBottom(true)
             scaleBarOverlay.setAlignRight(false)
             mapView.overlays.add(scaleBarOverlay)
+        }
+
+        // configure and display map compass
+        if (mapSettings.showCompass) {
+            rotateCompassOverlay?.setMapView(mapView)
+            rotateCompassOverlay?.show()
         }
 
         if (mapSettings.zoom > 0.0) {

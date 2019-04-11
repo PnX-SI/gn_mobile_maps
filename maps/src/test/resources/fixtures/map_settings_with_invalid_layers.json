@@ -1,5 +1,6 @@
 {
-  "display_scale": false,
+  "show_scale": false,
+  "show_compass": false,
   "max_bounds": [
     [
       47.253369,

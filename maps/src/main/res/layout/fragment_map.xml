@@ -17,24 +17,25 @@
         android:id="@+id/fab_compass"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/fab_margin"
+        android:layout_gravity="top|end"
         android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginTop="@dimen/fab_margin"
         android:clickable="true"
         android:focusable="true"
-        android:layout_gravity="top|end"
+        android:visibility="invisible"
         app:backgroundTint="@android:color/white"
-        app:fabSize="mini"
-        app:elevation="@dimen/fab_elevation" />
+        app:elevation="@dimen/fab_elevation"
+        app:fabSize="mini" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_poi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/fab_margin"
         android:layout_marginEnd="@dimen/fab_margin"
         android:clickable="true"
         android:focusable="true"
-        android:layout_gravity="bottom|end"
         android:tint="@android:color/white"
         app:elevation="@dimen/fab_elevation"
         app:srcCompat="@drawable/ic_add_poi" />

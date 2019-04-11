@@ -79,7 +79,8 @@ class MapSettingsReader {
             val keyName = reader.nextName()
 
             when (keyName) {
-                "display_scale" -> builder.displayScale(reader.nextBoolean())
+                "show_scale" -> builder.showScale(reader.nextBoolean())
+                "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
 
