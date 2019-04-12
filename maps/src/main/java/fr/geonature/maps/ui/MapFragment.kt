@@ -18,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.ui.overlay.RotateCompassOverlay
 import fr.geonature.maps.util.DrawableUtils.createScaledDrawable
 import fr.geonature.maps.util.ThemeUtils.getAccentColor
@@ -217,6 +218,9 @@ class MapFragment : Fragment() {
             rotateCompassOverlay?.setMapView(mapView)
             rotateCompassOverlay?.show()
         }
+
+        val myLocationOverlay = MyLocationOverlay(mapView)
+        mapView.overlays.add(myLocationOverlay)
 
         if (mapSettings.zoom > 0.0) {
             mapView.controller.setZoom(mapSettings.zoom)
