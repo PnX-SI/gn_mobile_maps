@@ -9,20 +9,23 @@ import android.text.TextUtils.isEmpty
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-data class TileSourceSettings(var name: String,
-                              var label: String,
-                              val minZoomLevel: Double = 0.0,
-                              val maxZoomLevel: Double = 0.0,
-                              val tileSizePixels: Int = DEFAULT_TILE_SIZE,
-                              val imageExtension: String? = DEFAULT_IMAGE_EXTENSION) : Parcelable {
+data class TileSourceSettings(
+    var name: String,
+    var label: String,
+    val minZoomLevel: Double = 0.0,
+    val maxZoomLevel: Double = 0.0,
+    val tileSizePixels: Int = DEFAULT_TILE_SIZE,
+    val imageExtension: String? = DEFAULT_IMAGE_EXTENSION
+) : Parcelable {
 
-    private constructor(builder: TileSourceSettings.Builder) : this(
+    private constructor(builder: Builder) : this(
         builder.name!!,
         builder.label!!,
         builder.minZoomLevel,
         builder.maxZoomLevel,
         builder.tileSizePixels,
-        builder.imageExtension)
+        builder.imageExtension
+    )
 
     private constructor(source: Parcel) : this(
         source.readString() ?: "",
@@ -30,14 +33,17 @@ data class TileSourceSettings(var name: String,
         source.readDouble(),
         source.readDouble(),
         source.readInt().let { if (it == 0) DEFAULT_TILE_SIZE else it },
-        source.readString() ?: DEFAULT_IMAGE_EXTENSION)
+        source.readString() ?: DEFAULT_IMAGE_EXTENSION
+    )
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel?,
-                               flags: Int) {
+    override fun writeToParcel(
+        dest: Parcel?,
+        flags: Int
+    ) {
         dest?.writeString(name)
         dest?.writeString(label)
         dest?.writeDouble(minZoomLevel)
@@ -46,12 +52,14 @@ data class TileSourceSettings(var name: String,
         dest?.writeString(imageExtension)
     }
 
-    data class Builder(var name: String? = null,
-                       var label: String? = null,
-                       var minZoomLevel: Double = 0.0,
-                       var maxZoomLevel: Double = 0.0,
-                       var tileSizePixels: Int = DEFAULT_TILE_SIZE,
-                       var imageExtension: String? = DEFAULT_IMAGE_EXTENSION) {
+    data class Builder(
+        var name: String? = null,
+        var label: String? = null,
+        var minZoomLevel: Double = 0.0,
+        var maxZoomLevel: Double = 0.0,
+        var tileSizePixels: Int = DEFAULT_TILE_SIZE,
+        var imageExtension: String? = DEFAULT_IMAGE_EXTENSION
+    ) {
 
         fun from(tileSourceSettings: TileSourceSettings) = apply {
             name(tileSourceSettings.name)

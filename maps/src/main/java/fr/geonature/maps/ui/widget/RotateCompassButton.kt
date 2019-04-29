@@ -1,10 +1,9 @@
-package fr.geonature.maps.ui.overlay
+package fr.geonature.maps.ui.widget
 
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
@@ -24,7 +23,7 @@ import kotlin.math.absoluteValue
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class RotateCompassOverlay(
+class RotateCompassButton(
     context: Context, attrs: AttributeSet
 ) : FloatingActionButton(
     context, attrs
@@ -40,7 +39,7 @@ class RotateCompassOverlay(
 
             val compassAnimator = ValueAnimator.ofFloat(mapView.mapOrientation, 0f)
             compassAnimator.addUpdateListener {
-                updateImageDrawable(it.animatedFraction)
+                updateImageDrawable(it.animatedValue as Float)
             }
             compassAnimator.duration = Configuration.getInstance().animationSpeedDefault.toLong()
             compassAnimator.start()
@@ -76,7 +75,6 @@ class RotateCompassOverlay(
         if (mapOrientation.absoluteValue * 100 / 360 < 2f) {
             val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             textPaint.style = Paint.Style.FILL
-            textPaint.color = Color.BLACK
             textPaint.textAlign = Paint.Align.CENTER
             textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textPaint.textSize = 32f

@@ -18,8 +18,8 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.overlay.MyLocationOverlay
-import fr.geonature.maps.ui.overlay.RotateCompassOverlay
+import fr.geonature.maps.ui.widget.MyLocationButton
+import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.util.DrawableUtils.createScaledDrawable
 import fr.geonature.maps.util.ThemeUtils.getAccentColor
 import fr.geonature.maps.util.ThemeUtils.getPrimaryColor
@@ -54,29 +54,33 @@ class MapFragment : Fragment() {
     private var container: View? = null
     private var mapView: MapView? = null
     private var poiFab: FloatingActionButton? = null
-    private var rotateCompassOverlay: RotateCompassOverlay? = null
+    private var myLocationFab: MyLocationButton? = null
+    private var rotateCompassFab: RotateCompassButton? = null
 
     private val pois = HashMap<String, GeoPoint>()
     private var selectedPoi: String? = null
 
     private var actionMode: ActionMode? = null
     private val actionModeCallback = object : ActionMode.Callback {
-        override fun onCreateActionMode(mode: ActionMode?,
-                                        menu: Menu?): Boolean {
+        override fun onCreateActionMode(
+            mode: ActionMode?, menu: Menu?
+        ): Boolean {
             mode?.menuInflater?.inflate(
-                R.menu.map_action_mode,
-                menu)
+                R.menu.map_action_mode, menu
+            )
 
             return true
         }
 
-        override fun onPrepareActionMode(mode: ActionMode?,
-                                         menu: Menu?): Boolean {
+        override fun onPrepareActionMode(
+            mode: ActionMode?, menu: Menu?
+        ): Boolean {
             return false
         }
 
-        override fun onActionItemClicked(mode: ActionMode?,
-                                         item: MenuItem?): Boolean {
+        override fun onActionItemClicked(
+            mode: ActionMode?, item: MenuItem?
+        ): Boolean {
             return when (item?.itemId) {
                 R.id.action_poi_delete -> {
                     val geoPoint = pois.remove(selectedPoi)
@@ -84,7 +88,7 @@ class MapFragment : Fragment() {
                         mapView?.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
                     deselectMarker(selectedMarker)
                     selectedMarker?.remove(mapView)
-                    showSnackbarForDeletedPoi(geoPoint)
+                    showSnackbarAboutDeletedPoi(geoPoint)
 
                     true
                 }
@@ -124,29 +128,25 @@ class MapFragment : Fragment() {
         val context = context ?: return
 
         Configuration.getInstance()
-            .load(
-                context,
-                PreferenceManager.getDefaultSharedPreferences(context))
-        Configuration.getInstance()
-            .isDebugMode = BuildConfig.DEBUG
-        Configuration.getInstance()
-            .isDebugTileProviders = BuildConfig.DEBUG
+            .load(context, PreferenceManager.getDefaultSharedPreferences(context))
+        Configuration.getInstance().isDebugMode = BuildConfig.DEBUG
+        Configuration.getInstance().isDebugTileProviders = BuildConfig.DEBUG
     }
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(
-            R.layout.fragment_map,
-            container,
-            false)
+            R.layout.fragment_map, container, false
+        )
 
         this.container = view.findViewById(android.R.id.content)
         this.mapView = view.findViewById(R.id.map)
-        this.rotateCompassOverlay = view.findViewById(R.id.fab_compass)
+        this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.poiFab = view.findViewById(R.id.fab_poi)
         this.poiFab?.setOnClickListener { addPoi() }
+        this.myLocationFab = view.findViewById(R.id.fab_location)
 
         configureMapView()
         configureTileProvider()
@@ -176,6 +176,7 @@ class MapFragment : Fragment() {
         super.onResume()
 
         mapView?.onResume()
+        myLocationFab?.onResume()
     }
 
     override fun onPause() {
@@ -215,12 +216,12 @@ class MapFragment : Fragment() {
 
         // configure and display map compass
         if (mapSettings.showCompass) {
-            rotateCompassOverlay?.setMapView(mapView)
-            rotateCompassOverlay?.show()
+            rotateCompassFab?.setMapView(mapView)
+            rotateCompassFab?.show()
         }
 
-        val myLocationOverlay = MyLocationOverlay(mapView)
-        mapView.overlays.add(myLocationOverlay)
+        // configure my location overlay
+        myLocationFab?.setMapView(mapView)
 
         if (mapSettings.zoom > 0.0) {
             mapView.controller.setZoom(mapSettings.zoom)
@@ -259,20 +260,19 @@ class MapFragment : Fragment() {
         val tileSources = mapSettings.tileSourceSettings.map { File("$baseTilePath/${it.name}") }
 
         val tileProvider = OfflineTileProvider(
-            SimpleRegisterReceiver(context),
-            tileSources.toTypedArray())
+            SimpleRegisterReceiver(context), tileSources.toTypedArray()
+        )
 
         mapView.tileProvider = tileProvider
     }
 
-    private fun showSnackbarForDeletedPoi(geoPoint: GeoPoint?) {
+    private fun showSnackbarAboutDeletedPoi(geoPoint: GeoPoint?) {
         val container = container ?: return
         if (geoPoint == null) return
 
         val snackbar = Snackbar.make(
-            container,
-            R.string.action_poi_deleted,
-            Snackbar.LENGTH_SHORT)
+            container, R.string.action_poi_deleted, Snackbar.LENGTH_SHORT
+        )
         snackbar.setAction(
             R.string.action_undo
         ) {
@@ -286,16 +286,14 @@ class MapFragment : Fragment() {
         val mapView = mapView ?: return
 
         val poiMarker = Marker(mapView)
-        poiMarker.id = UUID.randomUUID()
-            .toString()
+        poiMarker.id = UUID.randomUUID().toString()
         poiMarker.position = geoPoint ?: mapView.mapCenter as GeoPoint
         poiMarker.setAnchor(
-            Marker.ANCHOR_CENTER,
-            Marker.ANCHOR_BOTTOM)
+            Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM
+        )
         setMarkerIcon(
-            poiMarker,
-            getPrimaryColor(context),
-            2.0f)
+            poiMarker, getPrimaryColor(context), 2.0f
+        )
         poiMarker.isDraggable = true
         poiMarker.infoWindow = null
         poiMarker.setOnMarkerClickListener { marker, _ ->
@@ -330,16 +328,14 @@ class MapFragment : Fragment() {
         pois[poiMarker.id] = poiMarker.position
     }
 
-    private fun setMarkerIcon(marker: Marker?,
-                              @ColorInt tintColor: Int,
-                              scale: Float = 1.0f) {
+    private fun setMarkerIcon(
+        marker: Marker?, @ColorInt tintColor: Int, scale: Float = 1.0f
+    ) {
         val context = context ?: return
 
         marker?.icon = createScaledDrawable(
-            context,
-            R.drawable.ic_poi,
-            tintColor,
-            scale)
+            context, R.drawable.ic_poi, tintColor, scale
+        )
     }
 
     private fun selectMarker(marker: Marker?) {
@@ -354,9 +350,8 @@ class MapFragment : Fragment() {
         }
 
         setMarkerIcon(
-            marker,
-            getAccentColor(context),
-            2.5f)
+            marker, getAccentColor(context), 2.5f
+        )
     }
 
     private fun deselectMarker(marker: Marker?) {
@@ -367,9 +362,8 @@ class MapFragment : Fragment() {
         val context = context ?: return
 
         setMarkerIcon(
-            marker,
-            getPrimaryColor(context),
-            2.0f)
+            marker, getPrimaryColor(context), 2.0f
+        )
     }
 
     /**

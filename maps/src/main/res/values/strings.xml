@@ -10,4 +10,6 @@
     <string name="action_poi_delete">Delete POI</string>
     <string name="action_poi_deleted">POI deleted</string>
 
+    <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+
 </resources>

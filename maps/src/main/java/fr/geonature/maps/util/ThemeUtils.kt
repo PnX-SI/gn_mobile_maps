@@ -27,9 +27,7 @@ object ThemeUtils {
     }
 
     @ColorInt
-    private fun getColor(
-        context: Context,
-        colorAttribute: Int): Int {
+    private fun getColor(context: Context, colorAttribute: Int): Int {
         val typedArray = context.theme.obtainStyledAttributes(intArrayOf(colorAttribute))
         val color = typedArray.getColor(0, 0)
 

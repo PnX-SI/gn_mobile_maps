@@ -15,40 +15,31 @@ import androidx.annotation.DrawableRes
  */
 object DrawableUtils {
 
-    fun createScaledDrawable(context: Context,
-                             @DrawableRes drawableResourceId: Int,
-                             @ColorInt tintColor: Int,
-                             scale: Float = 1.0f): Drawable {
-
-        val drawable = context.resources.getDrawable(
-            drawableResourceId,
-            context.theme)
+    fun toBitmap(
+        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        scale: Float = 1.0f
+    ): Bitmap {
+        val drawable = context.resources.getDrawable(drawableResourceId, context.theme)
         drawable.setTint(tintColor)
 
-        return scaleDrawable(
-            context,
-            drawable,
-            scale)
-    }
-
-    private fun scaleDrawable(context: Context,
-                              drawable: Drawable,
-                              scale: Float = 1.0f): Drawable {
-
-        val bitmap = Bitmap.createBitmap(
+        return Bitmap.createBitmap(
             (drawable.intrinsicWidth * scale).toInt(),
             (drawable.intrinsicHeight * scale).toInt(),
-            Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(
-            0,
-            0,
-            canvas.width,
-            canvas.height)
-        drawable.draw(canvas)
+            Bitmap.Config.ARGB_8888
+        ).also {
+            val canvas = Canvas(it)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+        }
+    }
+
+    fun createScaledDrawable(
+        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        scale: Float = 1.0f
+    ): Drawable {
 
         return BitmapDrawable(
-            context.resources,
-            bitmap)
+            context.resources, toBitmap(context, drawableResourceId, tintColor, scale)
+        )
     }
 }

@@ -8,4 +8,6 @@
     <string name="action_poi_delete">Supprimer le marqueur</string>
     <string name="action_poi_deleted">Marqueur supprimé</string>
 
+    <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
+
 </resources>
