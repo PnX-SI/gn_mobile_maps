@@ -1,6 +1,6 @@
 package fr.geonature.maps.settings.io
 
-import fr.geonature.maps.TestHelper.getFixture
+import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.settings.TileSourceSettings
 import org.junit.Assert.assertEquals

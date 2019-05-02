@@ -8,11 +8,11 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 /**
- * Class helper about Unit tests.
+ * Helper functions about loading fixtures files from resources `fixtures/` folder.
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-object TestHelper {
+object FixtureHelper {
 
     /**
      * Reads the contents of a file as `File`.
@@ -23,7 +23,7 @@ object TestHelper {
      */
     @Throws(FileNotFoundException::class)
     fun getFixtureAsFile(name: String): File {
-        val resource = TestHelper::class.java.classLoader!!.getResource("fixtures/$name")
+        val resource = FixtureHelper::class.java.classLoader!!.getResource("fixtures/$name")
             ?: throw FileNotFoundException("file not found $name")
 
         return File(resource.file)
@@ -61,11 +61,9 @@ object TestHelper {
             }
             catch (ignored: IOException) {
             }
-
         }
 
-        return stringBuilder.toString()
-            .trim { it <= ' ' }
+        return stringBuilder.toString().trim { it <= ' ' }
     }
 
     /**
@@ -76,6 +74,6 @@ object TestHelper {
      * @return the file contents as [InputStream]
      */
     private fun getFixtureAsStream(name: String): InputStream? {
-        return TestHelper::class.java.classLoader!!.getResourceAsStream("fixtures/$name")
+        return FixtureHelper::class.java.classLoader!!.getResourceAsStream("fixtures/$name")
     }
 }

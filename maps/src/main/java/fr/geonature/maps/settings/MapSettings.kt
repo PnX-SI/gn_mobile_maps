@@ -23,7 +23,7 @@ data class MapSettings(
     val center: GeoPoint?
 ) : Parcelable {
 
-    private constructor(builder: MapSettings.Builder) : this(
+    private constructor(builder: Builder) : this(
         builder.tileSourceSettings,
         builder.baseTilesPath,
         builder.showScale,
