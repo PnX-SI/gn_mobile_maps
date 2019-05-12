@@ -1,1 +1,1 @@
-include ':maps'
+include ':app', ':maps'
