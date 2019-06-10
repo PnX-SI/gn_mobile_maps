@@ -20,7 +20,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.locationtech.jts.geom.GeometryFactory
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.io.StringReader
 
 /**
@@ -29,7 +28,6 @@ import java.io.StringReader
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class GeoJsonReaderTest {
 
     private lateinit var gf: GeometryFactory

@@ -28,7 +28,6 @@ import java.io.StringReader
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class WKTReaderTest {
 
     @Captor

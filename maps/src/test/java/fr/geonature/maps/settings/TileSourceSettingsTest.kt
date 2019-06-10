@@ -1,12 +1,11 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import java.lang.IllegalArgumentException
 
 /**
  * Unit tests about [TileSourceSettings].
@@ -14,7 +13,6 @@ import java.lang.IllegalArgumentException
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class TileSourceSettingsTest {
 
     @Test

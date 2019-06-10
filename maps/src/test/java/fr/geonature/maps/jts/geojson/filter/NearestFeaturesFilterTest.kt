@@ -1,6 +1,7 @@
 package fr.geonature.maps.jts.geojson.filter
 
 import fr.geonature.maps.jts.geojson.Feature
+import fr.geonature.maps.jts.geojson.FeatureCollection
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import fr.geonature.maps.jts.geojson.filter.NearestFeaturesFilter.Companion.getFilteredFeatures
 import org.junit.Assert.assertEquals
@@ -11,8 +12,6 @@ import org.junit.runner.RunWith
 import org.locationtech.jts.geom.GeometryFactory
 import org.osmdroid.util.GeoPoint
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import fr.geonature.maps.jts.geojson.FeatureCollection
 
 /**
  * Unit tests about [NearestFeaturesFilter].
@@ -20,7 +19,6 @@ import fr.geonature.maps.jts.geojson.FeatureCollection
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class NearestFeaturesFilterTest {
 
     private lateinit var gf: GeometryFactory

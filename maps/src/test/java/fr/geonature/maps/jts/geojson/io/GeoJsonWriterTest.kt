@@ -30,7 +30,6 @@ import org.robolectric.annotation.Config
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class GeoJsonWriterTest {
 
     private lateinit var gf: GeometryFactory

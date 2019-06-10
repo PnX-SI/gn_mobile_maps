@@ -1,14 +1,13 @@
 package fr.geonature.maps.jts.geojson
 
 import android.os.Parcel
+import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.locationtech.jts.geom.GeometryFactory
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 
 /**
  * Unit tests about [FeatureCollection].
@@ -16,7 +15,6 @@ import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class FeatureCollectionTest {
 
     private lateinit var gf: GeometryFactory
