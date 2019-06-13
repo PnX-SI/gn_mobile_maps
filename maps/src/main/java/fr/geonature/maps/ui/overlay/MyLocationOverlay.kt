@@ -24,7 +24,7 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 class MyLocationOverlay(
-    private var mapView: MapView,
+    mapView: MapView,
     private var maxBounds: BoundingBox? = null
 ) : Overlay(), MyLocationListener, IOrientationConsumer {
 
@@ -36,7 +36,11 @@ class MyLocationOverlay(
     private var compassOrientation = 0f
 
     init {
-        myLocationProvider = GpsMyLocationProvider(mapView.context)
+        myLocationProvider = GpsMyLocationProvider(mapView.context).apply {
+            locationUpdateMinDistance = 2F // 2 meters
+            locationUpdateMinTime = 10 * 1000 // 10s
+        }
+
         compassOrientationProvider = CompassOrientationProvider(mapView.context)
         compassBitmap = DrawableUtils.toBitmap(
             mapView.context,
@@ -95,8 +99,6 @@ class MyLocationOverlay(
 
         this.location = location
 
-        mapView.controller.animateTo(GeoPoint(location))
-
         this.myLocationListener?.onLocationChanged(
             location,
             source
@@ -112,6 +114,10 @@ class MyLocationOverlay(
         source: IOrientationProvider?
     ) {
         this.compassOrientation = orientation
+    }
+
+    fun getLastKnownLocation(): Location {
+        return location ?: myLocationProvider.lastKnownLocation
     }
 
     fun setMyLocationListener(myLocationListener: MyLocationListener) {

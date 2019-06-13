@@ -1,6 +1,7 @@
 package fr.geonature.maps.ui.widget
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.location.Location
 import android.os.Parcel
@@ -12,7 +13,11 @@ import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 
@@ -27,17 +32,54 @@ class MyLocationButton(
 ) : FloatingActionButton(
     context,
     attrs
-) {
+), MapListener {
     private var myLocationOverlay: MyLocationOverlay? = null
-    private var isMyLocationActive: Boolean = false
+    private var myLocationState: MyLocationState = MyLocationState.INACTIVE
 
     init {
         setImageDrawable(context.getDrawable(R.drawable.ic_gps_location_searching))
-        setOnClickListener {
-            val myLocationOverlay = myLocationOverlay ?: return@setOnClickListener
+    }
 
-            if (myLocationOverlay.isEnabled) disableMyLocation() else enableMyLocation()
+    override fun onScroll(event: ScrollEvent?): Boolean {
+        val mapView = event?.source ?: return true
+        if (mapView.isAnimating) return true
+
+        if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+            val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+            drawable?.setTint(Color.DKGRAY)
+            setImageDrawable(drawable)
+
+            myLocationState = MyLocationState.ACTIVE_NOT_CENTERED
         }
+
+        return true
+    }
+
+    override fun onZoom(event: ZoomEvent?): Boolean {
+        return true
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        val superState = super.onSaveInstanceState() ?: return null
+        val ss = SavedState(superState)
+
+        ss.isMyLocationActive = myLocationState != MyLocationState.INACTIVE
+
+        return ss
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
+        }
+
+        super.onRestoreInstanceState(state.superState)
+
+        myLocationState =
+            if (state.isMyLocationActive) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+
+        onResume()
     }
 
     fun setMapView(
@@ -50,6 +92,7 @@ class MyLocationButton(
             maxBounds
         )
         mapView.overlays.add(myLocationOverlay)
+        mapView.addMapListener(this)
 
         myLocationOverlay?.setMyLocationListener(object : MyLocationListener {
             override fun onLocationChanged(
@@ -57,10 +100,27 @@ class MyLocationButton(
                 source: IMyLocationProvider?
             ) {
                 val context = context ?: return
+                if (location == null) return
 
                 val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
-                drawable?.setTint(ThemeUtils.getAccentColor(context))
-                setImageDrawable(context.getDrawable(R.drawable.ic_gps_location_found))
+
+                myLocationState = if (myLocationState == MyLocationState.ACTIVE) {
+                    mapView.controller.animateTo(GeoPoint(location))
+                    drawable?.setTint(ThemeUtils.getAccentColor(context))
+                    MyLocationState.ACTIVE_CENTERED
+                }
+                else {
+                    if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+                        drawable?.setTint(ThemeUtils.getAccentColor(context))
+                        MyLocationState.ACTIVE_CENTERED
+                    }
+                    else {
+                        drawable?.setTint(Color.DKGRAY)
+                        MyLocationState.ACTIVE_NOT_CENTERED
+                    }
+                }
+
+                setImageDrawable(drawable)
             }
 
             override fun onLocationOutsideBoundaries(location: Location?) {
@@ -72,36 +132,38 @@ class MyLocationButton(
                     context,
                     R.string.toast_location_outside_map_boundaries,
                     Toast.LENGTH_LONG
-                ).show()
+                )
+                    .show()
             }
         })
+
+        setOnClickListener {
+            val myLocationOverlay = myLocationOverlay ?: return@setOnClickListener
+
+            if (myLocationOverlay.isEnabled) {
+                if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+                    disableMyLocation()
+                }
+                else {
+                    mapView.controller.animateTo(GeoPoint(myLocationOverlay.getLastKnownLocation()))
+
+                    val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                    drawable?.setTint(ThemeUtils.getAccentColor(context))
+                    setImageDrawable(drawable)
+
+                    myLocationState = MyLocationState.ACTIVE_CENTERED
+                }
+            }
+            else {
+                enableMyLocation()
+            }
+        }
 
         isEnabled = true
     }
 
-    override fun onSaveInstanceState(): Parcelable? {
-        val superState = super.onSaveInstanceState() ?: return null
-        val ss = SavedState(superState)
-
-        ss.isMyLocationActive = isMyLocationActive
-
-        return ss
-    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        if (state !is SavedState) {
-            super.onRestoreInstanceState(state)
-            return
-        }
-
-        super.onRestoreInstanceState(state.superState)
-        isMyLocationActive = state.isMyLocationActive
-
-        onResume()
-    }
-
     fun onResume() {
-        if (isMyLocationActive) enableMyLocation() else disableMyLocation()
+        if (myLocationState == MyLocationState.ACTIVE) enableMyLocation() else disableMyLocation()
     }
 
     private fun enableMyLocation() {
@@ -111,9 +173,9 @@ class MyLocationButton(
         val myLocationOverlay = myLocationOverlay ?: return
 
         drawable?.start()
-        isMyLocationActive = myLocationOverlay.enableMyLocation()
+        myLocationState =
+            if (myLocationOverlay.enableMyLocation()) MyLocationState.ACTIVE else MyLocationState.INACTIVE
     }
-
 
     private fun disableMyLocation() {
         setImageResource(R.drawable.ic_gps_location_searching)
@@ -123,7 +185,11 @@ class MyLocationButton(
         val myLocationOverlay = myLocationOverlay ?: return
 
         myLocationOverlay.disableMyLocation()
-        isMyLocationActive = false
+        myLocationState = MyLocationState.INACTIVE
+    }
+
+    internal enum class MyLocationState {
+        INACTIVE, ACTIVE, ACTIVE_NOT_CENTERED, ACTIVE_CENTERED
     }
 
     internal class SavedState : BaseSavedState {
