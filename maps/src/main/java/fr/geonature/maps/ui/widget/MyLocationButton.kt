@@ -44,12 +44,12 @@ class MyLocationButton(
         val mapView = event?.source ?: return true
         if (mapView.isAnimating) return true
 
-        if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+        if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
             val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
             drawable?.setTint(Color.DKGRAY)
             setImageDrawable(drawable)
 
-            myLocationState = MyLocationState.ACTIVE_NOT_CENTERED
+            myLocationState = MyLocationState.ACTIVE
         }
 
         return true
@@ -104,21 +104,16 @@ class MyLocationButton(
 
                 val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
 
-                myLocationState = if (myLocationState == MyLocationState.ACTIVE) {
-                    mapView.controller.animateTo(GeoPoint(location))
-                    drawable?.setTint(ThemeUtils.getAccentColor(context))
-                    MyLocationState.ACTIVE_CENTERED
-                }
-                else {
-                    if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+                myLocationState =
+                    if (myLocationState == MyLocationState.ACTIVE || myLocationState == MyLocationState.ACTIVE_TRACKER) {
+                        mapView.controller.animateTo(GeoPoint(location))
                         drawable?.setTint(ThemeUtils.getAccentColor(context))
-                        MyLocationState.ACTIVE_CENTERED
+                        MyLocationState.ACTIVE_TRACKER
                     }
                     else {
                         drawable?.setTint(Color.DKGRAY)
-                        MyLocationState.ACTIVE_NOT_CENTERED
+                        MyLocationState.ACTIVE
                     }
-                }
 
                 setImageDrawable(drawable)
             }
@@ -141,7 +136,7 @@ class MyLocationButton(
             val myLocationOverlay = myLocationOverlay ?: return@setOnClickListener
 
             if (myLocationOverlay.isEnabled) {
-                if (myLocationState == MyLocationState.ACTIVE_CENTERED) {
+                if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                     disableMyLocation()
                 }
                 else {
@@ -151,7 +146,7 @@ class MyLocationButton(
                     drawable?.setTint(ThemeUtils.getAccentColor(context))
                     setImageDrawable(drawable)
 
-                    myLocationState = MyLocationState.ACTIVE_CENTERED
+                    myLocationState = MyLocationState.ACTIVE_TRACKER
                 }
             }
             else {
@@ -189,7 +184,7 @@ class MyLocationButton(
     }
 
     internal enum class MyLocationState {
-        INACTIVE, ACTIVE, ACTIVE_NOT_CENTERED, ACTIVE_CENTERED
+        INACTIVE, ACTIVE, ACTIVE_TRACKER
     }
 
     internal class SavedState : BaseSavedState {
