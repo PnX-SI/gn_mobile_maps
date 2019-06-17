@@ -21,22 +21,19 @@
   "min_zoom_editing": 10.0,
   "layers": [
     {
-      "name": "nantes.mbtiles",
       "label": "Nantes",
-      "min_zoom": 7,
-      "max_zoom": 12,
-      "tile_size": 512,
-      "image_extension": "jpg"
+      "source": "nantes.mbtiles"
     },
     {
-      "name": "nantes.mbtiles",
-      "label": "Nantes 2"
+      "label": "Nantes 2",
+      "source": "nantes.mbtiles"
     },
     {
       "label": "Nantes 3"
     },
     {
-      "name": "nantes.wkt"
+      "label": "nantes.wkt",
+      "source": "nantes.wkt"
     }
   ]
 }

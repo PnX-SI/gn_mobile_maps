@@ -3,13 +3,12 @@ package fr.geonature.maps.settings.io
 import android.text.TextUtils.isEmpty
 import android.util.JsonReader
 import android.util.Log
+import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.settings.TileSourceSettings
 import org.osmdroid.util.GeoPoint
 import java.io.IOException
 import java.io.Reader
 import java.io.StringReader
-import java.lang.IllegalArgumentException
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
@@ -36,7 +35,8 @@ class MapSettingsReader {
         catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message)
+                ioe.message
+            )
         }
 
         return null
@@ -76,9 +76,8 @@ class MapSettingsReader {
         reader.beginObject()
 
         while (reader.hasNext()) {
-            val keyName = reader.nextName()
 
-            when (keyName) {
+            when (reader.nextName()) {
                 "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "max_bounds" -> {
@@ -100,7 +99,9 @@ class MapSettingsReader {
                             maxBounds.add(
                                 GeoPoint(
                                     tokens[0],
-                                    tokens[1]))
+                                    tokens[1]
+                                )
+                            )
                         }
                     }
 
@@ -122,16 +123,19 @@ class MapSettingsReader {
                         builder.center(
                             GeoPoint(
                                 tokens[0],
-                                tokens[1]))
+                                tokens[1]
+                            )
+                        )
                     }
                 }
                 "start_zoom", "zoom" -> builder.zoom(reader.nextDouble())
                 "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
                 "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
                 "min_zoom_editing" -> builder.minZoomEditing(reader.nextDouble())
-                "layers" -> readTileSourceSettingsAsList(
+                "layers" -> readLayerSettingsAsList(
                     reader,
-                    builder)
+                    builder
+                )
             }
         }
 
@@ -141,15 +145,17 @@ class MapSettingsReader {
     }
 
     @Throws(IOException::class)
-    private fun readTileSourceSettingsAsList(reader: JsonReader,
-                                             builder: MapSettings.Builder) {
+    private fun readLayerSettingsAsList(
+        reader: JsonReader,
+        builder: MapSettings.Builder
+    ) {
         reader.beginArray()
 
         while (reader.hasNext()) {
-            val tileSourceSettings = readTileSourceSettings(reader)
+            val tileSourceSettings = readLayerSettings(reader)
 
             if (tileSourceSettings != null) {
-                builder.addTileSource(tileSourceSettings)
+                builder.addLayer(tileSourceSettings)
             }
         }
 
@@ -157,21 +163,16 @@ class MapSettingsReader {
     }
 
     @Throws(IOException::class)
-    private fun readTileSourceSettings(reader: JsonReader): TileSourceSettings? {
+    private fun readLayerSettings(reader: JsonReader): LayerSettings? {
         reader.beginObject()
 
-        val builder = TileSourceSettings.Builder.newInstance()
+        val builder = LayerSettings.Builder.newInstance()
 
         while (reader.hasNext()) {
-            val keyName = reader.nextName()
 
-            when (keyName) {
-                "name" -> builder.name(reader.nextString())
+            when (reader.nextName()) {
                 "label" -> builder.label(reader.nextString())
-                "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
-                "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
-                "tile_size" -> builder.tileSizePixels(reader.nextInt())
-                "image_extension" -> builder.imageExtension(reader.nextString())
+                "source" -> builder.source(reader.nextString())
             }
         }
 
@@ -181,7 +182,10 @@ class MapSettingsReader {
             builder.build()
         }
         catch (iae: IllegalArgumentException) {
-            Log.w(TAG, iae.message)
+            Log.w(
+                TAG,
+                iae.message
+            )
 
             null
         }

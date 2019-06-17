@@ -1,8 +1,8 @@
 package fr.geonature.maps.settings.io
 
 import fr.geonature.maps.FixtureHelper.getFixture
+import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.settings.TileSourceSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -41,9 +41,11 @@ class MapSettingsReaderTest {
         assertEquals(
             MapSettings(
                 arrayListOf(
-                    TileSourceSettings(
-                        "nantes.mbtiles",
-                        "Nantes")),
+                    LayerSettings(
+                        "Nantes",
+                        "nantes.mbtiles"
+                    )
+                ),
                 null,
                 false,
                 false,
@@ -55,14 +57,21 @@ class MapSettingsReaderTest {
                     arrayListOf(
                         GeoPoint(
                             47.253369,
-                            -1.605721),
+                            -1.605721
+                        ),
                         GeoPoint(
                             47.173845,
-                            -1.482811))),
+                            -1.482811
+                        )
+                    )
+                ),
                 GeoPoint(
                     47.225827,
-                    -1.554470)),
-            mapSettings)
+                    -1.554470
+                )
+            ),
+            mapSettings
+        )
     }
 
     @Test
@@ -78,16 +87,15 @@ class MapSettingsReaderTest {
         assertEquals(
             MapSettings(
                 arrayListOf(
-                    TileSourceSettings(
-                        "nantes.mbtiles",
+                    LayerSettings(
                         "Nantes",
-                        7.0,
-                        12.0,
-                        512,
-                        "jpg"),
-                    TileSourceSettings(
+                        "nantes.mbtiles"
+                    ),
+                    LayerSettings(
                         "nantes.wkt",
-                        "nantes.wkt")),
+                        "nantes.wkt"
+                    )
+                ),
                 null,
                 false,
                 false,
@@ -99,14 +107,21 @@ class MapSettingsReaderTest {
                     arrayListOf(
                         GeoPoint(
                             47.253369,
-                            -1.605721),
+                            -1.605721
+                        ),
                         GeoPoint(
                             47.173845,
-                            -1.482811))),
+                            -1.482811
+                        )
+                    )
+                ),
                 GeoPoint(
                     47.225827,
-                    -1.554470)),
-            mapSettings)
+                    -1.554470
+                )
+            ),
+            mapSettings
+        )
     }
 
     @Test

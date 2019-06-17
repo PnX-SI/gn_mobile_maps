@@ -21,8 +21,8 @@
   "min_zoom_editing": 10.0,
   "layers": [
     {
-      "name": "nantes.mbtiles",
-      "label": "Nantes"
+      "label": "Nantes",
+      "source": "nantes.mbtiles"
     }
   ]
 }

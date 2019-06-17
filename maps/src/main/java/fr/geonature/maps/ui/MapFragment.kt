@@ -50,12 +50,15 @@ class MapFragment : Fragment() {
 
         val context = context ?: return
 
-        Configuration.getInstance().load(
-            context,
-            PreferenceManager.getDefaultSharedPreferences(context)
-        )
-        Configuration.getInstance().isDebugMode = BuildConfig.DEBUG
-        Configuration.getInstance().isDebugTileProviders = BuildConfig.DEBUG
+        Configuration.getInstance()
+            .load(
+                context,
+                PreferenceManager.getDefaultSharedPreferences(context)
+            )
+        Configuration.getInstance()
+            .isDebugMode = BuildConfig.DEBUG
+        Configuration.getInstance()
+            .isDebugTileProviders = BuildConfig.DEBUG
     }
 
     override fun onCreateView(
@@ -198,7 +201,7 @@ class MapFragment : Fragment() {
         val mapView = mapView ?: return
         val mapSettings = listener?.getMapSettings() ?: return
 
-        if (mapSettings.tileSourceSettings.isEmpty()) {
+        if (mapSettings.layersSettings.isEmpty()) {
             return
         }
 
@@ -206,7 +209,8 @@ class MapFragment : Fragment() {
         // TODO: set the right default storage directory to use as fallback
             ?: "${Environment.getExternalStorageDirectory().absolutePath}/osmdroid"
 
-        val tileSources = mapSettings.tileSourceSettings.map { File("$baseTilePath/${it.name}") }
+        val tileSources = mapSettings.getLayersAsTileSources()
+            .map { File("$baseTilePath/$it") }
 
         val tileProvider = OfflineTileProvider(
             SimpleRegisterReceiver(context),
@@ -236,6 +240,7 @@ class MapFragment : Fragment() {
          * @return A new instance of [MapFragment]
          */
         @JvmStatic
-        fun newInstance() = MapFragment()
+        fun newInstance() =
+            MapFragment()
     }
 }
