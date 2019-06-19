@@ -193,17 +193,13 @@ data class MapSettings(
         }
     }
 
-    companion object {
+    companion object CREATOR : Parcelable.Creator<MapSettings> {
+        override fun createFromParcel(parcel: Parcel): MapSettings {
+            return MapSettings(parcel)
+        }
 
-        @JvmField
-        val CREATOR: Parcelable.Creator<MapSettings> = object : Parcelable.Creator<MapSettings> {
-            override fun createFromParcel(source: Parcel): MapSettings {
-                return MapSettings(source)
-            }
-
-            override fun newArray(size: Int): Array<MapSettings?> {
-                return arrayOfNulls(size)
-            }
+        override fun newArray(size: Int): Array<MapSettings?> {
+            return arrayOfNulls(size)
         }
     }
 }

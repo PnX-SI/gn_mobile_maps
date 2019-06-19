@@ -70,7 +70,7 @@ class MapSettingsReader {
      * @throws IOException if something goes wrong
      */
     @Throws(IOException::class)
-    private fun read(reader: JsonReader): MapSettings {
+    fun read(reader: JsonReader): MapSettings {
         val builder = MapSettings.Builder.newInstance()
 
         reader.beginObject()

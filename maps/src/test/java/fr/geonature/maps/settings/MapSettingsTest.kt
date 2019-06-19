@@ -72,19 +72,19 @@ class MapSettingsTest {
                     )
                 ),
                 "/mnt/sdcard",
-                false,
-                false,
-                8.0,
-                7.0,
-                12.0,
-                10.0,
-                BoundingBox.fromGeoPoints(
+                showScale = false,
+                showCompass = false,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
                     arrayListOf(
                         nwGeoPoint,
                         seGeoPoint
                     )
                 ),
-                GeoPoint.fromCenterBetween(
+                center = GeoPoint.fromCenterBetween(
                     nwGeoPoint,
                     seGeoPoint
                 )
@@ -195,7 +195,7 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.CREATOR.createFromParcel(parcel)
+            MapSettings.createFromParcel(parcel)
         )
     }
 }
