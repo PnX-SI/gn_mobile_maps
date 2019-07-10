@@ -10,7 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/maps" />
-            <option value="$PROJECT_DIR$/osmdroid" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
