@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="toast_settings_not_found">Erreur lors du chargement des paramètres \'%1$s\'</string>
+
+</resources>
