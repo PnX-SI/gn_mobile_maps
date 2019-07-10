@@ -46,14 +46,14 @@ class MapSettingsReaderTest {
                         "nantes.mbtiles"
                     )
                 ),
-                null,
-                false,
-                false,
-                8.0,
-                7.0,
-                12.0,
-                10.0,
-                BoundingBox.fromGeoPoints(
+                "/mnt/sdcard/osmdroid",
+                showScale = false,
+                showCompass = false,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
                     arrayListOf(
                         GeoPoint(
                             47.253369,
@@ -65,7 +65,7 @@ class MapSettingsReaderTest {
                         )
                     )
                 ),
-                GeoPoint(
+                center = GeoPoint(
                     47.225827,
                     -1.554470
                 )
@@ -97,13 +97,13 @@ class MapSettingsReaderTest {
                     )
                 ),
                 null,
-                false,
-                false,
-                8.0,
-                7.0,
-                12.0,
-                10.0,
-                BoundingBox.fromGeoPoints(
+                showScale = false,
+                showCompass = false,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
                     arrayListOf(
                         GeoPoint(
                             47.253369,
@@ -115,7 +115,7 @@ class MapSettingsReaderTest {
                         )
                     )
                 ),
-                GeoPoint(
+                center = GeoPoint(
                     47.225827,
                     -1.554470
                 )

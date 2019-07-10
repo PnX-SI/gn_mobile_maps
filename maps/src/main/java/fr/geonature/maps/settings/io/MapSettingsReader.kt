@@ -78,6 +78,7 @@ class MapSettingsReader {
         while (reader.hasNext()) {
 
             when (reader.nextName()) {
+                "base_path" -> builder.baseTilesPath(reader.nextString())
                 "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "max_bounds" -> {

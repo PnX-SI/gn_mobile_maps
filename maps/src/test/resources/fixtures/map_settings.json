@@ -1,4 +1,5 @@
 {
+  "base_path": "/mnt/sdcard/osmdroid",
   "show_scale": false,
   "show_compass": false,
   "max_bounds": [

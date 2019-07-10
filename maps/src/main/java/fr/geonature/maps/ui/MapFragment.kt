@@ -3,8 +3,8 @@ package fr.geonature.maps.ui
 import android.Manifest
 import android.content.Context
 import android.os.Bundle
-import android.os.Environment
 import android.preference.PreferenceManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -302,15 +302,42 @@ class MapFragment : Fragment() {
         val mapSettings = listener?.getMapSettings() ?: return
 
         if (mapSettings.layersSettings.isEmpty()) {
+            Log.w(
+                TAG,
+                "No layers defined"
+            )
+
+            Snackbar.make(
+                container,
+                R.string.snackbar_layers_undefined,
+                Snackbar.LENGTH_LONG
+            )
+                .show()
+
             return
         }
 
-        val baseTilePath = mapSettings.baseTilesPath
-        // TODO: set the right default storage directory to use as fallback
-            ?: "${Environment.getExternalStorageDirectory().absolutePath}/osmdroid"
+        if (!File(mapSettings.baseTilesPath).exists()) {
+            Log.w(
+                TAG,
+                "Unable to load tiles from '${mapSettings.baseTilesPath}'"
+            )
+
+            Snackbar.make(
+                container,
+                getString(
+                    R.string.snackbar_base_path_undefined,
+                    mapSettings.baseTilesPath
+                ),
+                Snackbar.LENGTH_LONG
+            )
+                .show()
+
+            return
+        }
 
         val tileSources = mapSettings.getLayersAsTileSources()
-            .map { File("$baseTilePath/$it") }
+            .map { File("${mapSettings.baseTilesPath}/$it") }
 
         val tileProvider = OfflineTileProvider(
             SimpleRegisterReceiver(context),
@@ -333,6 +360,8 @@ class MapFragment : Fragment() {
     }
 
     companion object {
+
+        private val TAG = MapFragment::class.java.name
 
         private const val REQUEST_STORAGE_PERMISSIONS = 0
         private const val REQUEST_LOCATION_PERMISSIONS = 1

@@ -13,6 +13,8 @@
     <string name="snackbar_permissions_not_granted">Permissions were not granted</string>
     <string name="snackbar_permissions_granted">Permissions were been granted</string>
     <string name="snackbar_permissions_rationale">Some permissions are needed</string>
+    <string name="snackbar_layers_undefined">No layers defined</string>
+    <string name="snackbar_base_path_undefined">Unable to load tiles from path \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
 
