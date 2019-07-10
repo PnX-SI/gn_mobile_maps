@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name" translatable="false">maps</string>
+
+    <string name="compass_north">N</string>
+
+    <string name="action_undo">Undo</string>
+    <string name="action_title_poi_edit">Edit POI</string>
+    <string name="action_poi_delete">Delete POI</string>
+    <string name="action_poi_deleted">POI deleted</string>
+
+    <string name="snackbar_permissions_not_granted">Permissions were not granted</string>
+    <string name="snackbar_permissions_granted">Permissions were been granted</string>
+    <string name="snackbar_permissions_rationale">Some permissions are needed</string>
+    <string name="snackbar_layers_undefined">No layers defined</string>
+    <string name="snackbar_base_path_undefined">Unable to load tiles from path \'%1$s\'</string>
+
+    <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+
+</resources>
