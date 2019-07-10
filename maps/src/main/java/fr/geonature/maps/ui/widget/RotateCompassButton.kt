@@ -24,9 +24,11 @@ import kotlin.math.absoluteValue
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 class RotateCompassButton(
-    context: Context, attrs: AttributeSet
+    context: Context,
+    attrs: AttributeSet
 ) : FloatingActionButton(
-    context, attrs
+    context,
+    attrs
 ), MapListener {
 
     init {
@@ -37,14 +39,23 @@ class RotateCompassButton(
         mapView.addMapListener(this)
         setOnClickListener {
 
-            val compassAnimator = ValueAnimator.ofFloat(mapView.mapOrientation, 0f)
+            val compassAnimator = ValueAnimator.ofFloat(
+                mapView.mapOrientation,
+                0f
+            )
             compassAnimator.addUpdateListener {
                 updateImageDrawable(it.animatedValue as Float)
             }
-            compassAnimator.duration = Configuration.getInstance().animationSpeedDefault.toLong()
+            compassAnimator.duration = Configuration.getInstance()
+                .animationSpeedDefault.toLong()
             compassAnimator.start()
 
-            mapView.controller.animateTo(mapView.mapCenter, mapView.zoomLevelDouble, null, 0f)
+            mapView.controller.animateTo(
+                mapView.mapCenter,
+                mapView.zoomLevelDouble,
+                null,
+                0f
+            )
         }
     }
 
@@ -62,21 +73,30 @@ class RotateCompassButton(
     }
 
     private fun updateImageDrawable(mapOrientation: Float = 0f) {
-        val drawable = context.resources.getDrawable(R.drawable.ic_compass, context.theme)
+        val drawable = context.resources.getDrawable(
+            R.drawable.ic_compass,
+            context.theme
+        )
         drawable.setTint(ThemeUtils.getAccentColor(context))
 
         val bitmap = Bitmap.createBitmap(
-            drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
         )
 
         val canvas = Canvas(bitmap)
+        val northThreshold = mapOrientation.absoluteValue * 100 / 360 < 2f
 
         // show "N" if map orientation is near from north
-        if (mapOrientation.absoluteValue * 100 / 360 < 2f) {
+        if (northThreshold) {
             val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             textPaint.style = Paint.Style.FILL
             textPaint.textAlign = Paint.Align.CENTER
-            textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textPaint.typeface = Typeface.create(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+            )
             textPaint.textSize = 32f
 
             canvas.drawText(
@@ -87,11 +107,25 @@ class RotateCompassButton(
             )
         }
 
-        canvas.rotate(mapOrientation, (bitmap.width / 2).toFloat(), (bitmap.height / 2).toFloat())
+        canvas.rotate(
+            mapOrientation,
+            (bitmap.width / 2).toFloat(),
+            (bitmap.height / 2).toFloat()
+        )
 
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.setBounds(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        )
         drawable.draw(canvas)
 
-        setImageDrawable(BitmapDrawable(context.resources, bitmap))
+        setImageDrawable(
+            BitmapDrawable(
+                context.resources,
+                bitmap
+            )
+        )
     }
 }

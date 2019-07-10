@@ -125,6 +125,8 @@ class MyLocationOverlay(
     }
 
     fun enableMyLocation(): Boolean {
+        if (isEnabled) return true
+
         isEnabled =
             myLocationProvider.startLocationProvider(this) && compassOrientationProvider.startOrientationProvider(
                 this

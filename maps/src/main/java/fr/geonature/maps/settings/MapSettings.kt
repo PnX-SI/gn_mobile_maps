@@ -23,7 +23,7 @@ data class MapSettings(
     val center: GeoPoint?
 ) : Parcelable {
 
-    internal constructor(builder: Builder) : this(
+    private constructor(builder: Builder) : this(
         builder.layersSettings,
         builder.baseTilesPath,
         builder.showScale,
@@ -36,7 +36,7 @@ data class MapSettings(
         builder.center
     )
 
-    internal constructor(source: Parcel) : this(
+    private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
         source.readByte() == Integer.valueOf(1).toByte(), // as boolean value

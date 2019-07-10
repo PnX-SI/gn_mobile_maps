@@ -8,6 +8,10 @@
     <string name="action_poi_delete">Supprimer le marqueur</string>
     <string name="action_poi_deleted">Marqueur supprimé</string>
 
+    <string name="snackbar_permissions_not_granted">Les permissions n\'ont pas été accordées</string>
+    <string name="snackbar_permissions_granted">Les permissions ont été accordées</string>
+    <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>
+
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
 
 </resources>

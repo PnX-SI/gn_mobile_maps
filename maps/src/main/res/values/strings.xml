@@ -10,6 +10,10 @@
     <string name="action_poi_delete">Delete POI</string>
     <string name="action_poi_deleted">POI deleted</string>
 
+    <string name="snackbar_permissions_not_granted">Permissions were not granted</string>
+    <string name="snackbar_permissions_granted">Permissions were been granted</string>
+    <string name="snackbar_permissions_rationale">Some permissions are needed</string>
+
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
 
 </resources>

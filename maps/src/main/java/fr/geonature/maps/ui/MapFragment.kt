@@ -1,5 +1,6 @@
 package fr.geonature.maps.ui
 
+import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.os.Environment
@@ -17,9 +18,13 @@ import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
+import fr.geonature.maps.util.PermissionUtils
+import fr.geonature.maps.util.PermissionUtils.checkPermissions
+import kotlinx.android.synthetic.main.fragment_map.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -39,11 +44,11 @@ import java.io.File
 class MapFragment : Fragment() {
 
     private var listener: OnMapFragmentListener? = null
-    private var container: View? = null
-    private var mapView: MapView? = null
-    private var editFeatureFab: EditFeatureButton? = null
-    private var myLocationFab: MyLocationButton? = null
-    private var rotateCompassFab: RotateCompassButton? = null
+    private lateinit var container: View
+    private lateinit var mapView: MapView
+    private lateinit var editFeatureFab: EditFeatureButton
+    private lateinit var myLocationFab: MyLocationButton
+    private lateinit var rotateCompassFab: RotateCompassButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,22 +72,46 @@ class MapFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(
+        return inflater.inflate(
             R.layout.fragment_map,
             container,
             false
         )
+    }
 
-        this.container = view.findViewById(android.R.id.content)
-        this.mapView = view.findViewById(R.id.map)
-        this.rotateCompassFab = view.findViewById(R.id.fab_compass)
-        this.editFeatureFab = view.findViewById(R.id.fab_poi)
-        this.myLocationFab = view.findViewById(R.id.fab_location)
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        super.onViewCreated(
+            view,
+            savedInstanceState
+        )
+
+        this.container = map_content
+        this.mapView = map
+        this.rotateCompassFab = fab_compass
+        this.editFeatureFab = fab_poi
+        this.myLocationFab = fab_location
 
         configureMapView()
-        configureTileProvider()
 
-        return view
+        // check storage permissions
+        val context = context ?: return
+        val granted = PermissionUtils.checkSelfPermissions(
+            context,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+
+        if (granted) {
+            configureTileProvider()
+        }
+        else {
+            requestPermissions(
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_STORAGE_PERMISSIONS
+            )
+        }
     }
 
     override fun onAttach(context: Context) {
@@ -99,26 +128,75 @@ class MapFragment : Fragment() {
     override fun onDetach() {
         super.onDetach()
 
-        mapView?.onDetach()
+        mapView.onDetach()
         listener = null
     }
 
     override fun onResume() {
         super.onResume()
 
-        mapView?.onResume()
-        myLocationFab?.onResume()
+        mapView.onResume()
+        myLocationFab.onResume()
     }
 
     override fun onPause() {
         super.onPause()
 
-        mapView?.onPause()
+        mapView.onPause()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            REQUEST_STORAGE_PERMISSIONS -> {
+                val requestPermissionsResult = checkPermissions(grantResults)
+
+                if (requestPermissionsResult) {
+                    configureTileProvider()
+
+                    Snackbar.make(
+                        container,
+                        R.string.snackbar_permissions_granted,
+                        Snackbar.LENGTH_LONG
+                    )
+                        .show()
+                }
+                else {
+                    Snackbar.make(
+                        container,
+                        R.string.snackbar_permissions_not_granted,
+                        Snackbar.LENGTH_LONG
+                    )
+                        .show()
+                }
+            }
+            REQUEST_LOCATION_PERMISSIONS -> {
+                val requestPermissionsResult = checkPermissions(grantResults)
+
+                if (requestPermissionsResult) {
+                    myLocationFab.requestLocation()
+                }
+                else {
+                    Snackbar.make(
+                        container,
+                        R.string.snackbar_permissions_not_granted,
+                        Snackbar.LENGTH_LONG
+                    )
+                        .show()
+                }
+            }
+            else -> super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+            )
+        }
     }
 
     private fun configureMapView() {
-        val mapView = mapView ?: return
-
         // disable default zoom controller
         mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         mapView.setMultiTouchControls(true)
@@ -144,12 +222,12 @@ class MapFragment : Fragment() {
 
         // configure and display map compass
         if (mapSettings.showCompass) {
-            rotateCompassFab?.setMapView(mapView)
-            rotateCompassFab?.show()
+            rotateCompassFab.setMapView(mapView)
+            rotateCompassFab.show()
         }
 
         // configure edit POIs overlay
-        editFeatureFab?.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
+        editFeatureFab.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
             override fun getMapView(): MapView {
                 return mapView
             }
@@ -162,8 +240,6 @@ class MapFragment : Fragment() {
                 resId: Int,
                 duration: Int
             ): Snackbar? {
-                val container = container ?: return null
-
                 return Snackbar.make(
                     container,
                     resId,
@@ -173,7 +249,32 @@ class MapFragment : Fragment() {
         })
 
         // configure my location overlay
-        myLocationFab?.setMapView(mapView)
+        myLocationFab.setListener(object : MyLocationButton.OnMyLocationButtonListener {
+            override fun getMapView(): MapView {
+                return mapView
+            }
+
+            override fun getMaxBounds(): BoundingBox? {
+                return mapSettings.maxBounds
+            }
+
+            override fun checkPermissions(): Boolean {
+                val context = context ?: return false
+                val granted = PermissionUtils.checkSelfPermissions(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+
+                if (!granted) {
+                    requestPermissions(
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_LOCATION_PERMISSIONS
+                    )
+                }
+
+                return granted
+            }
+        })
 
         if (mapSettings.zoom > 0.0) {
             mapView.controller.setZoom(mapSettings.zoom)
@@ -198,7 +299,6 @@ class MapFragment : Fragment() {
 
     private fun configureTileProvider() {
         val context = context ?: return
-        val mapView = mapView ?: return
         val mapSettings = listener?.getMapSettings() ?: return
 
         if (mapSettings.layersSettings.isEmpty()) {
@@ -233,6 +333,9 @@ class MapFragment : Fragment() {
     }
 
     companion object {
+
+        private const val REQUEST_STORAGE_PERMISSIONS = 0
+        private const val REQUEST_LOCATION_PERMISSIONS = 1
 
         /**
          * Use this factory method to create a new instance of this fragment.

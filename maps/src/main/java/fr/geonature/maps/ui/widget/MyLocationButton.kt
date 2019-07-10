@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.location.Location
-import android.os.Parcel
+import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.Toast
@@ -34,6 +34,7 @@ class MyLocationButton(
     context,
     attrs
 ), MapListener {
+    private var onMyLocationButtonListener: OnMyLocationButtonListener? = null
     private var myLocationOverlay: MyLocationOverlay? = null
     private var myLocationState: MyLocationState = MyLocationState.INACTIVE
 
@@ -60,33 +61,40 @@ class MyLocationButton(
         return true
     }
 
+
     override fun onSaveInstanceState(): Parcelable? {
-        val superState = super.onSaveInstanceState() ?: return null
-        val ss = SavedState(superState)
-
-        ss.isMyLocationActive = myLocationState != MyLocationState.INACTIVE
-
-        return ss
+        return Bundle().apply {
+            putParcelable(
+                "superState",
+                super.onSaveInstanceState()
+            )
+            putByte(
+                "locationState",
+                (if (myLocationState != MyLocationState.INACTIVE) 1 else 0).toByte()
+            )
+        }
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        if (state !is SavedState) {
-            super.onRestoreInstanceState(state)
+        if (state is Bundle) {
+            myLocationState =
+                if (state.getByte("locationState") == Integer.valueOf(1).toByte()) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+            super.onRestoreInstanceState(state.getParcelable("superState"))
+
             return
         }
 
-        super.onRestoreInstanceState(state.superState)
-
-        myLocationState =
-            if (state.isMyLocationActive) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+        super.onRestoreInstanceState(state)
 
         onResume()
     }
 
-    fun setMapView(
-        mapView: MapView,
-        maxBounds: BoundingBox? = null
-    ) {
+    fun setListener(listener: OnMyLocationButtonListener) {
+        this.onMyLocationButtonListener = listener
+
+        val mapView = listener.getMapView()
+        val maxBounds = listener.getMaxBounds()
+
         // configure my location overlay
         myLocationOverlay = MyLocationOverlay(
             mapView,
@@ -136,28 +144,11 @@ class MyLocationButton(
         })
 
         setOnClickListener {
-            val myLocationOverlay = myLocationOverlay ?: return@setOnClickListener
-
-            if (myLocationOverlay.isEnabled) {
-                if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
-                    disableMyLocation()
-                }
-                else {
-                    animateTo(
-                        mapView,
-                        myLocationOverlay.getLastKnownLocation()
-                    )
-
-                    val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
-                    drawable?.setTint(ThemeUtils.getAccentColor(context))
-                    setImageDrawable(drawable)
-
-                    myLocationState = MyLocationState.ACTIVE_TRACKER
-                }
+            if (onMyLocationButtonListener?.checkPermissions() == false) {
+                return@setOnClickListener
             }
-            else {
-                enableMyLocation(MyLocationState.ACTIVE_TRACKER)
-            }
+
+            requestLocation()
         }
 
         isEnabled = true
@@ -165,6 +156,32 @@ class MyLocationButton(
 
     fun onResume() {
         if (myLocationState == MyLocationState.ACTIVE || myLocationState == MyLocationState.ACTIVE_TRACKER) enableMyLocation() else disableMyLocation()
+    }
+
+    fun requestLocation() {
+        val myLocationOverlay = myLocationOverlay ?: return
+        val mapView = onMyLocationButtonListener?.getMapView() ?: return
+
+        if (myLocationOverlay.isEnabled) {
+            if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
+                disableMyLocation()
+            }
+            else {
+                animateTo(
+                    mapView,
+                    myLocationOverlay.getLastKnownLocation()
+                )
+
+                val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                drawable?.setTint(ThemeUtils.getAccentColor(context))
+                setImageDrawable(drawable)
+
+                myLocationState = MyLocationState.ACTIVE_TRACKER
+            }
+        }
+        else {
+            enableMyLocation(MyLocationState.ACTIVE_TRACKER)
+        }
     }
 
     private fun enableMyLocation(myLocationState: MyLocationState = MyLocationState.ACTIVE) {
@@ -200,45 +217,13 @@ class MyLocationButton(
         )
     }
 
-    internal enum class MyLocationState {
-        INACTIVE, ACTIVE, ACTIVE_TRACKER
+    interface OnMyLocationButtonListener {
+        fun getMapView(): MapView
+        fun getMaxBounds(): BoundingBox?
+        fun checkPermissions(): Boolean
     }
 
-    internal class SavedState : BaseSavedState {
-        var isMyLocationActive: Boolean = false
-
-        constructor(superState: Parcelable) : super(superState)
-
-        private constructor(source: Parcel) : super(source) {
-            this.isMyLocationActive =
-                source.readByte() == Integer.valueOf(1).toByte() // as boolean value
-        }
-
-        override fun writeToParcel(
-            out: Parcel,
-            flags: Int
-        ) {
-            super.writeToParcel(
-                out,
-                flags
-            )
-
-            out.writeByte((if (isMyLocationActive) 1 else 0).toByte()) // as boolean value
-        }
-
-        companion object {
-
-            @Suppress("unused")
-            @JvmField
-            val CREATOR: Parcelable.Creator<SavedState> = object : Parcelable.Creator<SavedState> {
-                override fun createFromParcel(source: Parcel): SavedState {
-                    return SavedState(source)
-                }
-
-                override fun newArray(size: Int): Array<SavedState?> {
-                    return arrayOfNulls(size)
-                }
-            }
-        }
+    internal enum class MyLocationState {
+        INACTIVE, ACTIVE, ACTIVE_TRACKER
     }
 }
