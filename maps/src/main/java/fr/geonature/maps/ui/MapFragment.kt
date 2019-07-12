@@ -232,6 +232,14 @@ class MapFragment : Fragment() {
                 return mapView
             }
 
+            override fun getMinZoom(): Double {
+                return listener?.getMapSettings()?.minZoomLevel ?: mapView.minZoomLevel
+            }
+
+            override fun getMinZoomEditing(): Double {
+                return listener?.getMapSettings()?.minZoomEditing ?: mapView.minZoomLevel
+            }
+
             override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
                 return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
             }
