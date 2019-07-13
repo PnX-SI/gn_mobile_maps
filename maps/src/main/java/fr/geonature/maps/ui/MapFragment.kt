@@ -365,10 +365,11 @@ open class MapFragment : Fragment() {
 
         private val TAG = MapFragment::class.java.name
 
+        const val ARG_MAP_SETTINGS = "arg_map_settings"
+        const val ARG_EDIT_MODE = "arg_edit_mode"
+
         private const val REQUEST_STORAGE_PERMISSIONS = 0
         private const val REQUEST_LOCATION_PERMISSIONS = 1
-        private const val ARG_MAP_SETTINGS = "arg_map_settings"
-        private const val ARG_EDIT_MODE = "arg_edit_mode"
 
         /**
          * Use this factory method to create a new instance of this fragment.
