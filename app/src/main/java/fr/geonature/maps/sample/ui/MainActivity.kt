@@ -2,18 +2,20 @@ package fr.geonature.maps.sample.ui
 
 import android.Manifest
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.settings.AppSettingsManager
 import fr.geonature.maps.sample.settings.io.OnAppSettingsJsonReaderListenerImpl
-import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
+import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.util.PermissionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.osmdroid.util.GeoPoint
 
 /**
  * Main Activity.
@@ -22,9 +24,7 @@ import kotlinx.coroutines.launch
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class MainActivity : AppCompatActivity(), MapFragment.OnMapFragmentListener {
-
-    private lateinit var mapSettings: MapSettings
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,10 +75,6 @@ class MainActivity : AppCompatActivity(), MapFragment.OnMapFragmentListener {
         }
     }
 
-    override fun getMapSettings(): MapSettings {
-        return mapSettings
-    }
-
     private fun loadAppSettings() {
         val appSettingsManager = AppSettingsManager(
             application,
@@ -100,20 +96,30 @@ class MainActivity : AppCompatActivity(), MapFragment.OnMapFragmentListener {
                     .show()
             }
             else {
-                this@MainActivity.mapSettings = appSettings.mapSettings!!
-
                 // Display the fragment as the main content.
                 supportFragmentManager.beginTransaction()
-                    .replace(
-                        android.R.id.content,
-                        MapFragment.newInstance()
-                    )
+                    .replace(android.R.id.content,
+                        MapFragment.newInstance(
+                            appSettings.mapSettings!!,
+                            EditFeatureButton.EditMode.SINGLE
+                        ).apply {
+                            onSelectedPOIsListener = object : MapFragment.OnSelectedPOIsListener {
+                                override fun onSelectedPOIs(pois: List<GeoPoint>) {
+                                    Log.i(
+                                        TAG,
+                                        "selected POIs: $pois"
+                                    )
+                                }
+                            }
+                        })
                     .commit()
             }
         }
     }
 
     companion object {
+        private val TAG = MainActivity::class.java.name
+
         private const val REQUEST_STORAGE_PERMISSIONS = 0
     }
 }

@@ -1,7 +1,6 @@
 package fr.geonature.maps.ui
 
 import android.Manifest
-import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
@@ -25,6 +24,7 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
 import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -34,16 +34,14 @@ import java.io.File
 /**
  * Simple [Fragment] embedding a [MapView] instance.
  *
- * Activities that contain this fragment must implement the [MapFragment.OnMapFragmentListener]
- * interface to handle interaction events.
- *
  * Use the [MapFragment.newInstance] factory method to create an instance of this fragment.
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 class MapFragment : Fragment() {
 
-    private var listener: OnMapFragmentListener? = null
+    var onSelectedPOIsListener: OnSelectedPOIsListener? = null
+
     private lateinit var container: View
     private lateinit var mapView: MapView
     private lateinit var editFeatureFab: EditFeatureButton
@@ -114,22 +112,10 @@ class MapFragment : Fragment() {
         }
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-
-        if (context is OnMapFragmentListener) {
-            listener = context
-        }
-        else {
-            throw RuntimeException("$context must implement OnMapFragmentListener")
-        }
-    }
-
     override fun onDetach() {
         super.onDetach()
 
         mapView.onDetach()
-        listener = null
     }
 
     override fun onResume() {
@@ -209,7 +195,7 @@ class MapFragment : Fragment() {
         rotationGestureOverlay.isEnabled = true
         mapView.overlays.add(rotationGestureOverlay)
 
-        val mapSettings = listener?.getMapSettings() ?: return
+        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
 
         // configure and display scale bar
         if (mapSettings.showScale) {
@@ -232,12 +218,16 @@ class MapFragment : Fragment() {
                 return mapView
             }
 
+            override fun getEditMode(): EditFeatureButton.EditMode {
+                return arguments?.getSerializable(ARG_EDIT_MODE) as EditFeatureButton.EditMode
+            }
+
             override fun getMinZoom(): Double {
-                return listener?.getMapSettings()?.minZoomLevel ?: mapView.minZoomLevel
+                return mapSettings.minZoomLevel
             }
 
             override fun getMinZoomEditing(): Double {
-                return listener?.getMapSettings()?.minZoomEditing ?: mapView.minZoomLevel
+                return mapSettings.minZoomEditing
             }
 
             override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
@@ -253,6 +243,10 @@ class MapFragment : Fragment() {
                     resId,
                     duration
                 )
+            }
+
+            override fun onSelectedPOIs(pois: List<GeoPoint>) {
+                onSelectedPOIsListener?.onSelectedPOIs(pois)
             }
         })
 
@@ -307,7 +301,7 @@ class MapFragment : Fragment() {
 
     private fun configureTileProvider() {
         val context = context ?: return
-        val mapSettings = listener?.getMapSettings() ?: return
+        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
 
         if (mapSettings.layersSettings.isEmpty()) {
             Log.w(
@@ -355,16 +349,8 @@ class MapFragment : Fragment() {
         mapView.tileProvider = tileProvider
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
-     */
-    interface OnMapFragmentListener {
-        fun getMapSettings(): MapSettings
+    interface OnSelectedPOIsListener {
+        fun onSelectedPOIs(pois: List<GeoPoint>)
     }
 
     companion object {
@@ -373,6 +359,8 @@ class MapFragment : Fragment() {
 
         private const val REQUEST_STORAGE_PERMISSIONS = 0
         private const val REQUEST_LOCATION_PERMISSIONS = 1
+        private const val ARG_MAP_SETTINGS = "arg_map_settings"
+        private const val ARG_EDIT_MODE = "arg_edit_mode"
 
         /**
          * Use this factory method to create a new instance of this fragment.
@@ -380,7 +368,21 @@ class MapFragment : Fragment() {
          * @return A new instance of [MapFragment]
          */
         @JvmStatic
-        fun newInstance() =
-            MapFragment()
+        fun newInstance(
+            mapSettings: MapSettings,
+            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE
+        ) =
+            MapFragment().apply {
+                arguments = Bundle().apply {
+                    putParcelable(
+                        ARG_MAP_SETTINGS,
+                        mapSettings
+                    )
+                    putSerializable(
+                        ARG_EDIT_MODE,
+                        editMode
+                    )
+                }
+            }
     }
 }

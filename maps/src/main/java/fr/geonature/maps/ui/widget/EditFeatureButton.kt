@@ -71,6 +71,8 @@ class EditFeatureButton(
                     val mapView = listener?.getMapView() ?: return true
 
                     val geoPoint = pois.remove(selectedPoi)
+                    listener?.onSelectedPOIs(pois.values.toList())
+
                     val selectedMarker =
                         mapView.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
                     deselectMarker(selectedMarker)
@@ -122,6 +124,7 @@ class EditFeatureButton(
 
     override fun onZoom(event: ZoomEvent?): Boolean {
         if (!TextUtils.isEmpty(selectedPoi)) return true
+        if (pois.isNotEmpty() && listener?.getEditMode() == EditMode.SINGLE) return true
 
         if (listener?.getMinZoomEditing() ?: 0.0 <= event?.zoomLevel ?: 0.0) {
             show()
@@ -142,10 +145,6 @@ class EditFeatureButton(
         mapView.overlays.add(overlayEvents)
 
         mapView.addMapListener(this)
-    }
-
-    fun getPois(): List<GeoPoint> {
-        return pois.values.toList()
     }
 
     private fun addPoi(geoPoint: GeoPoint? = null) {
@@ -199,6 +198,11 @@ class EditFeatureButton(
 
         mapView.overlays.add(poiMarker)
         pois[poiMarker.id] = poiMarker.position
+        listener?.onSelectedPOIs(pois.values.toList())
+
+        if (listener?.getEditMode() == EditMode.SINGLE) {
+            hide()
+        }
     }
 
     private fun setMarkerIcon(
@@ -247,7 +251,9 @@ class EditFeatureButton(
     }
 
     private fun deselectMarker(marker: Marker?) {
-        show()
+        if (listener?.getEditMode() == EditMode.MULTIPLE) {
+            show()
+        }
 
         selectedPoi = null
         actionMode?.finish()
@@ -276,6 +282,21 @@ class EditFeatureButton(
             ) {
                 addPoi(geoPoint)
             }
+            ?.addCallback(object : Snackbar.Callback() {
+                override fun onShown(sb: Snackbar?) {
+                    super.onShown(sb)
+                    hide()
+                }
+
+                override fun onDismissed(
+                    transientBottomBar: Snackbar?,
+                    event: Int
+                ) {
+                    if ((pois.isEmpty() && listener?.getEditMode() == EditMode.SINGLE) || listener?.getEditMode() == EditMode.MULTIPLE) {
+                        show()
+                    }
+                }
+            })
             ?.show()
     }
 
@@ -293,6 +314,7 @@ class EditFeatureButton(
 
     interface OnEditFeatureButtonListener {
         fun getMapView(): MapView
+        fun getEditMode(): EditMode
         fun getMinZoom(): Double
         fun getMinZoomEditing(): Double
         fun startActionMode(callback: ActionMode.Callback): ActionMode?
@@ -300,5 +322,10 @@ class EditFeatureButton(
             @StringRes
             resId: Int, duration: Int
         ): Snackbar?
+        fun onSelectedPOIs(pois: List<GeoPoint>)
+    }
+
+    enum class EditMode {
+        SINGLE, MULTIPLE
     }
 }
