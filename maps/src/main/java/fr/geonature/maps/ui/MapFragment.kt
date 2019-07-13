@@ -38,7 +38,7 @@ import java.io.File
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class MapFragment : Fragment() {
+open class MapFragment : Fragment() {
 
     var onSelectedPOIsListener: OnSelectedPOIsListener? = null
 
@@ -180,6 +180,10 @@ class MapFragment : Fragment() {
                 grantResults
             )
         }
+    }
+
+    fun getSelectedPOIs(): List<GeoPoint> {
+        return editFeatureFab.getSelectedPOIs()
     }
 
     private fun configureMapView() {

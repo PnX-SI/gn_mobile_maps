@@ -71,7 +71,7 @@ class EditFeatureButton(
                     val mapView = listener?.getMapView() ?: return true
 
                     val geoPoint = pois.remove(selectedPoi)
-                    listener?.onSelectedPOIs(pois.values.toList())
+                    listener?.onSelectedPOIs(getSelectedPOIs())
 
                     val selectedMarker =
                         mapView.overlays?.find { it is Marker && it.id == selectedPoi } as Marker?
@@ -147,6 +147,10 @@ class EditFeatureButton(
         mapView.addMapListener(this)
     }
 
+    fun getSelectedPOIs(): List<GeoPoint> {
+        return pois.values.toList()
+    }
+
     private fun addPoi(geoPoint: GeoPoint? = null) {
         val context = context ?: return
         val mapView = listener?.getMapView() ?: return
@@ -198,7 +202,7 @@ class EditFeatureButton(
 
         mapView.overlays.add(poiMarker)
         pois[poiMarker.id] = poiMarker.position
-        listener?.onSelectedPOIs(pois.values.toList())
+        listener?.onSelectedPOIs(getSelectedPOIs())
 
         if (listener?.getEditMode() == EditMode.SINGLE) {
             hide()
