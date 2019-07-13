@@ -10,6 +10,8 @@ import org.locationtech.jts.geom.Polygon
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.constants.GeoConstants.RADIUS_EARTH_METERS
 import org.osmdroid.views.util.constants.MathConstants.DEG2RAD
+import kotlin.math.abs
+import kotlin.math.sin
 
 /**
  * Helper class about [Geometry] instances.
@@ -190,12 +192,12 @@ object GeometryUtils {
             val p1 = fromPoint(lineString.getPointN(i))
             val p2 = fromPoint(lineString.getPointN((i + 1) % lineString.numPoints))
 
-            area += (p2.longitude - p1.longitude) * DEG2RAD * (2.0 + Math.sin(p1.latitude * DEG2RAD) + Math.sin(p2.latitude * DEG2RAD))
+            area += (p2.longitude - p1.longitude) * DEG2RAD * (2.0 + sin(p1.latitude * DEG2RAD) + sin(p2.latitude * DEG2RAD))
         }
 
         area = area * RADIUS_EARTH_METERS.toDouble() * RADIUS_EARTH_METERS.toDouble() / 2.0
 
-        return Math.abs(area)
+        return abs(area)
     }
 
     /**
@@ -224,6 +226,6 @@ object GeometryUtils {
             }
         }
 
-        return Math.abs(area)
+        return abs(area)
     }
 }
