@@ -164,7 +164,7 @@ class GeoJsonWriter {
     }
 
     @Throws(IOException::class)
-    private fun writeFeatureCollection(
+    fun writeFeatureCollection(
         writer: JsonWriter,
         featureCollection: FeatureCollection
     ) {
@@ -185,7 +185,7 @@ class GeoJsonWriter {
     }
 
     @Throws(IOException::class)
-    private fun writeGeometry(
+    fun writeGeometry(
         writer: JsonWriter,
         geometry: Geometry
     ) {

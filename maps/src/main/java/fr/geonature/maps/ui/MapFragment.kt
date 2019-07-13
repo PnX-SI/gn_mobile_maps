@@ -186,6 +186,10 @@ open class MapFragment : Fragment() {
         return editFeatureFab.getSelectedPOIs()
     }
 
+    fun setSelectedPOIs(pois: List<GeoPoint>) {
+        editFeatureFab.setSelectedPOIs(pois)
+    }
+
     private fun configureMapView() {
         // disable default zoom controller
         mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)

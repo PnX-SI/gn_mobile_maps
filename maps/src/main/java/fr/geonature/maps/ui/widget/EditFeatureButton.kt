@@ -18,6 +18,7 @@ import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
@@ -149,6 +150,19 @@ class EditFeatureButton(
 
     fun getSelectedPOIs(): List<GeoPoint> {
         return pois.values.toList()
+    }
+
+    fun setSelectedPOIs(pois: List<GeoPoint>) {
+        val mapView = this.listener?.getMapView() ?: return
+
+        pois.forEach {
+            addPoi(it)
+        }
+
+        mapView.zoomToBoundingBox(
+            BoundingBox.fromGeoPoints(pois),
+            true
+        )
     }
 
     private fun addPoi(geoPoint: GeoPoint? = null) {
@@ -326,6 +340,7 @@ class EditFeatureButton(
             @StringRes
             resId: Int, duration: Int
         ): Snackbar?
+
         fun onSelectedPOIs(pois: List<GeoPoint>)
     }
 

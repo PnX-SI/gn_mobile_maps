@@ -26,9 +26,8 @@ import org.locationtech.jts.geom.Polygon
 import java.io.IOException
 import java.io.Reader
 import java.io.StringReader
-import java.lang.Double.*
-import java.lang.Integer.*
-import java.lang.NumberFormatException
+import java.lang.Double.parseDouble
+import java.lang.Integer.parseInt
 import java.util.ArrayList
 
 /**
@@ -225,7 +224,7 @@ class GeoJsonReader {
     }
 
     @Throws(IOException::class)
-    private fun readFeatureCollection(reader: JsonReader): FeatureCollection {
+    fun readFeatureCollection(reader: JsonReader): FeatureCollection {
         val featureCollection = FeatureCollection()
 
         reader.beginObject()
@@ -253,7 +252,7 @@ class GeoJsonReader {
     }
 
     @Throws(IOException::class)
-    private fun readGeometry(reader: JsonReader): Geometry {
+    fun readGeometry(reader: JsonReader): Geometry {
         reader.beginObject()
         val nextName = reader.nextName()
 
