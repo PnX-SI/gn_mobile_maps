@@ -68,6 +68,9 @@
       </option>
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT" value="2147483647" />
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT_FOR_MEMBERS" value="2147483647" />
+      <option name="CONTINUATION_INDENT_IN_ARGUMENT_LISTS" value="true" />
+      <option name="CONTINUATION_INDENT_FOR_EXPRESSION_BODIES" value="true" />
+      <option name="CONTINUATION_INDENT_FOR_CHAINED_CALLS" value="true" />
       <option name="CONTINUATION_INDENT_IN_IF_CONDITIONS" value="true" />
       <option name="WRAP_EXPRESSION_BODY_FUNCTIONS" value="2" />
       <option name="IF_RPAREN_ON_NEW_LINE" value="false" />
@@ -257,11 +260,16 @@
       <option name="WHILE_ON_NEW_LINE" value="true" />
       <option name="CATCH_ON_NEW_LINE" value="true" />
       <option name="FINALLY_ON_NEW_LINE" value="true" />
-      <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
       <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
       <option name="CALL_PARAMETERS_WRAP" value="2" />
+      <option name="CALL_PARAMETERS_LPAREN_ON_NEXT_LINE" value="false" />
+      <option name="CALL_PARAMETERS_RPAREN_ON_NEXT_LINE" value="false" />
       <option name="METHOD_PARAMETERS_WRAP" value="2" />
+      <option name="METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE" value="false" />
+      <option name="METHOD_PARAMETERS_RPAREN_ON_NEXT_LINE" value="false" />
       <option name="METHOD_CALL_CHAIN_WRAP" value="2" />
+      <option name="ASSIGNMENT_WRAP" value="0" />
       <option name="PARAMETER_ANNOTATION_WRAP" value="2" />
       <option name="VARIABLE_ANNOTATION_WRAP" value="2" />
     </codeStyleSettings>
