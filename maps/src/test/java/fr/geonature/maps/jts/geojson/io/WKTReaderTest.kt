@@ -1,8 +1,8 @@
 package fr.geonature.maps.jts.geojson.io
 
+import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.MockitoKotlinHelper.capture
-import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
 import org.junit.Assert.assertEquals
@@ -19,7 +19,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.io.StringReader
 
 /**
@@ -47,31 +46,22 @@ class WKTReaderTest {
         val wkt = getFixture("features.wkt")
 
         // when parsing this file as WKT
-        WKTReader().readFeatures(
-            StringReader(wkt),
-            onWKTReaderListener
-        )
+        WKTReader().readFeatures(StringReader(wkt),
+                                 onWKTReaderListener)
 
         // then
-        verify(
-            onWKTReaderListener,
-            never()
-        ).onError(any(Throwable::class.java))
-        verify(
-            onWKTReaderListener,
-            times(3)
-        ).onProgress(
-            anyInt(),
-            any(Feature::class.java)
-        )
+        verify(onWKTReaderListener,
+               never()).onError(any(Throwable::class.java))
+        verify(onWKTReaderListener,
+               times(4)).onProgress(anyInt(),
+                                    any(Feature::class.java))
         verify(onWKTReaderListener).onFinish(capture(featureCollectionArgumentCaptor))
 
         val featureCollection = featureCollectionArgumentCaptor.value
         assertNotNull(featureCollection)
-        assertEquals(
-            3,
-            featureCollection.getFeatures().size
-        )
+        assertEquals(4,
+                     featureCollection.getFeatures().size)
+        assertNotNull(featureCollection.getFeature("1"))
         assertNotNull(featureCollection.getFeature("69"))
         assertNotNull(featureCollection.getFeature("19"))
         assertNotNull(featureCollection.getFeature("146"))
@@ -87,43 +77,32 @@ class WKTReaderTest {
 
         // then
         assertNotNull(features)
-        assertEquals(
-            3,
-            features.size
-        )
-        assertEquals(
-            "69",
-            features[0].id
-        )
-        assertNotNull(
-            features[0].geometry
-        )
-        assertEquals(
-            "Polygon",
-            features[0].geometry.geometryType
-        )
-        assertEquals(
-            "19",
-            features[1].id
-        )
-        assertNotNull(
-            features[1].geometry
-        )
-        assertEquals(
-            "Polygon",
-            features[1].geometry.geometryType
-        )
-        assertEquals(
-            "146",
-            features[2].id
-        )
-        assertNotNull(
-            features[2].geometry
-        )
-        assertEquals(
-            "Polygon",
-            features[2].geometry.geometryType
-        )
+        assertEquals(4,
+                     features.size)
+
+        assertEquals("1",
+                     features[0].id)
+        assertNotNull(features[0].geometry)
+        assertEquals("Point",
+                     features[0].geometry.geometryType)
+
+        assertEquals("69",
+                     features[1].id)
+        assertNotNull(features[1].geometry)
+        assertEquals("Polygon",
+                     features[1].geometry.geometryType)
+
+        assertEquals("19",
+                     features[2].id)
+        assertNotNull(features[2].geometry)
+        assertEquals("Polygon",
+                     features[2].geometry.geometryType)
+
+        assertEquals("146",
+                     features[3].id)
+        assertNotNull(features[3].geometry)
+        assertEquals("Polygon",
+                     features[3].geometry.geometryType)
     }
 
     @Test
@@ -136,10 +115,9 @@ class WKTReaderTest {
 
         // then
         assertNotNull(featureCollection)
-        assertEquals(
-            3,
-            featureCollection.getFeatures().size
-        )
+        assertEquals(4,
+                     featureCollection.getFeatures().size)
+        assertNotNull(featureCollection.getFeature("1"))
         assertNotNull(featureCollection.getFeature("69"))
         assertNotNull(featureCollection.getFeature("19"))
         assertNotNull(featureCollection.getFeature("146"))

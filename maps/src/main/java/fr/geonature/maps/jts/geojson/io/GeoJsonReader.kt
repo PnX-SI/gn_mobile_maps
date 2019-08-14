@@ -3,6 +3,7 @@ package fr.geonature.maps.jts.geojson.io
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.JsonReader
+import android.util.JsonToken.BEGIN_ARRAY
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.BOOLEAN
 import android.util.JsonToken.NAME
@@ -45,6 +46,121 @@ class GeoJsonReader {
     private val gf: GeometryFactory = GeometryFactory()
 
     /**
+     * parse a `JSON` string to convert as list of [Feature]s.
+     *
+     * @param json the `JSON` string to parse
+     *
+     * @return a list of [Feature]s from the `JSON` string or empty list if something goes wrong
+     *
+     * @see .read
+     */
+    fun read(json: String?): List<Feature> {
+        if (TextUtils.isEmpty(json)) {
+            return emptyList()
+        }
+
+        try {
+            return read(StringReader(json))
+        }
+        catch (ioe: IOException) {
+            Log.w(TAG,
+                  ioe.message)
+        }
+
+        return emptyList()
+    }
+
+    /**
+     * parse a `JSON` reader to convert as list of [Feature]s.
+     *
+     * @param in the `Reader` to parse
+     *
+     * @return a list of [Feature]s from the `JSON` reader
+     *
+     * @throws IOException if something goes wrong
+     */
+    @Throws(IOException::class)
+    fun read(`in`: Reader): List<Feature> {
+        val jsonReader = JsonReader(`in`)
+        val features = read(jsonReader)
+        jsonReader.close()
+
+        return features
+    }
+
+    @Throws(IOException::class)
+    fun read(reader: JsonReader): List<Feature> {
+        @Suppress("RemoveExplicitTypeArguments") return when (reader.peek()) {
+            BEGIN_OBJECT -> {
+                val asFeature = try {
+                    readFeature(reader)
+                }
+                catch (e: Exception) {
+                    Log.w(TAG,
+                          e.message)
+
+                    null
+                }
+
+                return if (asFeature == null) try {
+                    val features = mutableListOf<Feature>()
+
+                    reader.beginArray()
+
+                    while (reader.hasNext()) {
+                        val feature = try {
+                            readFeature(reader)
+                        }
+                        catch (ioe: IOException) {
+                            Log.w(TAG,
+                                  ioe.message)
+
+                            null
+                        }
+
+                        if (feature != null) features.add(feature)
+                    }
+
+                    reader.endArray()
+
+                    return features
+                }
+                catch (e: Exception) {
+                    Log.w(TAG,
+                          e.message)
+
+                    emptyList<Feature>()
+                }
+                else listOf(asFeature)
+            }
+            BEGIN_ARRAY -> {
+                val features = mutableListOf<Feature>()
+
+                reader.beginArray()
+
+                while (reader.hasNext()) {
+                    val feature = try {
+                        readFeature(reader)
+                    }
+                    catch (ioe: IOException) {
+                        Log.w(TAG,
+                              ioe.message)
+
+                        null
+                    }
+
+                    if (feature != null) features.add(feature)
+                }
+
+                reader.endArray()
+
+                return features
+            }
+            else -> emptyList<Feature>()
+        }
+    }
+
+    /**
      * parse a `JSON` string to convert as [Feature].
      *
      * @param json the `JSON` string to parse
@@ -62,10 +178,8 @@ class GeoJsonReader {
             return readFeature(StringReader(json))
         }
         catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe.message
-            )
+            Log.w(TAG,
+                  ioe.message)
         }
 
         return null
@@ -107,10 +221,8 @@ class GeoJsonReader {
             return readFeatureCollection(StringReader(json))
         }
         catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe.message
-            )
+            Log.w(TAG,
+                  ioe.message)
         }
 
         return null
@@ -152,10 +264,8 @@ class GeoJsonReader {
             return readGeometry(StringReader(json))
         }
         catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe.message
-            )
+            Log.w(TAG,
+                  ioe.message)
         }
 
         return null
@@ -211,10 +321,8 @@ class GeoJsonReader {
             throw IOException("No geometry found for feature " + id!!)
         }
 
-        val feature = Feature(
-            id!!,
-            geometry
-        )
+        val feature = Feature(id!!,
+                              geometry)
 
         if (bundle != null && !bundle.isEmpty) {
             feature.properties.putAll(bundle)
@@ -266,15 +374,11 @@ class GeoJsonReader {
         when (type) {
             "Point" -> geometry = readPoint(reader)
             "MultiPoint" -> geometry = readMultiPoint(reader)
-            "LineString" -> geometry = readLineString(
-                reader,
-                true
-            )
+            "LineString" -> geometry = readLineString(reader,
+                                                      true)
             "MultiLineString" -> geometry = readMultiLineString(reader)
-            "Polygon" -> geometry = readPolygon(
-                reader,
-                true
-            )
+            "Polygon" -> geometry = readPolygon(reader,
+                                                true)
             "MultiPolygon" -> geometry = readMultiPolygon(reader)
             "GeometryCollection" -> geometry = readGeometryCollection(reader)
             else -> throw IOException("No such geometry $type")
@@ -308,10 +412,8 @@ class GeoJsonReader {
     }
 
     @Throws(IOException::class)
-    private fun readLineString(
-        reader: JsonReader,
-        readCoordinatesJsonKey: Boolean
-    ): LineString {
+    private fun readLineString(reader: JsonReader,
+                               readCoordinatesJsonKey: Boolean): LineString {
         if (readCoordinatesJsonKey) {
             val nextName = reader.nextName()
 
@@ -336,12 +438,8 @@ class GeoJsonReader {
         reader.beginArray()
 
         while (reader.hasNext()) {
-            lineStrings.add(
-                readLineString(
-                    reader,
-                    false
-                )
-            )
+            lineStrings.add(readLineString(reader,
+                                           false))
         }
 
         reader.endArray()
@@ -350,10 +448,8 @@ class GeoJsonReader {
     }
 
     @Throws(IOException::class)
-    private fun readPolygon(
-        reader: JsonReader,
-        readCoordinatesJsonKey: Boolean
-    ): Polygon {
+    private fun readPolygon(reader: JsonReader,
+                            readCoordinatesJsonKey: Boolean): Polygon {
         if (readCoordinatesJsonKey) {
             val nextName = reader.nextName()
 
@@ -381,13 +477,9 @@ class GeoJsonReader {
             gf.createPolygon(linearRings[0])
         }
         else {
-            gf.createPolygon(
-                linearRings[0],
-                linearRings.subList(
-                    1,
-                    linearRings.size
-                ).toTypedArray()
-            )
+            gf.createPolygon(linearRings[0],
+                             linearRings.subList(1,
+                                                 linearRings.size).toTypedArray())
         }
     }
 
@@ -404,12 +496,8 @@ class GeoJsonReader {
         reader.beginArray()
 
         while (reader.hasNext()) {
-            polygons.add(
-                readPolygon(
-                    reader,
-                    false
-                )
-            )
+            polygons.add(readPolygon(reader,
+                                     false))
         }
 
         reader.endArray()
@@ -463,10 +551,8 @@ class GeoJsonReader {
         while (reader.hasNext()) {
             when (val jsonToken = reader.peek()) {
                 NUMBER -> if (ordinateIndex < 3) {
-                    coordinate.setOrdinate(
-                        ordinateIndex,
-                        reader.nextDouble()
-                    )
+                    coordinate.setOrdinate(ordinateIndex,
+                                           reader.nextDouble())
                     ordinateIndex++
                 }
                 else -> throw IOException("Invalid coordinate JSON token $jsonToken")
@@ -490,38 +576,28 @@ class GeoJsonReader {
                 when (val jsonToken = reader.peek()) {
                     NAME -> key = reader.nextName()
                     STRING -> if (!TextUtils.isEmpty(key)) {
-                        bundle.putString(
-                            key,
-                            reader.nextString()
-                        )
+                        bundle.putString(key,
+                                         reader.nextString())
                     }
                     BOOLEAN -> if (!TextUtils.isEmpty(key)) {
-                        bundle.putBoolean(
-                            key,
-                            reader.nextBoolean()
-                        )
+                        bundle.putBoolean(key,
+                                          reader.nextBoolean())
                     }
                     NUMBER -> if (!TextUtils.isEmpty(key)) {
                         val rawValue = reader.nextString()
 
                         try {
-                            bundle.putInt(
-                                key,
-                                parseInt(rawValue)
-                            )
+                            bundle.putInt(key,
+                                          parseInt(rawValue))
                         }
                         catch (nfe: NumberFormatException) {
-                            bundle.putDouble(
-                                key,
-                                parseDouble(rawValue)
-                            )
+                            bundle.putDouble(key,
+                                             parseDouble(rawValue))
                         }
                     }
                     BEGIN_OBJECT -> if (!TextUtils.isEmpty(key)) {
-                        bundle.putBundle(
-                            key,
-                            readProperties(reader)
-                        )
+                        bundle.putBundle(key,
+                                         readProperties(reader))
                     }
                     else -> throw IOException("Invalid object properties JSON token $jsonToken")
                 }

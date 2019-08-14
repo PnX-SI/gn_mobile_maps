@@ -2,6 +2,7 @@ package fr.geonature.maps.jts.geojson
 
 import android.util.Log
 import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.CoordinateSequence
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.LineString
@@ -29,10 +30,30 @@ object GeometryUtils {
      * @return GeoPoint
      */
     fun fromPoint(point: Point): GeoPoint {
+        return fromCoordinate(point.coordinate)
+    }
+
+    /**
+     * Creates a GeoPoint from Coordinate.
+     *
+     * @param coordinate the coordinate to convert
+     * @return GeoPoint
+     */
+    fun fromCoordinate(coordinate: Coordinate): GeoPoint {
         return GeoPoint(
-            point.y,
-            point.x
+            coordinate.y,
+            coordinate.x
         )
+    }
+
+    /**
+     * Creates a list of GeoPoint from CoordinateSequence.
+     *
+     * @param coordinateSequence the CoordinateSequence to convert
+     * @return list of GeoPoint
+     */
+    fun fromCoordinateSequence(coordinateSequence: CoordinateSequence): List<GeoPoint> {
+        return coordinateSequence.toCoordinateArray().map { fromCoordinate(it) }
     }
 
     /**

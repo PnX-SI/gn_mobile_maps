@@ -14,12 +14,16 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.overlay.FeatureOverlayProvider
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.util.PermissionUtils
 import fr.geonature.maps.util.PermissionUtils.checkPermissions
 import kotlinx.android.synthetic.main.fragment_map.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
@@ -54,37 +58,27 @@ open class MapFragment : Fragment() {
         val context = context ?: return
 
         Configuration.getInstance()
-            .load(
-                context,
-                PreferenceManager.getDefaultSharedPreferences(context)
-            )
+                .load(context,
+                      PreferenceManager.getDefaultSharedPreferences(context))
         Configuration.getInstance()
-            .isDebugMode = BuildConfig.DEBUG
+                .isDebugMode = BuildConfig.DEBUG
         Configuration.getInstance()
-            .isDebugTileProviders = BuildConfig.DEBUG
+                .isDebugTileProviders = BuildConfig.DEBUG
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(
-            R.layout.fragment_map,
-            container,
-            false
-        )
+        return inflater.inflate(R.layout.fragment_map,
+                                container,
+                                false)
     }
 
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
-        super.onViewCreated(
-            view,
-            savedInstanceState
-        )
+    override fun onViewCreated(view: View,
+                               savedInstanceState: Bundle?) {
+        super.onViewCreated(view,
+                            savedInstanceState)
 
         this.container = map_content
         this.mapView = map
@@ -96,19 +90,16 @@ open class MapFragment : Fragment() {
 
         // check storage permissions
         val context = context ?: return
-        val granted = PermissionUtils.checkSelfPermissions(
-            context,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
+        val granted = PermissionUtils.checkSelfPermissions(context,
+                                                           Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         if (granted) {
             configureTileProvider()
+            configureVectorLayers()
         }
         else {
-            requestPermissions(
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_STORAGE_PERMISSIONS
-            )
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                               REQUEST_STORAGE_PERMISSIONS)
         }
     }
 
@@ -131,32 +122,21 @@ open class MapFragment : Fragment() {
         mapView.onPause()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<out String>,
+                                            grantResults: IntArray) {
         when (requestCode) {
             REQUEST_STORAGE_PERMISSIONS -> {
                 val requestPermissionsResult = checkPermissions(grantResults)
 
                 if (requestPermissionsResult) {
                     configureTileProvider()
+                    configureVectorLayers()
 
-                    Snackbar.make(
-                        container,
-                        R.string.snackbar_permissions_granted,
-                        Snackbar.LENGTH_LONG
-                    )
-                        .show()
+                    showSnackbar(getString(R.string.snackbar_permissions_granted))
                 }
                 else {
-                    Snackbar.make(
-                        container,
-                        R.string.snackbar_permissions_not_granted,
-                        Snackbar.LENGTH_LONG
-                    )
-                        .show()
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
             }
             REQUEST_LOCATION_PERMISSIONS -> {
@@ -166,19 +146,12 @@ open class MapFragment : Fragment() {
                     myLocationFab.requestLocation()
                 }
                 else {
-                    Snackbar.make(
-                        container,
-                        R.string.snackbar_permissions_not_granted,
-                        Snackbar.LENGTH_LONG
-                    )
-                        .show()
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
             }
-            else -> super.onRequestPermissionsResult(
-                requestCode,
-                permissions,
-                grantResults
-            )
+            else -> super.onRequestPermissionsResult(requestCode,
+                                                     permissions,
+                                                     grantResults)
         }
     }
 
@@ -242,15 +215,11 @@ open class MapFragment : Fragment() {
                 return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
             }
 
-            override fun makeSnackbar(
-                resId: Int,
-                duration: Int
-            ): Snackbar? {
-                return Snackbar.make(
-                    container,
-                    resId,
-                    duration
-                )
+            override fun makeSnackbar(resId: Int,
+                                      duration: Int): Snackbar? {
+                return Snackbar.make(container,
+                                     resId,
+                                     duration)
             }
 
             override fun onSelectedPOIs(pois: List<GeoPoint>) {
@@ -270,16 +239,12 @@ open class MapFragment : Fragment() {
 
             override fun checkPermissions(): Boolean {
                 val context = context ?: return false
-                val granted = PermissionUtils.checkSelfPermissions(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
+                val granted = PermissionUtils.checkSelfPermissions(context,
+                                                                   Manifest.permission.ACCESS_FINE_LOCATION)
 
                 if (!granted) {
-                    requestPermissions(
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        REQUEST_LOCATION_PERMISSIONS
-                    )
+                    requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                                       REQUEST_LOCATION_PERMISSIONS)
                 }
 
                 return granted
@@ -312,49 +277,66 @@ open class MapFragment : Fragment() {
         val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
 
         if (mapSettings.layersSettings.isEmpty()) {
-            Log.w(
-                TAG,
-                "No layers defined"
-            )
+            Log.w(TAG,
+                  "No layers defined")
 
-            Snackbar.make(
-                container,
-                R.string.snackbar_layers_undefined,
-                Snackbar.LENGTH_LONG
-            )
-                .show()
+            showSnackbar(getString(R.string.snackbar_layers_undefined))
 
             return
         }
 
         if (!File(mapSettings.baseTilesPath).exists()) {
-            Log.w(
-                TAG,
-                "Unable to load tiles from '${mapSettings.baseTilesPath}'"
-            )
+            Log.w(TAG,
+                  "Unable to load tiles from '${mapSettings.baseTilesPath}'")
 
-            Snackbar.make(
-                container,
-                getString(
-                    R.string.snackbar_base_path_undefined,
-                    mapSettings.baseTilesPath
-                ),
-                Snackbar.LENGTH_LONG
-            )
-                .show()
+            showSnackbar(getString(R.string.snackbar_base_path_undefined,
+                                   mapSettings.baseTilesPath))
 
             return
         }
 
         val tileSources = mapSettings.getLayersAsTileSources()
-            .map { File("${mapSettings.baseTilesPath}/$it") }
+                .map { File("${mapSettings.baseTilesPath}/$it") }
 
-        val tileProvider = OfflineTileProvider(
-            SimpleRegisterReceiver(context),
-            tileSources.toTypedArray()
-        )
+        val tileProvider = OfflineTileProvider(SimpleRegisterReceiver(context),
+                                               tileSources.toTypedArray())
 
         mapView.tileProvider = tileProvider
+    }
+
+    private fun configureVectorLayers() {
+        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
+
+        if (mapSettings.layersSettings.isEmpty()) {
+            Log.w(TAG,
+                  "No vector layers defined")
+
+            showSnackbar(getString(R.string.snackbar_layers_undefined))
+
+            return
+        }
+
+        if ((mapSettings.baseTilesPath == null) || !File(mapSettings.baseTilesPath).exists()) {
+            Log.w(TAG,
+                  "Unable to load vector layers from '${mapSettings.baseTilesPath}'")
+
+            showSnackbar(getString(R.string.snackbar_base_path_undefined,
+                                   mapSettings.baseTilesPath))
+
+            return
+        }
+
+        GlobalScope.launch(Dispatchers.Main) {
+            val overlays = FeatureOverlayProvider(mapSettings.baseTilesPath).loadFeaturesAsOverlays(mapSettings.getVectorLayers())
+            overlays.forEach { mapView.overlays.add(it) }
+        }
+    }
+
+    private fun showSnackbar(text: CharSequence) {
+        Snackbar.make(container,
+                      text,
+                      Snackbar.LENGTH_LONG)
+                .show()
     }
 
     interface OnSelectedPOIsListener {
@@ -377,21 +359,15 @@ open class MapFragment : Fragment() {
          * @return A new instance of [MapFragment]
          */
         @JvmStatic
-        fun newInstance(
-            mapSettings: MapSettings,
-            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE
-        ) =
-            MapFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(
-                        ARG_MAP_SETTINGS,
-                        mapSettings
-                    )
-                    putSerializable(
-                        ARG_EDIT_MODE,
-                        editMode
-                    )
+        fun newInstance(mapSettings: MapSettings,
+                        editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE) =
+                MapFragment().apply {
+                    arguments = Bundle().apply {
+                        putParcelable(ARG_MAP_SETTINGS,
+                                      mapSettings)
+                        putSerializable(ARG_EDIT_MODE,
+                                        editMode)
+                    }
                 }
-            }
     }
 }

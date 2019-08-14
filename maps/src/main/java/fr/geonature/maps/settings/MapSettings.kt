@@ -10,58 +10,48 @@ import org.osmdroid.util.GeoPoint
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-data class MapSettings(
-    val layersSettings: List<LayerSettings>,
-    val baseTilesPath: String?,
-    val showScale: Boolean = true,
-    val showCompass: Boolean = true,
-    val zoom: Double = 0.0,
-    val minZoomLevel: Double = 0.0,
-    val maxZoomLevel: Double = 0.0,
-    val minZoomEditing: Double = 0.0,
-    val maxBounds: BoundingBox?,
-    val center: GeoPoint?
-) : Parcelable {
+data class MapSettings(val layersSettings: List<LayerSettings>,
+                       val baseTilesPath: String?,
+                       val showScale: Boolean = true,
+                       val showCompass: Boolean = true,
+                       val zoom: Double = 0.0,
+                       val minZoomLevel: Double = 0.0,
+                       val maxZoomLevel: Double = 0.0,
+                       val minZoomEditing: Double = 0.0,
+                       val maxBounds: BoundingBox?,
+                       val center: GeoPoint?) : Parcelable {
 
-    private constructor(builder: Builder) : this(
-        builder.layersSettings,
-        builder.baseTilesPath,
-        builder.showScale,
-        builder.showCompass,
-        builder.zoom,
-        builder.minZoomLevel,
-        builder.maxZoomLevel,
-        builder.minZoomEditing,
-        builder.maxBounds,
-        builder.center
-    )
+    private constructor(builder: Builder) : this(builder.layersSettings,
+                                                 builder.baseTilesPath,
+                                                 builder.showScale,
+                                                 builder.showCompass,
+                                                 builder.zoom,
+                                                 builder.minZoomLevel,
+                                                 builder.maxZoomLevel,
+                                                 builder.minZoomEditing,
+                                                 builder.maxBounds,
+                                                 builder.center)
 
-    private constructor(source: Parcel) : this(
-        mutableListOf(),
-        source.readString(),
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
-        source.readDouble(),
-        source.readDouble(),
-        source.readDouble(),
-        source.readDouble(),
-        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox,
-        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint
-    ) {
-        source.readTypedList(
-            layersSettings,
-            LayerSettings.CREATOR
-        )
+    private constructor(source: Parcel) : this(mutableListOf(),
+                                               source.readString(),
+                                               source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+                                               source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+                                               source.readDouble(),
+                                               source.readDouble(),
+                                               source.readDouble(),
+                                               source.readDouble(),
+                                               source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox,
+                                               source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint) {
+        source.readTypedList(layersSettings,
+                             LayerSettings.CREATOR)
     }
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(
-        dest: Parcel?,
-        flags: Int
-    ) {
+    override fun writeToParcel(dest: Parcel?,
+                               flags: Int) {
         dest?.writeString(baseTilesPath)
         dest?.writeByte((if (showScale) 1 else 0).toByte()) // as boolean value
         dest?.writeByte((if (showCompass) 1 else 0).toByte()) // as boolean value
@@ -69,14 +59,10 @@ data class MapSettings(
         dest?.writeDouble(minZoomLevel)
         dest?.writeDouble(maxZoomLevel)
         dest?.writeDouble(minZoomEditing)
-        dest?.writeParcelable(
-            maxBounds,
-            0
-        )
-        dest?.writeParcelable(
-            center,
-            0
-        )
+        dest?.writeParcelable(maxBounds,
+                              0)
+        dest?.writeParcelable(center,
+                              0)
         dest?.writeTypedList(layersSettings)
     }
 
@@ -125,21 +111,27 @@ data class MapSettings(
 
     fun getLayersAsTileSources(): List<String> {
         return layersSettings.filter { it.source.endsWith(".mbtiles") }
-            .map { it.source }
+                .map { it.source }
     }
 
-    data class Builder(
-        val layersSettings: MutableList<LayerSettings> = mutableListOf(),
-        var baseTilesPath: String? = null,
-        var showScale: Boolean = true,
-        var showCompass: Boolean = true,
-        var zoom: Double = 0.0,
-        var minZoomLevel: Double = 0.0,
-        var maxZoomLevel: Double = 0.0,
-        var minZoomEditing: Double = 0.0,
-        var maxBounds: BoundingBox? = null,
-        var center: GeoPoint? = null
-    ) {
+    fun getVectorLayers(): List<LayerSettings> {
+        return layersSettings.filter { layerSettings ->
+            arrayOf(".geojson",
+                    ".json",
+                    ".wkt").any { layerSettings.source.endsWith(it) }
+        }
+    }
+
+    data class Builder(val layersSettings: MutableList<LayerSettings> = mutableListOf(),
+                       var baseTilesPath: String? = null,
+                       var showScale: Boolean = true,
+                       var showCompass: Boolean = true,
+                       var zoom: Double = 0.0,
+                       var minZoomLevel: Double = 0.0,
+                       var maxZoomLevel: Double = 0.0,
+                       var minZoomEditing: Double = 0.0,
+                       var maxBounds: BoundingBox? = null,
+                       var center: GeoPoint? = null) {
         fun baseTilesPath(baseTilesPath: String) =
             apply { this.baseTilesPath = baseTilesPath }
 
@@ -167,21 +159,15 @@ data class MapSettings(
         fun center(center: GeoPoint?) =
             apply { this.center = center }
 
-        fun addLayer(
-            label: String,
-            source: String
-        ) =
+        fun addLayer(label: String,
+                     source: String) =
             apply {
-                addLayer(
-                    LayerSettings.Builder.newInstance().label(label).source(source).build()
-                )
+                addLayer(LayerSettings.Builder.newInstance().label(label).source(source).build())
             }
 
         fun addLayer(layerSettings: LayerSettings) =
             apply {
-                if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(
-                    layerSettings
-                )
+                if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(layerSettings)
             }
 
         fun build() =

@@ -129,7 +129,6 @@ class MapSettingsTest {
                 "Nantes",
                 "nantes.mbtiles"
             )
-            // with identical tile source
             .addLayer(
                 "nantes.wkt",
                 "nantes.wkt"
@@ -141,6 +140,77 @@ class MapSettingsTest {
         assertArrayEquals(
             arrayOf("nantes.mbtiles"),
             mapSettings.getLayersAsTileSources().toTypedArray()
+        )
+    }
+
+    @Test
+    fun testGetVectorLayers() {
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721
+        )
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811
+        )
+
+        // given map settings instance from its builder
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
+            .showScale(false)
+            .showCompass(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .addLayer(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+            .addLayer(
+                "nantes.wkt",
+                "nantes.wkt"
+            )
+            .addLayer(
+                "nantes.json",
+                "nantes.json"
+            )
+            .addLayer(
+                "nantes.geojson",
+                "nantes.geojson"
+            )
+            .build()
+
+        // then
+        assertNotNull(mapSettings)
+        assertArrayEquals(
+            arrayOf(
+                LayerSettings(
+                    "nantes.wkt",
+                    "nantes.wkt"
+                ),
+                LayerSettings(
+                    "nantes.json",
+                    "nantes.json"
+                ),
+                LayerSettings(
+                    "nantes.geojson",
+                    "nantes.geojson"
+                )
+            ),
+            mapSettings.getVectorLayers().toTypedArray()
         )
     }
 
