@@ -22,8 +22,21 @@
   "min_zoom_editing": 10.0,
   "layers": [
     {
-      "label": "Nantes",
+      "label": "Nantes (Base)",
       "source": "nantes.mbtiles"
+    },
+    {
+      "label": "Nantes (Data)",
+      "source": "nantes.wkt",
+      "style": {
+        "stroke": true,
+        "color": "#FF0000",
+        "weight": 8,
+        "opacity": 0.9,
+        "fill": true,
+        "fillColor": "#FF8000",
+        "fillOpacity": 0.2
+      }
     }
   ]
 }

@@ -12,6 +12,8 @@ import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPolygon
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPolygon
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
+import fr.geonature.maps.settings.LayerStyleSettings
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -21,7 +23,7 @@ import org.junit.runner.RunWith
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
 import org.osmdroid.util.BoundingBox
-import org.osmdroid.views.overlay.FolderOverlay
+import org.osmdroid.views.overlay.OverlayWithIW
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.views.overlay.Polyline
 import org.robolectric.RobolectricTestRunner
@@ -51,7 +53,7 @@ class FeatureOverlayFactoryTest {
                                 47.2256258,
                                 -1.5545135)
 
-        // when create assertEquals(2, (overlay.items[1] as FolderOverlay).items.size) from Point
+        // when create Overlay from Point
         val overlayAsCirclePolygon = FeatureOverlayFactory.createOverlay(point)
 
         // then
@@ -62,6 +64,12 @@ class FeatureOverlayFactoryTest {
         assertEquals(GeometryUtils.fromPoint(point).latitude,
                      BoundingBox.fromGeoPoints(overlayAsCirclePolygon.points).centerLatitude,
                      0.00001)
+        assertEquals(LayerStyleSettings().color,
+                     overlayAsCirclePolygon.strokeColor)
+        assertEquals(LayerStyleSettings().weight.toFloat(),
+                     overlayAsCirclePolygon.strokeWidth)
+        assertEquals(LayerStyleSettings().fillColor,
+                     overlayAsCirclePolygon.fillColor)
 
         // when create Overlay from Geometry
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(point as Geometry)
@@ -69,6 +77,42 @@ class FeatureOverlayFactoryTest {
         // then
         assertEquals(overlayAsCirclePolygon.points,
                      (overlayFromGeometry as Polygon).points)
+        assertEquals(overlayAsCirclePolygon.strokeColor,
+                     overlayFromGeometry.strokeColor)
+        assertEquals(overlayAsCirclePolygon.strokeWidth,
+                     overlayFromGeometry.strokeWidth)
+        assertEquals(overlayAsCirclePolygon.fillColor,
+                     overlayFromGeometry.fillColor)
+    }
+
+    @Test
+    fun testCreateOverlayFromPointWithStyle() {
+        // given Point
+        val point = createPoint(gf,
+                                47.2256258,
+                                -1.5545135)
+
+        // when create Overlay from Point
+        val style = LayerStyleSettings.Builder.newInstance()
+                .stroke(true)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .fill(true)
+                .fillColor("#0000FF")
+                .fillOpacity(0.25f)
+                .build()
+        val overlayAsCirclePolygon = FeatureOverlayFactory.createOverlay(point,
+                                                                         style)
+
+        // then
+        assertTrue(overlayAsCirclePolygon is Polygon)
+        assertEquals(style.color,
+                     (overlayAsCirclePolygon as Polygon).strokeColor)
+        assertEquals(style.weight.toFloat(),
+                     overlayAsCirclePolygon.strokeWidth)
+        assertEquals(style.fillColor,
+                     overlayAsCirclePolygon.fillColor)
     }
 
     @Test
@@ -86,9 +130,9 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(multiPoints)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
         assertEquals(2,
-                     (overlay as FolderOverlay).items.size)
+                     (overlay as FeaturesOverlay).items.size)
         overlay.items.forEach {
             assertTrue(it is Polygon)
         }
@@ -97,9 +141,9 @@ class FeatureOverlayFactoryTest {
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(multiPoints as Geometry)
 
         // then
-        assertTrue(overlayFromGeometry is FolderOverlay)
+        assertTrue(overlayFromGeometry is FeaturesOverlay)
         assertEquals(2,
-                     (overlayFromGeometry as FolderOverlay).items.size)
+                     (overlayFromGeometry as FeaturesOverlay).items.size)
         overlayFromGeometry.items.forEach {
             assertTrue(it is Polygon)
         }
@@ -121,6 +165,10 @@ class FeatureOverlayFactoryTest {
         assertTrue(overlayAsPolyline is Polyline)
         assertEquals(2,
                      (overlayAsPolyline as Polyline).points.size)
+        assertEquals(LayerStyleSettings().color,
+                     overlayAsPolyline.color)
+        assertEquals(LayerStyleSettings().weight.toFloat(),
+                     overlayAsPolyline.width)
 
         // when create Overlay from Geometry
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(lineString as Geometry)
@@ -128,6 +176,38 @@ class FeatureOverlayFactoryTest {
         // then
         assertEquals(overlayAsPolyline.points,
                      (overlayFromGeometry as Polyline).points)
+        assertEquals(overlayAsPolyline.color,
+                     overlayFromGeometry.color)
+        assertEquals(overlayAsPolyline.width,
+                     overlayFromGeometry.width)
+
+    }
+
+    @Test
+    fun testCreateOverlayFromLineStringWithStyle() {
+        // given LineString
+        val lineString = createLineString(gf,
+                                          createCoordinate(47.2256258,
+                                                           -1.5545135),
+                                          createCoordinate(47.225136,
+                                                           -1.553913))
+
+        // when create Overlay from LineString
+        val style = LayerStyleSettings.Builder.newInstance()
+                .stroke(false)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .build()
+        val overlayAsPolyline = FeatureOverlayFactory.createOverlay(lineString,
+                                                                    style)
+
+        // then
+        assertTrue(overlayAsPolyline is Polyline)
+        assertEquals(style.color,
+                     (overlayAsPolyline as Polyline).color)
+        assertEquals(style.weight.toFloat(),
+                     overlayAsPolyline.width)
     }
 
     @Test
@@ -144,9 +224,9 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(multiLineString)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
         assertEquals(1,
-                     (overlay as FolderOverlay).items.size)
+                     (overlay as FeaturesOverlay).items.size)
         overlay.items.forEach {
             assertTrue(it is Polyline)
         }
@@ -155,9 +235,9 @@ class FeatureOverlayFactoryTest {
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(multiLineString as Geometry)
 
         // then
-        assertTrue(overlayFromGeometry is FolderOverlay)
+        assertTrue(overlayFromGeometry is FeaturesOverlay)
         assertEquals(1,
-                     (overlayFromGeometry as FolderOverlay).items.size)
+                     (overlayFromGeometry as FeaturesOverlay).items.size)
         overlayFromGeometry.items.forEach {
             assertTrue(it is Polyline)
         }
@@ -186,6 +266,12 @@ class FeatureOverlayFactoryTest {
         assertEquals(5,
                      (overlayAsPolygon as Polygon).points.size)
         assertTrue(overlayAsPolygon.holes.isEmpty())
+        assertEquals(LayerStyleSettings().color,
+                     overlayAsPolygon.strokeColor)
+        assertEquals(LayerStyleSettings().weight.toFloat(),
+                     overlayAsPolygon.strokeWidth)
+        assertEquals(LayerStyleSettings().fillColor,
+                     overlayAsPolygon.fillColor)
 
         // when create Overlay from Geometry
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(polygon as Geometry)
@@ -193,6 +279,12 @@ class FeatureOverlayFactoryTest {
         // then
         assertEquals(overlayAsPolygon.points,
                      (overlayFromGeometry as Polygon).points)
+        assertEquals(overlayAsPolygon.strokeColor,
+                     overlayFromGeometry.strokeColor)
+        assertEquals(overlayAsPolygon.strokeWidth,
+                     overlayFromGeometry.strokeWidth)
+        assertEquals(overlayAsPolygon.fillColor,
+                     overlayFromGeometry.fillColor)
     }
 
     @Test
@@ -233,6 +325,12 @@ class FeatureOverlayFactoryTest {
                      overlayAsPolygon.holes.size)
         assertEquals(5,
                      (overlayAsPolygon).holes[0].size)
+        assertEquals(LayerStyleSettings().color,
+                     overlayAsPolygon.strokeColor)
+        assertEquals(LayerStyleSettings().weight.toFloat(),
+                     overlayAsPolygon.strokeWidth)
+        assertEquals(LayerStyleSettings().fillColor,
+                     overlayAsPolygon.fillColor)
 
         // when create Overlay from Geometry
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(polygonWithHoles as Geometry)
@@ -242,6 +340,50 @@ class FeatureOverlayFactoryTest {
                      (overlayFromGeometry as Polygon).points)
         assertEquals(overlayAsPolygon.holes,
                      overlayFromGeometry.holes)
+        assertEquals(overlayAsPolygon.strokeColor,
+                     overlayFromGeometry.strokeColor)
+        assertEquals(overlayAsPolygon.strokeWidth,
+                     overlayFromGeometry.strokeWidth)
+        assertEquals(overlayAsPolygon.fillColor,
+                     overlayFromGeometry.fillColor)
+    }
+
+    @Test
+    fun testCreateOverlayFromPolygonWithStyle() {
+        // given Polygon
+        val polygon = createPolygon(gf,
+                                    createCoordinate(47.226219,
+                                                     -1.554430),
+                                    createCoordinate(47.226237,
+                                                     -1.554261),
+                                    createCoordinate(47.226122,
+                                                     -1.554245),
+                                    createCoordinate(47.226106,
+                                                     -1.554411),
+                                    createCoordinate(47.226219,
+                                                     -1.554430))
+
+        // when create Overlay from Polygon
+        val style = LayerStyleSettings.Builder.newInstance()
+                .stroke(true)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .fill(true)
+                .fillColor("#0000FF")
+                .fillOpacity(0.25f)
+                .build()
+        val overlayAsPolygon = FeatureOverlayFactory.createOverlay(polygon,
+                                                                   style)
+
+        // then
+        assertTrue(overlayAsPolygon is Polygon)
+        assertEquals(style.color,
+                     (overlayAsPolygon as Polygon).strokeColor)
+        assertEquals(style.weight.toFloat(),
+                     overlayAsPolygon.strokeWidth)
+        assertEquals(style.fillColor,
+                     overlayAsPolygon.fillColor)
     }
 
     @Test
@@ -287,9 +429,9 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(multiPolygon)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
         assertEquals(2,
-                     (overlay as FolderOverlay).items.size)
+                     (overlay as FeaturesOverlay).items.size)
         overlay.items.forEach {
             assertTrue(it is Polygon)
         }
@@ -298,9 +440,9 @@ class FeatureOverlayFactoryTest {
         val overlayFromGeometry = FeatureOverlayFactory.createOverlay(multiPolygon as Geometry)
 
         // then
-        assertTrue(overlayFromGeometry is FolderOverlay)
+        assertTrue(overlayFromGeometry is FeaturesOverlay)
         assertEquals(2,
-                     (overlayFromGeometry as FolderOverlay).items.size)
+                     (overlayFromGeometry as FeaturesOverlay).items.size)
         overlayFromGeometry.items.forEach {
             assertTrue(it is Polygon)
         }
@@ -315,8 +457,8 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(multiPoints)
 
         // then
-        assertTrue(overlay is FolderOverlay)
-        assertTrue((overlay as FolderOverlay).items.isEmpty())
+        assertTrue(overlay is FeaturesOverlay)
+        assertTrue((overlay as FeaturesOverlay).items.isEmpty())
     }
 
     @Test
@@ -360,17 +502,17 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(geometryCollection)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
         assertEquals(5,
-                     (overlay as FolderOverlay).items.size)
+                     (overlay as FeaturesOverlay).items.size)
         assertTrue(overlay.items[0] is Polygon)
-        assertTrue(overlay.items[1] is FolderOverlay)
+        assertTrue(overlay.items[1] is FeaturesOverlay)
         assertEquals(2,
-                     (overlay.items[1] as FolderOverlay).items.size)
+                     (overlay.items[1] as FeaturesOverlay).items.size)
         assertTrue(overlay.items[2] is Polyline)
-        assertTrue(overlay.items[3] is FolderOverlay)
+        assertTrue(overlay.items[3] is FeaturesOverlay)
         assertEquals(1,
-                     (overlay.items[3] as FolderOverlay).items.size)
+                     (overlay.items[3] as FeaturesOverlay).items.size)
         assertTrue(overlay.items[4] is Polygon)
     }
 
@@ -389,17 +531,19 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(feature)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
+        assertEquals("id1",
+                     (overlay as FeaturesOverlay).id)
         assertEquals(5,
-                     (overlay as FolderOverlay).items.size)
+                     overlay.items.size)
         assertTrue(overlay.items[0] is Polygon)
-        assertTrue(overlay.items[1] is FolderOverlay)
+        assertTrue(overlay.items[1] is FeaturesOverlay)
         assertEquals(2,
-                     (overlay.items[1] as FolderOverlay).items.size)
+                     (overlay.items[1] as FeaturesOverlay).items.size)
         assertTrue(overlay.items[2] is Polyline)
-        assertTrue(overlay.items[3] is FolderOverlay)
+        assertTrue(overlay.items[3] is FeaturesOverlay)
         assertEquals(1,
-                     (overlay.items[3] as FolderOverlay).items.size)
+                     (overlay.items[3] as FeaturesOverlay).items.size)
         assertTrue(overlay.items[4] is Polygon)
     }
 
@@ -418,9 +562,21 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(featureCollection)
 
         // then
-        assertTrue(overlay is FolderOverlay)
+        assertTrue(overlay is FeaturesOverlay)
         assertEquals(5,
-                     (overlay as FolderOverlay).items.size)
+                     (overlay as FeaturesOverlay).items.size)
+        assertArrayEquals(arrayOf("id1",
+                                  "id2",
+                                  "id3",
+                                  "id4",
+                                  "id5"),
+                          overlay.items.asSequence().map {
+                              when (it) {
+                                  is OverlayWithIW -> it.id
+                                  is FeaturesOverlay -> it.id
+                                  else -> null
+                              }
+                          }.filterNotNull().toList().sorted().toTypedArray())
     }
 
     @Test
@@ -438,7 +594,7 @@ class FeatureOverlayFactoryTest {
         val overlay = FeatureOverlayFactory.createOverlay(featureCollection)
 
         // then
-        assertTrue(overlay is FolderOverlay)
-        assertTrue((overlay as FolderOverlay).items.isEmpty())
+        assertTrue(overlay is FeaturesOverlay)
+        assertTrue((overlay as FeaturesOverlay).items.isEmpty())
     }
 }

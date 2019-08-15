@@ -32,7 +32,7 @@ class FeatureOverlayProvider(private val basePath: String) {
                                   "Loading vector layer '${layerSettings.label}'...")
 
 
-                            Pair(layerSettings.label,
+                            Pair(layerSettings,
                                  File(basePath,
                                       layerSettings.source))
                         }
@@ -52,16 +52,19 @@ class FeatureOverlayProvider(private val basePath: String) {
 
                             if (isLoaded) {
                                 Log.i(TAG,
-                                      "Vector layer '${it.first}' loaded")
+                                      "Vector layer '${it.first.label}' loaded")
                             }
                             else {
                                 Log.w(TAG,
-                                      "Failed to load vector layer '${it.first}'")
+                                      "Failed to load vector layer '${it.first.label}'")
                             }
 
                             isLoaded
                         }
-                        .map { FeatureOverlayFactory.createOverlay(it.second) }
+                        .map {
+                            FeatureOverlayFactory.createOverlay(it.second,
+                                                                it.first.layerStyle)
+                        }
                         .toList()
             }
 

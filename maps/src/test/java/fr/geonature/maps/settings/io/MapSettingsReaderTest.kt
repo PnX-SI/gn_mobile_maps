@@ -2,6 +2,7 @@ package fr.geonature.maps.settings.io
 
 import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -38,40 +39,25 @@ class MapSettingsReaderTest {
 
         // then
         assertNotNull(mapSettings)
-        assertEquals(
-            MapSettings(
-                arrayListOf(
-                    LayerSettings(
-                        "Nantes",
-                        "nantes.mbtiles"
-                    )
-                ),
-                "/mnt/sdcard/osmdroid",
-                showScale = false,
-                showCompass = false,
-                zoom = 8.0,
-                minZoomLevel = 7.0,
-                maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
-                    )
-                ),
-                center = GeoPoint(
-                    47.225827,
-                    -1.554470
-                )
-            ),
-            mapSettings
-        )
+        assertEquals(MapSettings(arrayListOf(LayerSettings("Nantes (Base)",
+                                                           "nantes.mbtiles"),
+                                             LayerSettings("Nantes (Data)",
+                                                           "nantes.wkt",
+                                                           LayerStyleSettings.Builder.newInstance().stroke(true).color("#FF0000").weight(8).opacity(0.9f).fill(true).fillColor("#FF8000").fillOpacity(0.2f).build())),
+                                 "/mnt/sdcard/osmdroid",
+                                 showScale = false,
+                                 showCompass = false,
+                                 zoom = 8.0,
+                                 minZoomLevel = 7.0,
+                                 maxZoomLevel = 12.0,
+                                 minZoomEditing = 10.0,
+                                 maxBounds = BoundingBox.fromGeoPoints(arrayListOf(GeoPoint(47.253369,
+                                                                                            -1.605721),
+                                                                                   GeoPoint(47.173845,
+                                                                                            -1.482811))),
+                                 center = GeoPoint(47.225827,
+                                                   -1.554470)),
+                     mapSettings)
     }
 
     @Test
@@ -84,44 +70,24 @@ class MapSettingsReaderTest {
 
         // then
         assertNotNull(mapSettings)
-        assertEquals(
-            MapSettings(
-                arrayListOf(
-                    LayerSettings(
-                        "Nantes",
-                        "nantes.mbtiles"
-                    ),
-                    LayerSettings(
-                        "nantes.wkt",
-                        "nantes.wkt"
-                    )
-                ),
-                null,
-                showScale = false,
-                showCompass = false,
-                zoom = 8.0,
-                minZoomLevel = 7.0,
-                maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
-                    )
-                ),
-                center = GeoPoint(
-                    47.225827,
-                    -1.554470
-                )
-            ),
-            mapSettings
-        )
+        assertEquals(MapSettings(arrayListOf(LayerSettings("Nantes",
+                                                           "nantes.mbtiles"),
+                                             LayerSettings("nantes.wkt",
+                                                           "nantes.wkt")),
+                                 null,
+                                 showScale = false,
+                                 showCompass = false,
+                                 zoom = 8.0,
+                                 minZoomLevel = 7.0,
+                                 maxZoomLevel = 12.0,
+                                 minZoomEditing = 10.0,
+                                 maxBounds = BoundingBox.fromGeoPoints(arrayListOf(GeoPoint(47.253369,
+                                                                                            -1.605721),
+                                                                                   GeoPoint(47.173845,
+                                                                                            -1.482811))),
+                                 center = GeoPoint(47.225827,
+                                                   -1.554470)),
+                     mapSettings)
     }
 
     @Test

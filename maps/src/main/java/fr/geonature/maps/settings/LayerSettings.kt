@@ -9,61 +9,49 @@ import android.text.TextUtils
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class LayerSettings(
-    var label: String,
-    var source: String
-) : Parcelable {
+data class LayerSettings(var label: String,
+                         var source: String,
+                         var layerStyle: LayerStyleSettings = LayerStyleSettings()) : Parcelable {
 
-    private constructor(builder: Builder) : this(
-        builder.label!!,
-        builder.source!!
-    )
+    private constructor(builder: Builder) : this(builder.label!!,
+                                                 builder.source!!,
+                                                 builder.layerStyle)
 
-    private constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
-        parcel.readString() ?: ""
-    )
+    private constructor(parcel: Parcel) : this(parcel.readString() ?: "",
+                                               parcel.readString() ?: "",
+                                               parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings)
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(
-        dest: Parcel?,
-        flags: Int
-    ) {
+    override fun writeToParcel(dest: Parcel?,
+                               flags: Int) {
         dest?.writeString(label)
         dest?.writeString(source)
+        dest?.writeParcelable(layerStyle,
+                              0)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    class Builder {
 
-        other as LayerSettings
+        var label: String? = null
+            private set
 
-        if (label != other.label) return false
-        if (source != other.source) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = label.hashCode()
-        result = 31 * result + source.hashCode()
-
-        return result
-    }
-
-    data class Builder(
-        var label: String? = null,
         var source: String? = null
-    ) {
+            private set
+
+        var layerStyle: LayerStyleSettings = LayerStyleSettings()
+            private set
+
         fun label(label: String) =
-            apply { this.label = label }
+                apply { this.label = label }
 
         fun source(source: String) =
-            apply { this.source = source }
+                apply { this.source = source }
+
+        fun style(layerStyle: LayerStyleSettings?) =
+                apply { this.layerStyle = layerStyle ?: LayerStyleSettings() }
 
         @Throws(java.lang.IllegalArgumentException::class)
         fun build(): LayerSettings {
@@ -75,7 +63,7 @@ class LayerSettings(
 
         companion object {
             fun newInstance(): Builder =
-                Builder()
+                    Builder()
         }
     }
 
