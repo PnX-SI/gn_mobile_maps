@@ -3,6 +3,7 @@ package fr.geonature.maps.ui.overlay.feature
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.ui.overlay.feature.filter.IFeatureOverlayFilterVisitor
 import org.osmdroid.views.overlay.FolderOverlay
 
 /**
@@ -26,5 +27,23 @@ class FeatureCollectionOverlay : FolderOverlay() {
                            layerStyle)
             })
         }
+    }
+
+    fun getFeatureOverlays(filter: (overlay: FeatureOverlay) -> Boolean = { true }): List<FeatureOverlay> {
+        return items.asSequence()
+                .filterNotNull()
+                .filter { it is FeatureOverlay }
+                .map { it as FeatureOverlay }
+                .filter(filter)
+                .toList()
+    }
+
+    /**
+     * Performs an operation on this [FeatureCollectionOverlay].
+     *
+     * @param filter the filter to apply
+     */
+    fun apply(filter: IFeatureOverlayFilterVisitor) {
+        getFeatureOverlays().forEach { it.apply(filter) }
     }
 }

@@ -3,6 +3,7 @@ package fr.geonature.maps.jts.geojson
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
 import org.locationtech.jts.geom.Geometry
 
 /**
@@ -16,10 +17,8 @@ class Feature : AbstractGeoJson, Parcelable {
     val geometry: Geometry
     var properties: Bundle = Bundle()
 
-    constructor(
-        id: String,
-        geometry: Geometry
-    ) {
+    constructor(id: String,
+                geometry: Geometry) {
         this.id = id
         this.geometry = geometry
     }
@@ -43,10 +42,8 @@ class Feature : AbstractGeoJson, Parcelable {
         return 0
     }
 
-    override fun writeToParcel(
-        dest: Parcel,
-        flags: Int
-    ) {
+    override fun writeToParcel(dest: Parcel,
+                               flags: Int) {
         dest.writeString(id)
         dest.writeSerializable(geometry)
         dest.writeBundle(properties)

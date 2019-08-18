@@ -41,6 +41,40 @@ class LayerStyleSettingsTest {
     }
 
     @Test
+    fun testFromExistingLayerStyleSettings() {
+        // given a layer style settings instance from its builder
+        val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
+                .stroke(true)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .fill(true)
+                .fillColor("#0000FF")
+                .fillOpacity(0.25f)
+                .build()
+
+        // then
+        assertEquals(layerStyleSettings,
+                     LayerStyleSettings.Builder.newInstance().from(layerStyleSettings).build())
+
+        // when applying new style
+        val fromExistingLayerStyleSettings = LayerStyleSettings.Builder.newInstance()
+                .from(layerStyleSettings)
+                .color("#FFFF00")
+                .build()
+
+        // then
+        assertEquals(LayerStyleSettings(true,
+                                        ColorUtils.setAlphaComponent(Color.parseColor("#FFFF00"),
+                                                                     (0.9 * 255).toInt()),
+                                        10,
+                                        true,
+                                        ColorUtils.setAlphaComponent(Color.BLUE,
+                                                                     (0.25 * 255).toInt())),
+                     fromExistingLayerStyleSettings)
+    }
+
+    @Test
     fun testStrokeColorWithOpacity() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()

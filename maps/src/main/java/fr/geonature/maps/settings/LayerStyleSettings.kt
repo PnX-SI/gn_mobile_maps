@@ -1,7 +1,6 @@
 package fr.geonature.maps.settings
 
 import android.graphics.Color
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.ColorInt
@@ -73,25 +72,30 @@ data class LayerStyleSettings(var stroke: Boolean = true,
                     to = 1.0)
         private var fillOpacity: Float = 0.2f
 
+        fun from(layerStyleSettings: LayerStyleSettings) =
+                apply {
+                    stroke = layerStyleSettings.stroke
+                    color(layerStyleSettings.color)
+                    weight = layerStyleSettings.weight
+                    fill = layerStyleSettings.fill
+                    fillColor(layerStyleSettings.fillColor)
+                }
+
         fun stroke(stroke: Boolean) =
                 apply { this.stroke = stroke }
 
         fun color(@ColorInt
                   color: Int) =
-                apply { this.color = color }
+                apply {
+                    this.color = color
+                    this.opacity = (Color.alpha(color).toDouble() / 255).toFloat()
+                }
 
         fun color(colorString: String) =
                 apply {
                     this.color = Color.parseColor(colorString)
-
-                    val opacity = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val opacity = Color.valueOf(this.color)
-                                .alpha()
-                        if (opacity == 1f) this.opacity else opacity
-                    }
-                    else {
-                        this.opacity
-                    }
+                    var opacity = (Color.alpha(color).toDouble() / 255).toFloat()
+                    opacity = if (opacity == 1f) this.opacity else opacity
 
                     opacity(opacity)
                 }
@@ -123,21 +127,15 @@ data class LayerStyleSettings(var stroke: Boolean = true,
                       fillColor: Int) =
                 apply {
                     this.fillColor = fillColor
+                    this.fillOpacity = (Color.alpha(fillColor).toDouble() / 255).toFloat()
                 }
 
         fun fillColor(fillColorString: String) =
                 apply {
-                    fill(true)
                     this.fillColor = Color.parseColor(fillColorString)
 
-                    val fillOpacity = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val fillOpacity = Color.valueOf(this.fillColor)
-                                .alpha()
-                        if (fillOpacity == 1f) this.fillOpacity else fillOpacity
-                    }
-                    else {
-                        this.fillOpacity
-                    }
+                    var fillOpacity = (Color.alpha(fillColor).toDouble() / 255).toFloat()
+                    fillOpacity = if (fillOpacity == 1f) this.fillOpacity else fillOpacity
 
                     fillOpacity(fillOpacity)
                 }

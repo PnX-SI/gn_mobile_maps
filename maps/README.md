@@ -58,12 +58,12 @@ Example:
 
 Layer style is only available to vector layers (e.g. WKT or GeoJSON layers). Available parameters are as follow:
 
-| Parameter     | Type    | Default value | Description                                                                                                                    |
-| ------------- | ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `stroke`      | Boolean | `true`        | Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.                              |
-| `color`       | String  | `#444444`     | The stroke color. Supported formats are `#RRGGBB` and `#AARRGGBB` (Alpha channel is only available for Android Oreo or above). |
-| `weight`      | Number  | 8             | The stroke width in pixels.                                                                                                    |
-| `opacity`     | Number  | 1.0           | The stroke opacity (value between 0 and 1, not applicable if an alpha channel is defined to the stroke color).                 |
-| `fill`        | Boolean | `false`       | Whether to fill the path with color. Set it to false to disable filling on polygons or circles.                                |
-| `fillColor`   | String  | `#00000000`   | The fill color. Supported formats are `#RRGGBB` and `#AARRGGBB` (Alpha channel is only available for Android Oreo or above).   |
-| `fillOpacity` | Number  | 0.2           | The fill opacity (value between 0 and 1, not applicable if an alpha channel is defined to the fill color).                     |
+| Parameter     | Type    | Default value | Description                                                                                                    |
+| ------------- | ------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
+| `stroke`      | Boolean | `true`        | Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.              |
+| `color`       | String  | `#444444`     | The stroke color. Supported formats are `#RRGGBB` and `#AARRGGBB`.                                             |
+| `weight`      | Number  | 8             | The stroke width in pixels.                                                                                    |
+| `opacity`     | Number  | 1.0           | The stroke opacity (value between 0 and 1, not applicable if an alpha channel is defined to the stroke color). |
+| `fill`        | Boolean | `false`       | Whether to fill the path with color. Set it to false to disable filling on polygons or circles.                |
+| `fillColor`   | String  | `#00000000`   | The fill color. Supported formats are `#RRGGBB` and `#AARRGGBB`.                                               |
+| `fillOpacity` | Number  | 0.2           | The fill opacity (value between 0 and 1, not applicable if an alpha channel is defined to the fill color).     |

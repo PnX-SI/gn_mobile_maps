@@ -3,6 +3,7 @@ package fr.geonature.maps.ui.overlay.feature
 import android.graphics.Canvas
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.ui.overlay.feature.filter.IFeatureOverlayFilterVisitor
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
 import org.locationtech.jts.geom.LineString
@@ -20,7 +21,7 @@ import org.osmdroid.views.overlay.OverlayWithIW
 class FeatureOverlay : OverlayWithIW() {
 
     internal var backendOverlay: AbstractGeometryOverlay<Geometry, Overlay>? = null
-    protected var feature: Feature? = null
+    internal var feature: Feature? = null
 
     @Suppress("UNCHECKED_CAST")
     fun setFeature(feature: Feature,
@@ -38,6 +39,19 @@ class FeatureOverlay : OverlayWithIW() {
 
         backendOverlay?.setGeometry(feature.geometry,
                                     layerStyle)
+    }
+
+    /**
+     * Performs an operation on this [FeatureOverlay].
+     *
+     * @param filter the filter to apply
+     */
+    fun apply(filter: IFeatureOverlayFilterVisitor) {
+        val feature = this.feature ?: return
+
+        val matches = filter.filter(feature)
+        backendOverlay?.setStyle(filter.getStyle(feature,
+                                                 matches))
     }
 
     override fun draw(pCanvas: Canvas?,
