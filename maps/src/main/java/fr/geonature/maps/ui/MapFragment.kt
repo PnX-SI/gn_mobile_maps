@@ -14,7 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.overlay.FeatureOverlayProvider
+import fr.geonature.maps.ui.overlay.feature.FeatureOverlayProvider
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton

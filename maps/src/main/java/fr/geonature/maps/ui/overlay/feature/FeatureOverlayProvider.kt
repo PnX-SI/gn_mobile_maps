@@ -1,4 +1,4 @@
-package fr.geonature.maps.ui.overlay
+package fr.geonature.maps.ui.overlay.feature
 
 import android.util.Log
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
@@ -62,8 +62,10 @@ class FeatureOverlayProvider(private val basePath: String) {
                             isLoaded
                         }
                         .map {
-                            FeatureOverlayFactory.createOverlay(it.second,
-                                                                it.first.layerStyle)
+                            FeatureCollectionOverlay().apply {
+                                setFeatures(it.second,
+                                            it.first.layerStyle)
+                            }
                         }
                         .toList()
             }
