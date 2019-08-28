@@ -20,6 +20,9 @@ import org.osmdroid.views.overlay.OverlayWithIW
  */
 class FeatureOverlay : OverlayWithIW() {
 
+    var layerStyle: LayerStyleSettings = LayerStyleSettings()
+        private set
+
     internal var backendOverlay: AbstractGeometryOverlay<Geometry, Overlay>? = null
     internal var feature: Feature? = null
 
@@ -28,6 +31,7 @@ class FeatureOverlay : OverlayWithIW() {
                    layerStyle: LayerStyleSettings = LayerStyleSettings()) {
         id = feature.id
         this.feature = feature
+        this.layerStyle = layerStyle
 
         backendOverlay = when (feature.geometry) {
             is Point -> CirclePointOverlay()
@@ -39,6 +43,13 @@ class FeatureOverlay : OverlayWithIW() {
 
         backendOverlay?.setGeometry(feature.geometry,
                                     layerStyle)
+    }
+
+    fun setStyle(layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+        backendOverlay?.also {
+            this.layerStyle = layerStyle
+            it.setStyle(layerStyle)
+        }
     }
 
     /**

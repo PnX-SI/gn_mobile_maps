@@ -31,6 +31,7 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.io.File
@@ -161,6 +162,19 @@ open class MapFragment : Fragment() {
 
     fun setSelectedPOIs(pois: List<GeoPoint>) {
         editFeatureFab.setSelectedPOIs(pois)
+    }
+
+    /**
+     * Gets [Overlay]s matching given predicate.
+     *
+     * @return [List] of [Overlay]s
+     */
+    fun getOverlays(filter: (overlay: Overlay) -> Boolean = DEFAULT_OVERLAY_FILTER): List<Overlay> {
+        if (filter === DEFAULT_OVERLAY_FILTER) {
+            return mapView.overlays
+        }
+
+        return mapView.overlays.filter(filter)
     }
 
     private fun configureMapView() {
@@ -352,6 +366,8 @@ open class MapFragment : Fragment() {
 
         private const val REQUEST_STORAGE_PERMISSIONS = 0
         private const val REQUEST_LOCATION_PERMISSIONS = 1
+
+        private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 
         /**
          * Use this factory method to create a new instance of this fragment.

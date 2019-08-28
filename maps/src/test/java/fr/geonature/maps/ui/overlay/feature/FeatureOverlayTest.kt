@@ -1,13 +1,22 @@
 package fr.geonature.maps.ui.overlay.feature
 
 import fr.geonature.maps.FixtureHelper.getFixture
+import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
+import fr.geonature.maps.settings.LayerStyleSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.locationtech.jts.geom.Geometry
+import org.mockito.Mockito.atMostOnce
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.osmdroid.views.overlay.Overlay
 import org.robolectric.RobolectricTestRunner
 import java.io.StringReader
 
@@ -121,5 +130,56 @@ class FeatureOverlayTest {
         assertEquals(1,
                      ((featureOverlay.backendOverlay as GeometryCollectionOverlay).backendOverlay.items[3] as GeometryCollectionOverlay).backendOverlay.items.size)
         assertTrue((featureOverlay.backendOverlay as GeometryCollectionOverlay).backendOverlay.items[4] is PolygonOverlay)
+    }
+
+    @Test
+    fun testSetStyleIfOverlayWasSet() {
+        val backendOverlay = mock(AbstractGeometryOverlay::class.java)
+
+        // given FeatureOverlay with its Overlay
+        @Suppress("UNCHECKED_CAST")
+        val featureOverlay = FeatureOverlay().also { it.backendOverlay = backendOverlay as AbstractGeometryOverlay<Geometry, Overlay> }
+
+        // when set new style
+        val layerStyle = LayerStyleSettings.Builder.newInstance()
+                .stroke(true)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .fill(true)
+                .fillColor("#0000FF")
+                .fillOpacity(0.25f)
+                .build()
+        featureOverlay.setStyle(layerStyle)
+
+        // then
+        assertEquals(layerStyle,
+                     featureOverlay.layerStyle)
+        verify(backendOverlay,
+               atMostOnce()).setStyle(featureOverlay.layerStyle)
+    }
+
+    @Test
+    fun testDoNotSetStyleIfOverlayWasNotSet() {
+        // given an empty FeatureOverlay
+        val featureOverlay = spy(FeatureOverlay())
+
+        // when set new style
+        val layerStyle = LayerStyleSettings.Builder.newInstance()
+                .stroke(true)
+                .color("#FF0000")
+                .weight(10)
+                .opacity(0.9f)
+                .fill(true)
+                .fillColor("#0000FF")
+                .fillOpacity(0.25f)
+                .build()
+        featureOverlay.setStyle(layerStyle)
+
+        // then
+        assertEquals(LayerStyleSettings(),
+                     featureOverlay.layerStyle)
+        verify(featureOverlay,
+               never()).backendOverlay?.setStyle(any(LayerStyleSettings::class.java))
     }
 }

@@ -35,13 +35,13 @@ data class LayerSettings(var label: String,
 
     class Builder {
 
-        var label: String? = null
+        internal var label: String? = null
             private set
 
-        var source: String? = null
+        internal var source: String? = null
             private set
 
-        var layerStyle: LayerStyleSettings = LayerStyleSettings()
+        internal var layerStyle: LayerStyleSettings = LayerStyleSettings()
             private set
 
         fun label(label: String) =

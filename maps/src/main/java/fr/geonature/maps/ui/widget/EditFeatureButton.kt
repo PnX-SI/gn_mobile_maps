@@ -200,6 +200,7 @@ class EditFeatureButton(
                 deselectMarker(marker)
 
                 pois[marker.id] = marker.position
+                listener?.onSelectedPOIs(getSelectedPOIs())
             }
 
             override fun onMarkerDragStart(marker: Marker?) {

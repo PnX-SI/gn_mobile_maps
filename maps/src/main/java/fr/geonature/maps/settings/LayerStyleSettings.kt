@@ -47,21 +47,21 @@ data class LayerStyleSettings(var stroke: Boolean = true,
 
     class Builder {
 
-        var stroke: Boolean = true
+        internal var stroke: Boolean = true
             private set
 
         @ColorInt
-        var color: Int = Color.DKGRAY
+        internal var color: Int = Color.DKGRAY
             private set
 
-        var weight: Int = 8
+        internal var weight: Int = 8
             private set
 
-        var fill: Boolean = false
+        internal var fill: Boolean = false
             private set
 
         @ColorInt
-        var fillColor: Int = Color.TRANSPARENT
+        internal var fillColor: Int = Color.TRANSPARENT
             private set
 
         @FloatRange(from = 0.0,

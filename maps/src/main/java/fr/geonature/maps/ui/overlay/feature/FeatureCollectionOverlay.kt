@@ -13,6 +13,9 @@ import org.osmdroid.views.overlay.FolderOverlay
  */
 class FeatureCollectionOverlay : FolderOverlay() {
 
+    var layerStyle: LayerStyleSettings = LayerStyleSettings()
+        private set
+
     fun setFeatureCollection(featureCollection: FeatureCollection,
                              layerStyle: LayerStyleSettings = LayerStyleSettings()) {
         setFeatures(featureCollection.getFeatures(),
@@ -21,11 +24,21 @@ class FeatureCollectionOverlay : FolderOverlay() {
 
     fun setFeatures(features: List<Feature>,
                     layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+        this.layerStyle = layerStyle
+
         features.forEach {
             add(FeatureOverlay().apply {
                 setFeature(it,
                            layerStyle)
             })
+        }
+    }
+
+    fun setStyle(layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+        this.layerStyle = layerStyle
+
+        getFeatureOverlays().forEach {
+            it.setStyle(layerStyle)
         }
     }
 
