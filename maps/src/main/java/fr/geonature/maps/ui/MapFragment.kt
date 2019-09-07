@@ -59,12 +59,12 @@ open class MapFragment : Fragment() {
         val context = context ?: return
 
         Configuration.getInstance()
-                .load(context,
-                      PreferenceManager.getDefaultSharedPreferences(context))
-        Configuration.getInstance()
-                .isDebugMode = BuildConfig.DEBUG
-        Configuration.getInstance()
-                .isDebugTileProviders = BuildConfig.DEBUG
+                .apply {
+                    load(context,
+                         PreferenceManager.getDefaultSharedPreferences(context))
+                    isDebugMode = BuildConfig.DEBUG
+                    isDebugTileProviders = BuildConfig.DEBUG
+                }
     }
 
     override fun onCreateView(inflater: LayoutInflater,

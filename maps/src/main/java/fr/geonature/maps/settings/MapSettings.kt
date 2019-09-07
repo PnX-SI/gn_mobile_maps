@@ -122,60 +122,95 @@ data class MapSettings(val layersSettings: List<LayerSettings>,
         }
     }
 
-    data class Builder(val layersSettings: MutableList<LayerSettings> = mutableListOf(),
-                       var baseTilesPath: String? = null,
-                       var showScale: Boolean = true,
-                       var showCompass: Boolean = true,
-                       var zoom: Double = 0.0,
-                       var minZoomLevel: Double = 0.0,
-                       var maxZoomLevel: Double = 0.0,
-                       var minZoomEditing: Double = 0.0,
-                       var maxBounds: BoundingBox? = null,
-                       var center: GeoPoint? = null) {
+    class Builder {
+
+        internal val layersSettings: MutableList<LayerSettings> = mutableListOf()
+
+        internal var baseTilesPath: String? = null
+            private set
+
+        internal var showScale: Boolean = true
+            private set
+
+        internal var showCompass: Boolean = true
+            private set
+
+        internal var zoom: Double = 0.0
+            private set
+
+        internal var minZoomLevel: Double = 0.0
+            private set
+
+        internal var maxZoomLevel: Double = 0.0
+            private set
+
+        internal var minZoomEditing: Double = 0.0
+            private set
+
+        internal var maxBounds: BoundingBox? = null
+            private set
+
+        internal var center: GeoPoint? = null
+            private set
+
+        fun from(mapSettings: MapSettings) =
+                apply {
+                    this.layersSettings.addAll(mapSettings.layersSettings)
+                    this.baseTilesPath = mapSettings.baseTilesPath
+                    this.showScale = mapSettings.showScale
+                    this.showCompass = mapSettings.showCompass
+                    this.zoom = mapSettings.zoom
+                    this.minZoomLevel = mapSettings.minZoomLevel
+                    this.maxZoomLevel = mapSettings.maxZoomLevel
+                    this.minZoomEditing = mapSettings.minZoomEditing
+                    this.maxBounds = mapSettings.maxBounds
+                    this.center = mapSettings.center
+                }
+
         fun baseTilesPath(baseTilesPath: String) =
-            apply { this.baseTilesPath = baseTilesPath }
+                apply { this.baseTilesPath = baseTilesPath }
 
         fun showScale(showScale: Boolean) =
-            apply { this.showScale = showScale }
+                apply { this.showScale = showScale }
 
         fun showCompass(showCompass: Boolean) =
-            apply { this.showCompass = showCompass }
+                apply { this.showCompass = showCompass }
 
         fun zoom(zoom: Double) =
-            apply { this.zoom = zoom }
+                apply { this.zoom = zoom }
 
         fun minZoomLevel(minZoomLevel: Double) =
-            apply { this.minZoomLevel = minZoomLevel }
+                apply { this.minZoomLevel = minZoomLevel }
 
         fun maxZoomLevel(maxZoomLevel: Double) =
-            apply { this.maxZoomLevel = maxZoomLevel }
+                apply { this.maxZoomLevel = maxZoomLevel }
 
         fun minZoomEditing(minZoomEditing: Double) =
-            apply { this.minZoomEditing = minZoomEditing }
+                apply { this.minZoomEditing = minZoomEditing }
 
         fun maxBounds(geoPoints: List<GeoPoint>) =
-            apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
+                apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
 
         fun center(center: GeoPoint?) =
-            apply { this.center = center }
+                apply { this.center = center }
 
         fun addLayer(label: String,
                      source: String) =
-            apply {
-                addLayer(LayerSettings.Builder.newInstance().label(label).source(source).build())
-            }
+                apply {
+                    addLayer(LayerSettings.Builder.newInstance().label(label).source(source).build())
+                }
 
         fun addLayer(layerSettings: LayerSettings) =
-            apply {
-                if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(layerSettings)
-            }
+                apply {
+                    if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(layerSettings)
+                }
 
         fun build() =
-            MapSettings(this)
+                MapSettings(this)
 
         companion object {
             fun newInstance(): Builder =
-                Builder()
+                    Builder()
         }
     }
 
