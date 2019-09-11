@@ -63,7 +63,6 @@ open class MapFragment : Fragment() {
                     load(context,
                          PreferenceManager.getDefaultSharedPreferences(context))
                     isDebugMode = BuildConfig.DEBUG
-                    isDebugTileProviders = BuildConfig.DEBUG
                 }
     }
 
