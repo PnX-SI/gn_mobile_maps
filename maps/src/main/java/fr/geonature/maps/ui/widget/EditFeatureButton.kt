@@ -198,7 +198,7 @@ class EditFeatureButton(context: Context,
                 marker?.run {
                     val mapViewForMarker = listener?.getMapView() ?: return
 
-                    if (!mapViewForMarker.isAnimating && mapViewForMarker.boundingBox.increaseByScale(0.75f).contains(marker.position)) {
+                    if (!mapViewForMarker.isAnimating && !mapViewForMarker.boundingBox.increaseByScale(0.75f).contains(marker.position)) {
                         centerMapToMarker(marker)
                     }
                 }
