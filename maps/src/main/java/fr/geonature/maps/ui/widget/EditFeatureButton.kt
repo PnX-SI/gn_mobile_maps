@@ -77,8 +77,7 @@ class EditFeatureButton(context: Context,
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             actionMode = null
-
-            findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
+            clearActiveSelection()
         }
     }
 
@@ -89,7 +88,7 @@ class EditFeatureButton(context: Context,
         }
 
         override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-            findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
+            clearActiveSelection()
 
             return true
         }
@@ -149,6 +148,10 @@ class EditFeatureButton(context: Context,
 
         mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(selectedPois),
                                   true)
+    }
+
+    fun clearActiveSelection() {
+        findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
     }
 
     private fun addPoi(geoPoint: GeoPoint? = null) {

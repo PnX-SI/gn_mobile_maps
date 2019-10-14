@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
@@ -161,6 +162,10 @@ open class MapFragment : Fragment() {
 
     fun setSelectedPOIs(pois: List<GeoPoint>) {
         editFeatureFab.setSelectedPOIs(pois)
+    }
+
+    fun clearActiveSelection() {
+        editFeatureFab.clearActiveSelection()
     }
 
     /**
@@ -348,7 +353,7 @@ open class MapFragment : Fragment() {
     private fun showSnackbar(text: CharSequence) {
         Snackbar.make(container,
                       text,
-                      Snackbar.LENGTH_LONG)
+                      LENGTH_LONG)
                 .show()
     }
 
