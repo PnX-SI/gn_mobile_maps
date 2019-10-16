@@ -60,13 +60,12 @@ class EditFeatureButton(context: Context,
                     val mapView = listener?.getMapView() ?: return true
 
                     val geoPoint = pois.remove(selectedPoi)
-                    listener?.onSelectedPOIs(getSelectedPOIs())
 
-                    findMarkerOverlay { it.id == selectedPoi }?.also {
-                        deselectMarker(it)
+                    clearActiveSelection()?.also {
                         it.remove(mapView)
                     }
 
+                    listener?.onSelectedPOIs(getSelectedPOIs())
                     showSnackbarAboutDeletedPoi(geoPoint)
 
                     true
@@ -150,8 +149,8 @@ class EditFeatureButton(context: Context,
                                   true)
     }
 
-    fun clearActiveSelection() {
-        findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
+    fun clearActiveSelection(): Marker? {
+        return findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
     }
 
     private fun addPoi(geoPoint: GeoPoint? = null) {
@@ -299,7 +298,7 @@ class EditFeatureButton(context: Context,
                 ?.show()
     }
 
-    fun findMarkerOverlay(filter: (overlay: Marker) -> Boolean): Marker? {
+    private fun findMarkerOverlay(filter: (overlay: Marker) -> Boolean): Marker? {
         val mapView = listener?.getMapView() ?: return null
 
         return mapView.overlays.asSequence()
