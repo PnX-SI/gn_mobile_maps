@@ -63,6 +63,7 @@ class EditFeatureButton(context: Context,
 
                     clearActiveSelection()?.also {
                         it.remove(mapView)
+                        mapView.invalidate()
                     }
 
                     listener?.onSelectedPOIs(getSelectedPOIs())
@@ -208,6 +209,7 @@ class EditFeatureButton(context: Context,
         })
 
         mapView.overlays.add(poiMarker)
+        mapView.invalidate()
         pois[poiMarker.id] = poiMarker.position
         listener?.onSelectedPOIs(getSelectedPOIs())
 

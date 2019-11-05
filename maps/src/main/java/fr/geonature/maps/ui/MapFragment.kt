@@ -347,6 +347,7 @@ open class MapFragment : Fragment() {
         GlobalScope.launch(Dispatchers.Main) {
             val overlays = FeatureOverlayProvider(mapSettings.baseTilesPath).loadFeaturesAsOverlays(mapSettings.getVectorLayers())
             overlays.forEach { mapView.overlays.add(it) }
+            mapView.invalidate()
         }
     }
 
