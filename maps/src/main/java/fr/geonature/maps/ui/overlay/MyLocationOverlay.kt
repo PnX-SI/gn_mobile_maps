@@ -185,6 +185,8 @@ class MyLocationOverlay(
         x: Float,
         y: Float
     ) {
+        canvas.save()
+
         val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         circlePaint.color = Color.BLUE
 
@@ -260,5 +262,7 @@ class MyLocationOverlay(
             y - compassBitmap.height + 8,
             compassPaint
         )
+
+        canvas.restore()
     }
 }
