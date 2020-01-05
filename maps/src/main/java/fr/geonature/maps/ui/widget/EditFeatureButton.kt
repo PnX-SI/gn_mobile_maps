@@ -13,6 +13,8 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
 import fr.geonature.maps.util.DrawableUtils
 import fr.geonature.maps.util.ThemeUtils
+import java.util.HashMap
+import java.util.UUID
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
@@ -23,38 +25,48 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import java.util.HashMap
-import java.util.UUID
 
 /**
  * Edit feature (POI) on the map.
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class EditFeatureButton(context: Context,
-                        attrs: AttributeSet) : FloatingActionButton(context,
-                                                                    attrs), MapListener {
+class EditFeatureButton(
+    context: Context,
+    attrs: AttributeSet
+) : FloatingActionButton(
+    context,
+    attrs
+), MapListener {
     private var listener: OnEditFeatureButtonListener? = null
     private val pois = HashMap<String, GeoPoint>()
     private var selectedPoi: String? = null
 
     private var actionMode: ActionMode? = null
     private val actionModeCallback = object : ActionMode.Callback {
-        override fun onCreateActionMode(mode: ActionMode?,
-                                        menu: Menu?): Boolean {
-            mode?.menuInflater?.inflate(R.menu.map_action_mode,
-                                        menu)
+        override fun onCreateActionMode(
+            mode: ActionMode?,
+            menu: Menu?
+        ): Boolean {
+            mode?.menuInflater?.inflate(
+                R.menu.map_action_mode,
+                menu
+            )
 
             return true
         }
 
-        override fun onPrepareActionMode(mode: ActionMode?,
-                                         menu: Menu?): Boolean {
+        override fun onPrepareActionMode(
+            mode: ActionMode?,
+            menu: Menu?
+        ): Boolean {
             return false
         }
 
-        override fun onActionItemClicked(mode: ActionMode?,
-                                         item: MenuItem?): Boolean {
+        override fun onActionItemClicked(
+            mode: ActionMode?,
+            item: MenuItem?
+        ): Boolean {
             return when (item?.itemId) {
                 R.id.action_poi_delete -> {
                     val mapView = listener?.getMapView() ?: return true
@@ -109,8 +121,7 @@ class EditFeatureButton(context: Context,
 
         if (listener?.getMinZoomEditing() ?: 0.0 <= event?.zoomLevel ?: 0.0) {
             show()
-        }
-        else {
+        } else {
             hide()
         }
 
@@ -136,8 +147,10 @@ class EditFeatureButton(context: Context,
         val mapView = this.listener?.getMapView() ?: return
 
         if (this.listener?.getEditMode() == EditMode.SINGLE && this.pois.isNotEmpty()) {
-            mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(getSelectedPOIs()),
-                                      true)
+            mapView.zoomToBoundingBox(
+                BoundingBox.fromGeoPoints(getSelectedPOIs()),
+                true
+            )
 
             return
         }
@@ -146,8 +159,10 @@ class EditFeatureButton(context: Context,
             addPoi(it)
         }
 
-        mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(selectedPois),
-                                  true)
+        mapView.zoomToBoundingBox(
+            BoundingBox.fromGeoPoints(selectedPois),
+            true
+        )
     }
 
     fun clearActiveSelection(): Marker? {
@@ -160,13 +175,17 @@ class EditFeatureButton(context: Context,
 
         val poiMarker = Marker(mapView)
         poiMarker.id = UUID.randomUUID()
-                .toString()
+            .toString()
         poiMarker.position = geoPoint ?: mapView.mapCenter as GeoPoint
-        poiMarker.setAnchor(Marker.ANCHOR_CENTER,
-                            Marker.ANCHOR_BOTTOM)
-        setMarkerIcon(poiMarker,
-                      ThemeUtils.getPrimaryColor(context),
-                      2.0f)
+        poiMarker.setAnchor(
+            Marker.ANCHOR_CENTER,
+            Marker.ANCHOR_BOTTOM
+        )
+        setMarkerIcon(
+            poiMarker,
+            ThemeUtils.getPrimaryColor(context),
+            2.0f
+        )
         poiMarker.isDraggable = true
         poiMarker.infoWindow = null
         poiMarker.setOnMarkerClickListener { marker, _ ->
@@ -201,7 +220,10 @@ class EditFeatureButton(context: Context,
                 marker?.run {
                     val mapViewForMarker = listener?.getMapView() ?: return
 
-                    if (!mapViewForMarker.isAnimating && !mapViewForMarker.boundingBox.increaseByScale(0.75f).contains(marker.position)) {
+                    if (!mapViewForMarker.isAnimating && !mapViewForMarker.boundingBox.increaseByScale(
+                            0.75f
+                        ).contains(marker.position)
+                    ) {
                         centerMapToMarker(marker)
                     }
                 }
@@ -218,16 +240,20 @@ class EditFeatureButton(context: Context,
         }
     }
 
-    private fun setMarkerIcon(marker: Marker,
-                              @ColorInt
-                              tintColor: Int,
-                              scale: Float = 1.0f) {
+    private fun setMarkerIcon(
+        marker: Marker,
+        @ColorInt
+        tintColor: Int,
+        scale: Float = 1.0f
+    ) {
         val context = context ?: return
 
-        marker.icon = DrawableUtils.createScaledDrawable(context,
-                                                         R.drawable.ic_poi,
-                                                         tintColor,
-                                                         scale)
+        marker.icon = DrawableUtils.createScaledDrawable(
+            context,
+            R.drawable.ic_poi,
+            tintColor,
+            scale
+        )
     }
 
     private fun selectMarker(marker: Marker) {
@@ -243,9 +269,11 @@ class EditFeatureButton(context: Context,
 
         mapView.minZoomLevel = listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
 
-        setMarkerIcon(marker,
-                      ThemeUtils.getAccentColor(context),
-                      2.5f)
+        setMarkerIcon(
+            marker,
+            ThemeUtils.getAccentColor(context),
+            2.5f
+        )
     }
 
     private fun deselectMarker(marker: Marker) {
@@ -261,61 +289,74 @@ class EditFeatureButton(context: Context,
 
         mapView.minZoomLevel = listener?.getMinZoom() ?: mapView.minZoomLevel
 
-        setMarkerIcon(marker,
-                      ThemeUtils.getPrimaryColor(context),
-                      2.0f)
+        setMarkerIcon(
+            marker,
+            ThemeUtils.getPrimaryColor(context),
+            2.0f
+        )
     }
 
     private fun centerMapToMarker(marker: Marker) {
         val mapView = listener?.getMapView() ?: return
-        val editZoom = if (listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble <= mapView.zoomLevelDouble) mapView.zoomLevelDouble
-        else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
+        val editZoom =
+            if (listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble <= mapView.zoomLevelDouble) mapView.zoomLevelDouble
+            else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
 
-        animateTo(mapView,
-                  marker.position,
-                  editZoom)
+        animateTo(
+            mapView,
+            marker.position,
+            editZoom
+        )
     }
 
     private fun showSnackbarAboutDeletedPoi(geoPoint: GeoPoint?) {
         if (geoPoint == null) return
 
-        listener?.makeSnackbar(R.string.action_poi_deleted,
-                               Snackbar.LENGTH_SHORT)
-                ?.setAction(R.string.action_undo) {
-                    addPoi(geoPoint)
+        listener?.makeSnackbar(
+            R.string.action_poi_deleted,
+            Snackbar.LENGTH_SHORT
+        )
+            ?.setAction(R.string.action_undo) {
+                addPoi(geoPoint)
+            }
+            ?.addCallback(object : Snackbar.Callback() {
+                override fun onShown(sb: Snackbar?) {
+                    super.onShown(sb)
+                    hide()
                 }
-                ?.addCallback(object : Snackbar.Callback() {
-                    override fun onShown(sb: Snackbar?) {
-                        super.onShown(sb)
-                        hide()
-                    }
 
-                    override fun onDismissed(transientBottomBar: Snackbar?,
-                                             event: Int) {
-                        if ((pois.isEmpty() && listener?.getEditMode() == EditMode.SINGLE) || listener?.getEditMode() == EditMode.MULTIPLE) {
-                            show()
-                        }
+                override fun onDismissed(
+                    transientBottomBar: Snackbar?,
+                    event: Int
+                ) {
+                    if ((pois.isEmpty() && listener?.getEditMode() == EditMode.SINGLE) || listener?.getEditMode() == EditMode.MULTIPLE) {
+                        show()
                     }
-                })
-                ?.show()
+                }
+            })
+            ?.show()
     }
 
     private fun findMarkerOverlay(filter: (overlay: Marker) -> Boolean): Marker? {
         val mapView = listener?.getMapView() ?: return null
 
         return mapView.overlays.asSequence()
-                .filterNotNull()
-                .filter { it is Marker }
-                .map { it as Marker }
-                .find(filter)
+            .filterNotNull()
+            .filter { it is Marker }
+            .map { it as Marker }
+            .find(filter)
     }
 
-    private fun animateTo(mapView: MapView,
-                          point: GeoPoint,
-                          zoom: Double) {
-        mapView.controller.animateTo(point,
-                                     zoom,
-                                     Configuration.getInstance().animationSpeedDefault.toLong())
+    private fun animateTo(
+        mapView: MapView,
+        point: GeoPoint,
+        zoom: Double
+    ) {
+        mapView.controller.animateTo(
+            point,
+            zoom,
+            Configuration.getInstance().animationSpeedDefault.toLong()
+        )
     }
 
     interface OnEditFeatureButtonListener {
@@ -324,10 +365,7 @@ class EditFeatureButton(context: Context,
         fun getMinZoom(): Double
         fun getMinZoomEditing(): Double
         fun startActionMode(callback: ActionMode.Callback): ActionMode?
-        fun makeSnackbar(
-            @StringRes
-            resId: Int, duration: Int): Snackbar?
-
+        fun makeSnackbar(@StringRes resId: Int, duration: Int): Snackbar?
         fun onSelectedPOIs(pois: List<GeoPoint>)
     }
 

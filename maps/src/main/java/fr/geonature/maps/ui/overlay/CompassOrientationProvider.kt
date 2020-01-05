@@ -34,8 +34,7 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
 
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
-        }
-        else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
+        } else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
         }
 

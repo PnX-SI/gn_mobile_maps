@@ -12,8 +12,10 @@ import org.osmdroid.views.overlay.Polyline
  */
 class LineStringOverlay : AbstractGeometryOverlay<LineString, Polyline>(Polyline()) {
 
-    override fun applyGeometry(geometry: LineString,
-                               layerStyle: LayerStyleSettings) {
+    override fun applyGeometry(
+        geometry: LineString,
+        layerStyle: LayerStyleSettings
+    ) {
         backendOverlay.setPoints(GeometryUtils.fromCoordinateSequence(geometry.coordinateSequence))
         setStyle(layerStyle)
     }

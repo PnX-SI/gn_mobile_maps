@@ -1,6 +1,8 @@
 package fr.geonature.maps.jts.geojson
 
 import android.util.Log
+import kotlin.math.abs
+import kotlin.math.sin
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.CoordinateSequence
 import org.locationtech.jts.geom.Geometry
@@ -11,8 +13,6 @@ import org.locationtech.jts.geom.Polygon
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.constants.GeoConstants.RADIUS_EARTH_METERS
 import org.osmdroid.views.util.constants.MathConstants.DEG2RAD
-import kotlin.math.abs
-import kotlin.math.sin
 
 /**
  * Helper class about [Geometry] instances.
@@ -75,8 +75,10 @@ object GeometryUtils {
      * Returns the minimum distance between two `Geometry` instances.
      *
      * @param fromGeometry the `Geometry` to check the distance from
-     * @param toGeometry   the `Geometry` to check the distance to
+     * @param toGeometry the `Geometry` to check the distance to
+     *
      * @return the minimum distance in meters
+     *
      * @see GeoPoint.distanceToAsDouble
      */
     fun distanceTo(
@@ -94,7 +96,13 @@ object GeometryUtils {
                         fromGeoPoint.distanceToAsDouble(fromPoint(toGeometry as Point))
                     "LineString", "LinearRing" -> for (i in 0 until toGeometry.numPoints) {
                         val distanceFromPoint =
-                            fromGeoPoint.distanceToAsDouble(fromPoint((toGeometry as LineString).getPointN(i)))
+                            fromGeoPoint.distanceToAsDouble(
+                                fromPoint(
+                                    (toGeometry as LineString).getPointN(
+                                        i
+                                    )
+                                )
+                            )
 
                         if (distance > distanceFromPoint) {
                             distance = distanceFromPoint
@@ -118,7 +126,9 @@ object GeometryUtils {
                 "LineString", "LinearRing" -> for (i in 0 until fromGeometry.numPoints) {
                     for (j in 0 until toGeometry.numPoints) {
                         val distanceFromPoint =
-                            fromPoint((fromGeometry as LineString).getPointN(i)).distanceToAsDouble(fromPoint((toGeometry as LineString).getPointN(i)))
+                            fromPoint((fromGeometry as LineString).getPointN(i)).distanceToAsDouble(
+                                fromPoint((toGeometry as LineString).getPointN(i))
+                            )
 
                         if (distance > distanceFromPoint) {
                             distance = distanceFromPoint
@@ -173,7 +183,9 @@ object GeometryUtils {
         when (geometry.geometryType) {
             "LineString", "LinearRing" -> if (!geometry.isEmpty) {
                 for (i in 1 until geometry.numPoints) {
-                    length += fromPoint((geometry as LineString).getPointN(i)).distanceToAsDouble(fromPoint(geometry.getPointN(i - 1)))
+                    length += fromPoint((geometry as LineString).getPointN(i)).distanceToAsDouble(
+                        fromPoint(geometry.getPointN(i - 1))
+                    )
                 }
             }
             "Polygon" -> {
@@ -183,7 +195,11 @@ object GeometryUtils {
 
                 // adds the last segment of the LineString if the last Point is not the same as the first Point
                 if (!exteriorRing.isClosed) {
-                    length += fromPoint(exteriorRing.endPoint).distanceToAsDouble(fromPoint(exteriorRing.startPoint))
+                    length += fromPoint(exteriorRing.endPoint).distanceToAsDouble(
+                        fromPoint(
+                            exteriorRing.startPoint
+                        )
+                    )
                 }
             }
             else -> Log.w(
@@ -213,7 +229,9 @@ object GeometryUtils {
             val p1 = fromPoint(lineString.getPointN(i))
             val p2 = fromPoint(lineString.getPointN((i + 1) % lineString.numPoints))
 
-            area += (p2.longitude - p1.longitude) * DEG2RAD * (2.0 + sin(p1.latitude * DEG2RAD) + sin(p2.latitude * DEG2RAD))
+            area += (p2.longitude - p1.longitude) * DEG2RAD * (2.0 + sin(p1.latitude * DEG2RAD) + sin(
+                p2.latitude * DEG2RAD
+            ))
         }
 
         area = area * RADIUS_EARTH_METERS.toDouble() * RADIUS_EARTH_METERS.toDouble() / 2.0

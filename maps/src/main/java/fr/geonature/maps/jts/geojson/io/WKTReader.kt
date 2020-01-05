@@ -4,12 +4,12 @@ import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import org.locationtech.jts.io.ParseException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.Reader
 import java.util.ArrayList
 import java.util.regex.Pattern
+import org.locationtech.jts.io.ParseException
 
 /**
  * Converts a GeoJSON in Well-Known Text format to a [AbstractGeoJson] implementation.
@@ -24,11 +24,13 @@ class WKTReader {
     /**
      * parse a Well-Known Text format reader to convert as [Feature].
      *
-     * @param in       the `Reader` to use
+     * @param in the `Reader` to use
      * @param listener the callback to monitor the progression
      */
-    fun readFeatures(`in`: Reader,
-                     listener: OnWKTReaderListener) {
+    fun readFeatures(
+        `in`: Reader,
+        listener: OnWKTReaderListener
+    ) {
         val featureCollection = FeatureCollection()
         val bufferedReader = BufferedReader(`in`)
         var currentLine = 0
@@ -42,36 +44,39 @@ class WKTReader {
 
                 if (matcher.matches()) {
                     try {
-                        val feature = Feature(matcher.group(1),
-                                              wktReader.read(matcher.group(2)))
+                        val feature = Feature(
+                            matcher.group(1),
+                            wktReader.read(matcher.group(2))
+                        )
                         featureCollection.addFeature(feature)
 
-                        listener.onProgress(currentLine + 1,
-                                            feature)
+                        listener.onProgress(
+                            currentLine + 1,
+                            feature
+                        )
+                    } catch (pe: ParseException) {
+                        Log.w(
+                            TAG,
+                            pe.message
+                        )
                     }
-                    catch (pe: ParseException) {
-                        Log.w(TAG,
-                              pe.message)
-                    }
-
                 }
 
                 currentLine++
 
                 line = bufferedReader.readLine()
-            }
-            while (line != null)
+            } while (line != null)
 
             listener.onFinish(featureCollection)
             bufferedReader.close()
-        }
-        catch (ioe: IOException) {
-            Log.w(TAG,
-                  ioe.message)
+        } catch (ioe: IOException) {
+            Log.w(
+                TAG,
+                ioe.message
+            )
 
             listener.onError(ioe)
         }
-
     }
 
     /**
@@ -83,16 +88,18 @@ class WKTReader {
     fun readFeatures(`in`: Reader): List<Feature> {
         val features = ArrayList<Feature>()
         readFeatures(`in`,
-                     object : OnWKTReaderListener {
-                         override fun onProgress(progress: Int,
-                                                 feature: Feature) {
-                             features.add(feature)
-                         }
+            object : OnWKTReaderListener {
+                override fun onProgress(
+                    progress: Int,
+                    feature: Feature
+                ) {
+                    features.add(feature)
+                }
 
-                         override fun onFinish(featureCollection: FeatureCollection) {}
+                override fun onFinish(featureCollection: FeatureCollection) {}
 
-                         override fun onError(t: Throwable) {}
-                     })
+                override fun onError(t: Throwable) {}
+            })
 
         return features
     }
@@ -117,8 +124,10 @@ class WKTReader {
      */
     interface OnWKTReaderListener {
 
-        fun onProgress(progress: Int,
-                       feature: Feature)
+        fun onProgress(
+            progress: Int,
+            feature: Feature
+        )
 
         fun onFinish(featureCollection: FeatureCollection)
 

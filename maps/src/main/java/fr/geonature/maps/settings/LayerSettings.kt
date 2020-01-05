@@ -9,28 +9,38 @@ import android.text.TextUtils
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-data class LayerSettings(var label: String,
-                         var source: String,
-                         var layerStyle: LayerStyleSettings = LayerStyleSettings()) : Parcelable {
+data class LayerSettings(
+    var label: String,
+    var source: String,
+    var layerStyle: LayerStyleSettings = LayerStyleSettings()
+) : Parcelable {
 
-    private constructor(builder: Builder) : this(builder.label!!,
-                                                 builder.source!!,
-                                                 builder.layerStyle)
+    private constructor(builder: Builder) : this(
+        builder.label!!,
+        builder.source!!,
+        builder.layerStyle
+    )
 
-    private constructor(parcel: Parcel) : this(parcel.readString() ?: "",
-                                               parcel.readString() ?: "",
-                                               parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings)
+    private constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings
+    )
 
     override fun describeContents(): Int {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel?,
-                               flags: Int) {
+    override fun writeToParcel(
+        dest: Parcel?,
+        flags: Int
+    ) {
         dest?.writeString(label)
         dest?.writeString(source)
-        dest?.writeParcelable(layerStyle,
-                              0)
+        dest?.writeParcelable(
+            layerStyle,
+            0
+        )
     }
 
     class Builder {
@@ -45,13 +55,13 @@ data class LayerSettings(var label: String,
             private set
 
         fun label(label: String) =
-                apply { this.label = label }
+            apply { this.label = label }
 
         fun source(source: String) =
-                apply { this.source = source }
+            apply { this.source = source }
 
         fun style(layerStyle: LayerStyleSettings?) =
-                apply { this.layerStyle = layerStyle ?: LayerStyleSettings() }
+            apply { this.layerStyle = layerStyle ?: LayerStyleSettings() }
 
         @Throws(java.lang.IllegalArgumentException::class)
         fun build(): LayerSettings {
@@ -63,7 +73,7 @@ data class LayerSettings(var label: String,
 
         companion object {
             fun newInstance(): Builder =
-                    Builder()
+                Builder()
         }
     }
 

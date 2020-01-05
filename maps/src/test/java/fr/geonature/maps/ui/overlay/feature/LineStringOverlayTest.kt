@@ -28,49 +28,73 @@ class LineStringOverlayTest {
     @Test
     fun testCreateOverlayFromLineString() {
         // given LineString
-        val lineString = createLineString(gf,
-                                          createCoordinate(47.2256258,
-                                                           -1.5545135),
-                                          createCoordinate(47.225136,
-                                                           -1.553913))
+        val lineString = createLineString(
+            gf,
+            createCoordinate(
+                47.2256258,
+                -1.5545135
+            ),
+            createCoordinate(
+                47.225136,
+                -1.553913
+            )
+        )
 
         // when create Overlay from LineString
         val lineStringOverlay = LineStringOverlay().apply { setGeometry(lineString) }
 
         // then
-        assertEquals(2,
-                     lineStringOverlay.backendOverlay.points.size)
-        assertEquals(LayerStyleSettings().color,
-                     lineStringOverlay.backendOverlay.color)
-        assertEquals(LayerStyleSettings().weight.toFloat(),
-                     lineStringOverlay.backendOverlay.width)
+        assertEquals(
+            2,
+            lineStringOverlay.backendOverlay.points.size
+        )
+        assertEquals(
+            LayerStyleSettings().color,
+            lineStringOverlay.backendOverlay.color
+        )
+        assertEquals(
+            LayerStyleSettings().weight.toFloat(),
+            lineStringOverlay.backendOverlay.width
+        )
     }
 
     @Test
     fun testCreateOverlayFromLineStringWithStyle() {
         // given LineString
-        val lineString = createLineString(gf,
-                                          createCoordinate(47.2256258,
-                                                           -1.5545135),
-                                          createCoordinate(47.225136,
-                                                           -1.553913))
+        val lineString = createLineString(
+            gf,
+            createCoordinate(
+                47.2256258,
+                -1.5545135
+            ),
+            createCoordinate(
+                47.225136,
+                -1.553913
+            )
+        )
 
         // when create Overlay from LineString
         val style = LayerStyleSettings.Builder.newInstance()
-                .stroke(false)
-                .color("#FF0000")
-                .weight(10)
-                .opacity(0.9f)
-                .build()
+            .stroke(false)
+            .color("#FF0000")
+            .weight(10)
+            .opacity(0.9f)
+            .build()
         val lineStringOverlay = LineStringOverlay().apply {
-            setGeometry(lineString,
-                        style)
+            setGeometry(
+                lineString,
+                style
+            )
         }
 
         // then
-        assertEquals(style.color,
-                     lineStringOverlay.backendOverlay.color)
-        assertEquals(style.weight.toFloat(),
-                     lineStringOverlay.backendOverlay.width)
+        assertEquals(
+            style.color,
+            lineStringOverlay.backendOverlay.color
+        )
+        assertEquals(
+            style.weight.toFloat(),
+            lineStringOverlay.backendOverlay.width
+        )
     }
 }

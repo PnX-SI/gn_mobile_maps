@@ -13,14 +13,18 @@ import org.locationtech.jts.geom.Polygon
 class PolygonOverlay :
     AbstractGeometryOverlay<Polygon, org.osmdroid.views.overlay.Polygon>(org.osmdroid.views.overlay.Polygon()) {
 
-    override fun applyGeometry(geometry: Polygon,
-                               layerStyle: LayerStyleSettings) {
+    override fun applyGeometry(
+        geometry: Polygon,
+        layerStyle: LayerStyleSettings
+    ) {
         backendOverlay.apply {
             points = GeometryUtils.fromCoordinateSequence(geometry.exteriorRing.coordinateSequence)
 
             if (geometry.numInteriorRing > 0) {
-                holes = IntRange(0,
-                                 geometry.numInteriorRing - 1).map {
+                holes = IntRange(
+                    0,
+                    geometry.numInteriorRing - 1
+                ).map {
                     GeometryUtils.fromCoordinateSequence(geometry.getInteriorRingN(it).coordinateSequence)
                 }
             }
@@ -33,8 +37,7 @@ class PolygonOverlay :
             if (layerStyle.stroke) {
                 strokeColor = layerStyle.color
                 strokeWidth = layerStyle.weight.toFloat()
-            }
-            else {
+            } else {
                 strokeColor = Color.TRANSPARENT
                 strokeWidth = 0f
             }

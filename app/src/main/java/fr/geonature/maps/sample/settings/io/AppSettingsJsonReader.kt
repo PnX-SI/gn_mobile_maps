@@ -29,8 +29,7 @@ class AppSettingsJsonReader<T : IAppSettings>(private val onAppSettingsJsonReade
 
         try {
             return read(StringReader(json))
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Log.w(
                 TAG,
                 e.message
@@ -111,9 +110,9 @@ class AppSettingsJsonReader<T : IAppSettings>(private val onAppSettingsJsonReade
         /**
          * Reading some additional data to set to the given [IAppSettings].
          *
-         * @param reader  the current @code JsonReader} to use
+         * @param reader the current @code JsonReader} to use
          * @param keyName the JSON key read
-         * @param appSettings   the current [AbstractInput] to use
+         * @param appSettings the current [IAppSettings] to use
          *
          * @throws IOException if something goes wrong
          * @throws IllegalArgumentException if invalid parameter was given

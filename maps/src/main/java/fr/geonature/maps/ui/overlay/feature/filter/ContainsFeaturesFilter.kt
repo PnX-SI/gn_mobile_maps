@@ -10,9 +10,11 @@ import org.osmdroid.util.GeoPoint
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class ContainsFeaturesFilter(private val geoPoint: GeoPoint,
-                             private val defaultStyleSettings: LayerStyleSettings,
-                             private val selectedStyleSettings: LayerStyleSettings) :
+class ContainsFeaturesFilter(
+    private val geoPoint: GeoPoint,
+    private val defaultStyleSettings: LayerStyleSettings,
+    private val selectedStyleSettings: LayerStyleSettings
+) :
     IFeatureOverlayFilterVisitor {
 
     private val features: MutableList<Feature> = mutableListOf()
@@ -31,8 +33,10 @@ class ContainsFeaturesFilter(private val geoPoint: GeoPoint,
         return matches
     }
 
-    override fun getStyle(feature: Feature,
-                          selected: Boolean): LayerStyleSettings {
+    override fun getStyle(
+        feature: Feature,
+        selected: Boolean
+    ): LayerStyleSettings {
         return if (selected) selectedStyleSettings else defaultStyleSettings
     }
 }

@@ -17,8 +17,10 @@ class Feature : AbstractGeoJson, Parcelable {
     val geometry: Geometry
     var properties: Bundle = Bundle()
 
-    constructor(id: String,
-                geometry: Geometry) {
+    constructor(
+        id: String,
+        geometry: Geometry
+    ) {
         this.id = id
         this.geometry = geometry
     }
@@ -42,8 +44,10 @@ class Feature : AbstractGeoJson, Parcelable {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel,
-                               flags: Int) {
+    override fun writeToParcel(
+        dest: Parcel,
+        flags: Int
+    ) {
         dest.writeString(id)
         dest.writeSerializable(geometry)
         dest.writeBundle(properties)

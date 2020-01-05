@@ -16,7 +16,9 @@ import androidx.annotation.DrawableRes
 object DrawableUtils {
 
     fun toBitmap(
-        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        context: Context,
+        @DrawableRes drawableResourceId: Int,
+        @ColorInt tintColor: Int,
         scale: Float = 1.0f
     ): Bitmap {
         val drawable = context.resources.getDrawable(drawableResourceId, context.theme)
@@ -34,7 +36,9 @@ object DrawableUtils {
     }
 
     fun createScaledDrawable(
-        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        context: Context,
+        @DrawableRes drawableResourceId: Int,
+        @ColorInt tintColor: Int,
         scale: Float = 1.0f
     ): Drawable {
 

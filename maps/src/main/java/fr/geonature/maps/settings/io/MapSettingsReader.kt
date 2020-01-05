@@ -8,10 +8,10 @@ import android.util.Log
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
-import org.osmdroid.util.GeoPoint
 import java.io.IOException
 import java.io.Reader
 import java.io.StringReader
+import org.osmdroid.util.GeoPoint
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
@@ -34,10 +34,11 @@ class MapSettingsReader {
 
         try {
             return read(StringReader(json))
-        }
-        catch (ioe: IOException) {
-            Log.w(TAG,
-                  ioe.message)
+        } catch (ioe: IOException) {
+            Log.w(
+                TAG,
+                ioe.message
+            )
         }
 
         return null
@@ -98,8 +99,12 @@ class MapSettingsReader {
                         reader.endArray()
 
                         if (tokens.size == 2) {
-                            maxBounds.add(GeoPoint(tokens[0],
-                                                   tokens[1]))
+                            maxBounds.add(
+                                GeoPoint(
+                                    tokens[0],
+                                    tokens[1]
+                                )
+                            )
                         }
                     }
 
@@ -118,16 +123,22 @@ class MapSettingsReader {
                     reader.endArray()
 
                     if (tokens.size == 2) {
-                        builder.center(GeoPoint(tokens[0],
-                                                tokens[1]))
+                        builder.center(
+                            GeoPoint(
+                                tokens[0],
+                                tokens[1]
+                            )
+                        )
                     }
                 }
                 "start_zoom", "zoom" -> builder.zoom(reader.nextDouble())
                 "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
                 "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
                 "min_zoom_editing" -> builder.minZoomEditing(reader.nextDouble())
-                "layers" -> readLayerSettingsAsList(reader,
-                                                    builder)
+                "layers" -> readLayerSettingsAsList(
+                    reader,
+                    builder
+                )
             }
         }
 
@@ -137,8 +148,10 @@ class MapSettingsReader {
     }
 
     @Throws(IOException::class)
-    private fun readLayerSettingsAsList(reader: JsonReader,
-                                        builder: MapSettings.Builder) {
+    private fun readLayerSettingsAsList(
+        reader: JsonReader,
+        builder: MapSettings.Builder
+    ) {
         reader.beginArray()
 
         while (reader.hasNext()) {
@@ -171,10 +184,11 @@ class MapSettingsReader {
 
         return try {
             builder.build()
-        }
-        catch (iae: IllegalArgumentException) {
-            Log.w(TAG,
-                  iae.message)
+        } catch (iae: IllegalArgumentException) {
+            Log.w(
+                TAG,
+                iae.message
+            )
 
             null
         }
@@ -207,10 +221,11 @@ class MapSettingsReader {
 
                 return try {
                     builder.build()
-                }
-                catch (iae: IllegalArgumentException) {
-                    Log.w(TAG,
-                          iae.message)
+                } catch (iae: IllegalArgumentException) {
+                    Log.w(
+                        TAG,
+                        iae.message
+                    )
 
                     null
                 }

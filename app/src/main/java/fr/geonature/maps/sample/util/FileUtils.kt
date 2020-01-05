@@ -20,7 +20,7 @@ object FileUtils {
      * Construct a file from the set of name elements.
      *
      * @param directory the parent directory
-     * @param names     the name elements
+     * @param names the name elements
      *
      * @return the corresponding file
      */
@@ -89,7 +89,7 @@ object FileUtils {
     /**
      * Gets the root folder as `File` used by this context.
      *
-     * @param context     the current `Context`
+     * @param context the current `Context`
      *
      * @return the root folder as `File`
      */

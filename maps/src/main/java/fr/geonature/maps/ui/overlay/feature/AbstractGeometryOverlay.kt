@@ -17,31 +17,43 @@ abstract class AbstractGeometryOverlay<G : Geometry, O : Overlay>(internal var b
 
     internal var geometry: G? = null
 
-    fun setGeometry(geometry: G,
-                    layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+    fun setGeometry(
+        geometry: G,
+        layerStyle: LayerStyleSettings = LayerStyleSettings()
+    ) {
         this.geometry = geometry
 
-        applyGeometry(geometry,
-                      layerStyle)
+        applyGeometry(
+            geometry,
+            layerStyle
+        )
     }
 
     /**
      * Draw given geometry through backend overlay.
      */
-    abstract fun applyGeometry(geometry: G,
-                               layerStyle: LayerStyleSettings = LayerStyleSettings())
+    abstract fun applyGeometry(
+        geometry: G,
+        layerStyle: LayerStyleSettings = LayerStyleSettings()
+    )
 
     /**
      * Apply style to backend overlay.
      */
     abstract fun setStyle(layerStyle: LayerStyleSettings = LayerStyleSettings())
 
-    override fun draw(pCanvas: Canvas?,
-                      pProjection: Projection?) {
-        super.draw(pCanvas,
-                   pProjection)
+    override fun draw(
+        pCanvas: Canvas?,
+        pProjection: Projection?
+    ) {
+        super.draw(
+            pCanvas,
+            pProjection
+        )
 
-        backendOverlay.draw(pCanvas,
-                            pProjection)
+        backendOverlay.draw(
+            pCanvas,
+            pProjection
+        )
     }
 }

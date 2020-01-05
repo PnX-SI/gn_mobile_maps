@@ -19,8 +19,10 @@ class FeatureCollection : AbstractGeoJson, Parcelable {
 
     private constructor(source: Parcel) {
         val features = ArrayList<Feature>()
-        source.readTypedList(features,
-                             Feature)
+        source.readTypedList(
+            features,
+            Feature
+        )
         addAllFeatures(features)
     }
 
@@ -75,8 +77,10 @@ class FeatureCollection : AbstractGeoJson, Parcelable {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel,
-                               flags: Int) {
+    override fun writeToParcel(
+        dest: Parcel,
+        flags: Int
+    ) {
         dest.writeTypedList(ArrayList(features.values))
     }
 

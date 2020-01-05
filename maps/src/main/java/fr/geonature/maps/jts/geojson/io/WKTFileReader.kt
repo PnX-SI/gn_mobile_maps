@@ -1,12 +1,12 @@
 package fr.geonature.maps.jts.geojson.io
 
+import fr.geonature.maps.jts.geojson.AbstractGeoJson
+import fr.geonature.maps.jts.geojson.Feature
+import fr.geonature.maps.jts.geojson.FeatureCollection
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.io.LineNumberReader
-import fr.geonature.maps.jts.geojson.AbstractGeoJson
-import fr.geonature.maps.jts.geojson.Feature
-import fr.geonature.maps.jts.geojson.FeatureCollection
 
 /**
  * Converts a GeoJSON in Well-Known Text format from `File` to a [AbstractGeoJson] implementation.
@@ -23,7 +23,7 @@ class WKTFileReader {
     /**
      * parse a Well-Known Text format reader to convert as [Feature].
      *
-     * @param wkt      the WKT `File` to read
+     * @param wkt the WKT `File` to read
      * @param listener the callback to monitor the progression
      */
     fun readFeatures(
@@ -33,8 +33,8 @@ class WKTFileReader {
         try {
             val lineNumberReader = LineNumberReader(FileReader(wkt))
 
+            @Suppress("ControlFlowWithEmptyBody")
             while (lineNumberReader.readLine() != null) {
-
             }
 
             lineNumber = lineNumberReader.lineNumber
@@ -65,8 +65,7 @@ class WKTFileReader {
                 FileReader(wkt),
                 onWKTReaderListener
             )
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             listener.onError(ioe)
         }
     }

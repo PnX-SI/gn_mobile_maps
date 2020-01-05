@@ -7,6 +7,9 @@ import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
+import java.io.IOException
+import java.io.StringWriter
+import java.io.Writer
 import org.locationtech.jts.geom.CoordinateSequence
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
@@ -16,9 +19,6 @@ import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
-import java.io.IOException
-import java.io.StringWriter
-import java.io.Writer
 
 /**
  * Default `JsonWriter` about writing an [AbstractGeoJson] as `JSON`.
@@ -52,8 +52,7 @@ class GeoJsonWriter {
                 writer,
                 feature
             )
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             Log.w(
                 TAG,
                 ioe.message
@@ -68,7 +67,7 @@ class GeoJsonWriter {
     /**
      * Convert the given [Feature] as `JSON` and write it to the given `Writer`.
      *
-     * @param out     the `Writer` to use
+     * @param out the `Writer` to use
      * @param feature the [Feature] to convert
      *
      * @throws IOException if something goes wrong
@@ -108,8 +107,7 @@ class GeoJsonWriter {
                 writer,
                 featureCollection
             )
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             Log.w(
                 TAG,
                 ioe.message
@@ -124,7 +122,7 @@ class GeoJsonWriter {
     /**
      * Convert the given [FeatureCollection] as `JSON` and write it to the given `Writer`.
      *
-     * @param out               the `Writer` to use
+     * @param out the `Writer` to use
      * @param featureCollection the [FeatureCollection] to convert
      *
      * @throws IOException if something goes wrong

@@ -16,11 +16,15 @@ import org.osmdroid.views.overlay.FolderOverlay
 class GeometryCollectionOverlay :
     AbstractGeometryOverlay<GeometryCollection, FolderOverlay>(FolderOverlay()) {
 
-    override fun applyGeometry(geometry: GeometryCollection,
-                               layerStyle: LayerStyleSettings) {
+    override fun applyGeometry(
+        geometry: GeometryCollection,
+        layerStyle: LayerStyleSettings
+    ) {
         if (geometry.numGeometries > 0) {
-            IntRange(0,
-                     geometry.numGeometries - 1).forEach {
+            IntRange(
+                0,
+                geometry.numGeometries - 1
+            ).forEach {
                 val geometryN = geometry.getGeometryN(it)
 
                 val overlay = when (geometryN) {
@@ -32,8 +36,10 @@ class GeometryCollectionOverlay :
                 }
 
                 if (overlay != null) {
-                    @Suppress("UNCHECKED_CAST") (overlay as AbstractGeometryOverlay<Geometry, *>).setGeometry(geometryN,
-                                                                                                              layerStyle)
+                    @Suppress("UNCHECKED_CAST") (overlay as AbstractGeometryOverlay<Geometry, *>).setGeometry(
+                        geometryN,
+                        layerStyle
+                    )
                     backendOverlay.add(overlay)
                 }
             }

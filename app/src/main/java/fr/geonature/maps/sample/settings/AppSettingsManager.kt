@@ -5,14 +5,14 @@ import android.util.Log
 import fr.geonature.maps.sample.settings.io.AppSettingsJsonReader
 import fr.geonature.maps.sample.util.FileUtils.getFile
 import fr.geonature.maps.sample.util.FileUtils.getRootFolder
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileReader
-import java.io.IOException
 
 /**
  * Manage [IAppSettings].
@@ -64,12 +64,10 @@ class AppSettingsManager<T : IAppSettings>(
                     "'${settingsJsonFile.absolutePath}' not found"
                 )
                 null
-            }
-            else {
+            } else {
                 try {
                     appSettingsJsonReader.read(FileReader(settingsJsonFile))
-                }
-                catch (e: IOException) {
+                } catch (e: IOException) {
                     Log.w(
                         TAG,
                         "Failed to load '${settingsJsonFile.name}'"

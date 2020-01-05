@@ -16,20 +16,28 @@ class FeatureCollectionOverlay : FolderOverlay() {
     var layerStyle: LayerStyleSettings = LayerStyleSettings()
         private set
 
-    fun setFeatureCollection(featureCollection: FeatureCollection,
-                             layerStyle: LayerStyleSettings = LayerStyleSettings()) {
-        setFeatures(featureCollection.getFeatures(),
-                    layerStyle)
+    fun setFeatureCollection(
+        featureCollection: FeatureCollection,
+        layerStyle: LayerStyleSettings = LayerStyleSettings()
+    ) {
+        setFeatures(
+            featureCollection.getFeatures(),
+            layerStyle
+        )
     }
 
-    fun setFeatures(features: List<Feature>,
-                    layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+    fun setFeatures(
+        features: List<Feature>,
+        layerStyle: LayerStyleSettings = LayerStyleSettings()
+    ) {
         this.layerStyle = layerStyle
 
         features.forEach {
             add(FeatureOverlay().apply {
-                setFeature(it,
-                           layerStyle)
+                setFeature(
+                    it,
+                    layerStyle
+                )
             })
         }
     }
@@ -44,11 +52,11 @@ class FeatureCollectionOverlay : FolderOverlay() {
 
     fun getFeatureOverlays(filter: (overlay: FeatureOverlay) -> Boolean = { true }): List<FeatureOverlay> {
         return items.asSequence()
-                .filterNotNull()
-                .filter { it is FeatureOverlay }
-                .map { it as FeatureOverlay }
-                .filter(filter)
-                .toList()
+            .filterNotNull()
+            .filter { it is FeatureOverlay }
+            .map { it as FeatureOverlay }
+            .filter(filter)
+            .toList()
     }
 
     /**

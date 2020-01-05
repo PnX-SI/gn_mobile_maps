@@ -17,11 +17,13 @@ data class AppSettings(var mapSettings: MapSettings? = null) : IAppSettings {
         return 0
     }
 
-    override fun writeToParcel(dest: Parcel?,
-                               flags: Int) {
+    override fun writeToParcel(
+        dest: Parcel?,
+        flags: Int
+    ) {
         dest?.writeParcelable(
-                mapSettings,
-                0
+            mapSettings,
+            0
         )
     }
 

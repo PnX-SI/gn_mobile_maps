@@ -27,8 +27,10 @@ class FeatureOverlay : OverlayWithIW() {
     internal var feature: Feature? = null
 
     @Suppress("UNCHECKED_CAST")
-    fun setFeature(feature: Feature,
-                   layerStyle: LayerStyleSettings = LayerStyleSettings()) {
+    fun setFeature(
+        feature: Feature,
+        layerStyle: LayerStyleSettings = LayerStyleSettings()
+    ) {
         id = feature.id
         this.feature = feature
         this.layerStyle = layerStyle
@@ -41,8 +43,10 @@ class FeatureOverlay : OverlayWithIW() {
             else -> null
         } as AbstractGeometryOverlay<Geometry, Overlay>?
 
-        backendOverlay?.setGeometry(feature.geometry,
-                                    layerStyle)
+        backendOverlay?.setGeometry(
+            feature.geometry,
+            layerStyle
+        )
     }
 
     fun setStyle(layerStyle: LayerStyleSettings = LayerStyleSettings()) {
@@ -61,16 +65,26 @@ class FeatureOverlay : OverlayWithIW() {
         val feature = this.feature ?: return
 
         val matches = filter.filter(feature)
-        backendOverlay?.setStyle(filter.getStyle(feature,
-                                                 matches))
+        backendOverlay?.setStyle(
+            filter.getStyle(
+                feature,
+                matches
+            )
+        )
     }
 
-    override fun draw(pCanvas: Canvas?,
-                      pProjection: Projection?) {
-        super.draw(pCanvas,
-                   pProjection)
+    override fun draw(
+        pCanvas: Canvas?,
+        pProjection: Projection?
+    ) {
+        super.draw(
+            pCanvas,
+            pProjection
+        )
 
-        backendOverlay?.draw(pCanvas,
-                             pProjection)
+        backendOverlay?.draw(
+            pCanvas,
+            pProjection
+        )
     }
 }

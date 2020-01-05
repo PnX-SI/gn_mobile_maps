@@ -15,10 +15,14 @@ import org.osmdroid.views.overlay.Polygon.pointsAsCircle
 class CirclePointOverlay(private var radiusInMeters: Double = 10.0) :
     AbstractGeometryOverlay<Point, Polygon>(Polygon()) {
 
-    override fun applyGeometry(geometry: Point,
-                               layerStyle: LayerStyleSettings) {
-        backendOverlay.points = pointsAsCircle(fromPoint(geometry),
-                                               radiusInMeters)
+    override fun applyGeometry(
+        geometry: Point,
+        layerStyle: LayerStyleSettings
+    ) {
+        backendOverlay.points = pointsAsCircle(
+            fromPoint(geometry),
+            radiusInMeters
+        )
         setStyle(layerStyle)
     }
 
@@ -27,8 +31,7 @@ class CirclePointOverlay(private var radiusInMeters: Double = 10.0) :
             if (layerStyle.stroke) {
                 strokeColor = layerStyle.color
                 strokeWidth = layerStyle.weight.toFloat()
-            }
-            else {
+            } else {
                 strokeColor = Color.TRANSPARENT
                 strokeWidth = 0f
             }

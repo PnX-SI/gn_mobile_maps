@@ -11,12 +11,12 @@ import android.util.AttributeSet
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.util.ThemeUtils
+import kotlin.math.absoluteValue
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
 import org.osmdroid.views.MapView
-import kotlin.math.absoluteValue
 
 /**
  * Show map compass as floating action button.

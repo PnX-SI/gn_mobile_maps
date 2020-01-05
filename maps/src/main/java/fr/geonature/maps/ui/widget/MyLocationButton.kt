@@ -61,7 +61,6 @@ class MyLocationButton(
         return true
     }
 
-
     override fun onSaveInstanceState(): Parcelable? {
         return Bundle().apply {
             putParcelable(
@@ -120,8 +119,7 @@ class MyLocationButton(
                     )
                     drawable?.setTint(ThemeUtils.getAccentColor(context))
                     MyLocationState.ACTIVE_TRACKER
-                }
-                else {
+                } else {
                     drawable?.setTint(Color.DKGRAY)
                     MyLocationState.ACTIVE
                 }
@@ -165,8 +163,7 @@ class MyLocationButton(
         if (myLocationOverlay.isEnabled) {
             if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                 disableMyLocation()
-            }
-            else {
+            } else {
                 animateTo(
                     mapView,
                     myLocationOverlay.getLastKnownLocation()
@@ -178,8 +175,7 @@ class MyLocationButton(
 
                 myLocationState = MyLocationState.ACTIVE_TRACKER
             }
-        }
-        else {
+        } else {
             enableMyLocation(MyLocationState.ACTIVE_TRACKER)
         }
     }
