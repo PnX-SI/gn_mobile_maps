@@ -16,4 +16,7 @@
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
 
+    <string name="button_zoom_in_hint">Zoomer</string>
+    <string name="button_zoom_out_hint">Dézoomer</string>
+
 </resources>

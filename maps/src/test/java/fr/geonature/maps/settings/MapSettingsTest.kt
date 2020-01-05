@@ -34,6 +34,7 @@ class MapSettingsTest {
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
+            .showZoom(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -74,6 +75,7 @@ class MapSettingsTest {
                 "/mnt/sdcard",
                 showScale = false,
                 showCompass = false,
+                showZoom = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -280,6 +282,7 @@ class MapSettingsTest {
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
+            .showZoom(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)

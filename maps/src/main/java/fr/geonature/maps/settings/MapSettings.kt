@@ -15,6 +15,7 @@ data class MapSettings(
     val baseTilesPath: String?,
     val showScale: Boolean = true,
     val showCompass: Boolean = true,
+    val showZoom: Boolean = false,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -28,6 +29,7 @@ data class MapSettings(
         builder.baseTilesPath,
         builder.showScale,
         builder.showCompass,
+        builder.showZoom,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -39,6 +41,7 @@ data class MapSettings(
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
+        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
         source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
         source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
         source.readDouble(),
@@ -65,6 +68,7 @@ data class MapSettings(
         dest?.writeString(baseTilesPath)
         dest?.writeByte((if (showScale) 1 else 0).toByte()) // as boolean value
         dest?.writeByte((if (showCompass) 1 else 0).toByte()) // as boolean value
+        dest?.writeByte((if (showZoom) 1 else 0).toByte()) // as boolean value
         dest?.writeDouble(zoom)
         dest?.writeDouble(minZoomLevel)
         dest?.writeDouble(maxZoomLevel)
@@ -89,6 +93,8 @@ data class MapSettings(
         if (layersSettings != other.layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
         if (showScale != other.showScale) return false
+        if (showCompass != other.showCompass) return false
+        if (showZoom != other.showZoom) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
         if (maxZoomLevel != other.maxZoomLevel) return false
@@ -112,6 +118,8 @@ data class MapSettings(
         var result = layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
         result = 31 * result + showScale.hashCode()
+        result = 31 * result + showCompass.hashCode()
+        result = 31 * result + showZoom.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
         result = 31 * result + maxZoomLevel.hashCode()
@@ -150,6 +158,9 @@ data class MapSettings(
         internal var showCompass: Boolean = true
             private set
 
+        internal var showZoom: Boolean = false
+            private set
+
         internal var zoom: Double = 0.0
             private set
 
@@ -174,6 +185,7 @@ data class MapSettings(
                 this.baseTilesPath = mapSettings.baseTilesPath
                 this.showScale = mapSettings.showScale
                 this.showCompass = mapSettings.showCompass
+                this.showZoom = mapSettings.showZoom
                 this.zoom = mapSettings.zoom
                 this.minZoomLevel = mapSettings.minZoomLevel
                 this.maxZoomLevel = mapSettings.maxZoomLevel
@@ -190,6 +202,9 @@ data class MapSettings(
 
         fun showCompass(showCompass: Boolean) =
             apply { this.showCompass = showCompass }
+
+        fun showZoom(showZoom: Boolean) =
+            apply { this.showZoom = showZoom }
 
         fun zoom(zoom: Double) =
             apply { this.zoom = zoom }

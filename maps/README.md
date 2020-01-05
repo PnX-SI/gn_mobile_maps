@@ -8,6 +8,7 @@ Example:
 {
   "show_scale": false,
   "show_compass": false,
+  "show_zoom": false,
   "max_bounds": [[47.253369, -1.605721], [47.173845, -1.482811]],
   "center": [47.225827, -1.55447],
   "start_zoom": 8.0,
@@ -43,6 +44,7 @@ Example:
 | `base_path`        | &#9744; | Sets the default layers path (default: `null`).                                                                                    |
 | `show_scale`       | &#9745; | Whether to show the map scale (default: `true`).                                                                                   |
 | `show_compass`     | &#9745; | Whether to show north compass during map rotation (default: `true`).                                                               |
+| `show_zoom`        | &#9745; | Whether to show zoom control (default: `false`).                                                               |
 | `max_bounds`       | &#9744; | Set the map to limit it's scrollable view to the specified bounding box.                                                           |
 | `center`           | &#9744; | Center automatically the map at given position at startup.                                                                         |
 | `start_zoom`       | &#9744; | Set the default map zoom at startup.                                                                                               |

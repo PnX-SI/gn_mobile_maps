@@ -13,13 +13,22 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <fr.geonature.maps.ui.widget.ZoomButton
+        android:id="@+id/fab_zoom"
+        android:layout_width="48dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="@dimen/fab_margin"
+        android:layout_marginTop="@dimen/fab_margin"
+        android:visibility="invisible" />
+
     <fr.geonature.maps.ui.widget.RotateCompassButton
         android:id="@+id/fab_compass"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
-        android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginTop="@dimen/fab_margin"
+        android:layout_marginEnd="@dimen/fab_margin"
         android:clickable="true"
         android:focusable="true"
         android:visibility="invisible"
@@ -39,8 +48,8 @@
             android:id="@+id/fab_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
             android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/fab_margin"
             android:clickable="true"
             android:focusable="true"
             app:backgroundTint="@android:color/white"
@@ -50,8 +59,8 @@
             android:id="@+id/fab_poi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
             android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/fab_margin"
             android:clickable="true"
             android:focusable="true"
             android:tint="@android:color/white"

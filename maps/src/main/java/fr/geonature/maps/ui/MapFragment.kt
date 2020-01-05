@@ -19,10 +19,10 @@ import fr.geonature.maps.ui.overlay.feature.FeatureOverlayProvider
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
+import fr.geonature.maps.ui.widget.ZoomButton
 import fr.geonature.maps.util.PermissionUtils
 import fr.geonature.maps.util.PermissionUtils.checkPermissions
 import java.io.File
-import kotlinx.android.synthetic.main.fragment_map.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -53,6 +53,7 @@ open class MapFragment : Fragment() {
     private lateinit var editFeatureFab: EditFeatureButton
     private lateinit var myLocationFab: MyLocationButton
     private lateinit var rotateCompassFab: RotateCompassButton
+    private lateinit var zoomFab: ZoomButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,11 +92,12 @@ open class MapFragment : Fragment() {
             savedInstanceState
         )
 
-        this.container = map_content
-        this.mapView = map
-        this.rotateCompassFab = fab_compass
-        this.editFeatureFab = fab_poi
-        this.myLocationFab = fab_location
+        this.container = view.findViewById(R.id.map_content)
+        this.mapView = view.findViewById(R.id.map)
+        this.rotateCompassFab = view.findViewById(R.id.fab_compass)
+        this.editFeatureFab = view.findViewById(R.id.fab_poi)
+        this.myLocationFab = view.findViewById(R.id.fab_location)
+        this.zoomFab = view.findViewById(R.id.fab_zoom)
 
         configureMapView()
 
@@ -224,6 +226,12 @@ open class MapFragment : Fragment() {
         if (mapSettings.showCompass) {
             rotateCompassFab.setMapView(mapView)
             rotateCompassFab.show()
+        }
+
+        // configure and display zoom control
+        if (mapSettings.showZoom) {
+            zoomFab.setMapView(mapView)
+            zoomFab.visibility = View.VISIBLE
         }
 
         // configure edit POIs overlay

@@ -83,6 +83,7 @@ class MapSettingsReader {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
                 "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
+                "show_zoom" -> builder.showZoom(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
 
