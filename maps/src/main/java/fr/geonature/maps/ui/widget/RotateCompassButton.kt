@@ -11,12 +11,16 @@ import android.util.AttributeSet
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.util.ThemeUtils
-import kotlin.math.absoluteValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
 import org.osmdroid.views.MapView
+import kotlin.math.absoluteValue
 
 /**
  * Show map compass as floating action button.
@@ -31,11 +35,15 @@ class RotateCompassButton(
     attrs
 ), MapListener {
 
+    private var mapView: MapView? = null
+
     init {
         updateImageDrawable()
     }
 
     fun setMapView(mapView: MapView) {
+        this.mapView = mapView
+
         mapView.addMapListener(this)
         setOnClickListener {
 
@@ -62,7 +70,28 @@ class RotateCompassButton(
     override fun onScroll(event: ScrollEvent?): Boolean {
         if (event == null) return true
 
+        if (alpha == 0F && !northThreshold(event.source.mapOrientation)) {
+            animate().alpha(1F).setDuration(
+                Configuration.getInstance()
+                    .animationSpeedShort.toLong()
+            ).start()
+        }
+
         updateImageDrawable(event.source.mapOrientation)
+
+        GlobalScope.launch(Dispatchers.Main) {
+            delay(
+                Configuration.getInstance()
+                    .animationSpeedDefault.toLong()
+            )
+
+            if (alpha == 1F && northThreshold(mapView?.mapOrientation ?: 0F)) {
+                animate().alpha(0F).setDuration(
+                    Configuration.getInstance()
+                        .animationSpeedShort.toLong()
+                ).start()
+            }
+        }
 
         return true
     }
@@ -86,10 +115,9 @@ class RotateCompassButton(
         )
 
         val canvas = Canvas(bitmap)
-        val northThreshold = mapOrientation.absoluteValue * 100 / 360 < 2f
 
         // show "N" if map orientation is near from north
-        if (northThreshold) {
+        if (northThreshold(mapOrientation)) {
             val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             textPaint.style = Paint.Style.FILL
             textPaint.textAlign = Paint.Align.CENTER
@@ -127,5 +155,9 @@ class RotateCompassButton(
                 bitmap
             )
         )
+    }
+
+    private fun northThreshold(mapOrientation: Float): Boolean {
+        return mapOrientation.absoluteValue * 100 / 360 < 2f
     }
 }
