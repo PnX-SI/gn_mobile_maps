@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
-version = "0.3.7"
+version = "0.3.8"
 
 android {
     compileSdkVersion 28
@@ -59,6 +59,3 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
-repositories {
-    mavenCentral()
-}

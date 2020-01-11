@@ -18,7 +18,6 @@ import fr.geonature.maps.util.PermissionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.osmdroid.util.GeoPoint
 
 /**
  * Main Activity.
@@ -103,42 +102,68 @@ class MainActivity : AppCompatActivity() {
                             appSettings.mapSettings!!,
                             EditFeatureButton.EditMode.SINGLE
                         ).apply {
-                            onSelectedPOIsListener = object :
-                                MapFragment.OnSelectedPOIsListener {
-                                override fun onSelectedPOIs(pois: List<GeoPoint>) {
-                                    Log.i(
-                                        TAG,
-                                        "selected POIs: $pois"
-                                    )
+                            onSelectedPOIsListener = { pois ->
+                                Log.i(
+                                    TAG,
+                                    "selected POIs: $pois"
+                                )
 
-                                    getOverlays { overlay -> overlay is FeatureCollectionOverlay }.asSequence()
-                                        .map { it as FeatureCollectionOverlay }
-                                        .map { it.also { it.setStyle(it.layerStyle) } }
-                                        .map {
-                                            pois.asSequence()
-                                                .filterNotNull()
-                                                .map { geoPoint ->
-                                                    val filter = ContainsFeaturesFilter(
-                                                        geoPoint,
-                                                        it.layerStyle,
-                                                        LayerStyleSettings.Builder.newInstance().from(
-                                                            it.layerStyle
-                                                        ).color("red").build()
-                                                    )
-                                                    it.apply(filter)
-                                                    filter.getSelectedFeatures()
-                                                }
-                                                .flatMap { list -> list.asSequence() }
-                                                .toList()
-                                        }
-                                        .flatMap { it.asSequence() }
-                                        .forEach {
-                                            Log.i(
-                                                TAG,
-                                                "selected zone: ${it.id}"
-                                            )
-                                        }
-                                }
+                                getOverlays { overlay -> overlay is FeatureCollectionOverlay }.asSequence()
+                                    .map { it as FeatureCollectionOverlay }
+                                    .map { it.also { it.setStyle(it.layerStyle) } }
+                                    .map {
+                                        pois.asSequence()
+                                            .filterNotNull()
+                                            .map { geoPoint ->
+                                                val filter = ContainsFeaturesFilter(
+                                                    geoPoint,
+                                                    it.layerStyle,
+                                                    LayerStyleSettings.Builder.newInstance().from(
+                                                        it.layerStyle
+                                                    ).color("red").build()
+                                                )
+                                                it.apply(filter)
+                                                filter.getSelectedFeatures()
+                                            }
+                                            .flatMap { list -> list.asSequence() }
+                                            .toList()
+                                    }
+                                    .flatMap { it.asSequence() }
+                                    .forEach {
+                                        Log.i(
+                                            TAG,
+                                            "selected zone: ${it.id}"
+                                        )
+                                    }
+                            }
+                            onVectorLayersChangedListener = { activeVectorLayers ->
+                                activeVectorLayers.asSequence()
+                                    .map { it as FeatureCollectionOverlay }
+                                    .map { it.also { it.setStyle(it.layerStyle) } }
+                                    .map {
+                                        getSelectedPOIs().asSequence()
+                                            .filterNotNull()
+                                            .map { geoPoint ->
+                                                val filter = ContainsFeaturesFilter(
+                                                    geoPoint,
+                                                    it.layerStyle,
+                                                    LayerStyleSettings.Builder.newInstance().from(
+                                                        it.layerStyle
+                                                    ).color("red").build()
+                                                )
+                                                it.apply(filter)
+                                                filter.getSelectedFeatures()
+                                            }
+                                            .flatMap { list -> list.asSequence() }
+                                            .toList()
+                                    }
+                                    .flatMap { it.asSequence() }
+                                    .forEach {
+                                        Log.i(
+                                            TAG,
+                                            "selected zone: ${it.id}"
+                                        )
+                                    }
                             }
                         })
                     .commit()

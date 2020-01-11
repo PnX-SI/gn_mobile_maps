@@ -43,6 +43,23 @@ data class LayerSettings(
         )
     }
 
+    fun getType(): LayerType {
+        if (source.endsWith("mbtiles")) {
+            return LayerType.TILES
+        }
+
+        if (arrayOf(
+                ".geojson",
+                ".json",
+                ".wkt"
+            ).any { source.endsWith(it) }
+        ) {
+            return LayerType.VECTOR
+        }
+
+        return LayerType.NOT_IMPLEMENTED
+    }
+
     class Builder {
 
         internal var label: String? = null

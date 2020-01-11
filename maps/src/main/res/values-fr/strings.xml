@@ -3,6 +3,12 @@
 
     <string name="compass_north">N</string>
 
+    <string name="alert_dialog_layers_title">Couches géographiques</string>
+    <string name="alert_dialog_layers_cancel">Fermer</string>
+    <string name="alert_dialog_layers_type_tiles">Fonds cartographique</string>
+    <string name="alert_dialog_layers_type_vector">Couches vectorielles</string>
+    <string name="alert_dialog_layers_no_data">Aucune couche géographique à afficher</string>
+
     <string name="action_undo">Annuler</string>
     <string name="action_title_poi_edit">Éditer le marqueur</string>
     <string name="action_poi_delete">Supprimer le marqueur</string>

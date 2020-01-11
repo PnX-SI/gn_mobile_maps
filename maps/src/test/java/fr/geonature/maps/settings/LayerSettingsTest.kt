@@ -73,6 +73,44 @@ class LayerSettingsTest {
     }
 
     @Test
+    fun testGetType() {
+        assertEquals(
+            LayerType.TILES, LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            ).getType()
+        )
+
+        assertEquals(
+            LayerType.VECTOR, LayerSettings(
+                "Nantes",
+                "nantes.wkt"
+            ).getType()
+        )
+
+        assertEquals(
+            LayerType.VECTOR, LayerSettings(
+                "Nantes",
+                "nantes.json"
+            ).getType()
+        )
+
+        assertEquals(
+            LayerType.VECTOR, LayerSettings(
+                "Nantes",
+                "nantes.geojson"
+            ).getType()
+        )
+
+        assertEquals(
+            LayerType.NOT_IMPLEMENTED, LayerSettings(
+                "Nantes",
+                "nantes"
+            ).getType()
+        )
+    }
+
+    @Test
     fun testParcelable() {
         // given a layer settings
         val layerSettings = LayerSettings(

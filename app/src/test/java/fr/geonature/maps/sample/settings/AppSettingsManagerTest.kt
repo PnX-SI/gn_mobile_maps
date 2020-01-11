@@ -7,11 +7,14 @@ import fr.geonature.maps.sample.settings.io.OnAppSettingsJsonReaderListenerImpl
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.doReturn
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.robolectric.RobolectricTestRunner
@@ -43,8 +46,8 @@ class AppSettingsManagerTest {
         val appSettingsFilename = appSettingsManager.getAppSettingsFilename()
 
         // then
-        Assert.assertNotNull(appSettingsFilename)
-        Assert.assertEquals(
+        assertNotNull(appSettingsFilename)
+        assertEquals(
             "settings_sample.json",
             appSettingsFilename
         )
@@ -56,10 +59,10 @@ class AppSettingsManagerTest {
         var noSuchAppSettings = runBlocking { appSettingsManager.loadAppSettings() }
 
         // then
-        Assert.assertNull(noSuchAppSettings)
+        assertNull(noSuchAppSettings)
 
         // given non existing app settings JSON file
-        Mockito.doReturn(
+        doReturn(
             File(
                 "/mnt/sdcard",
                 "no_such_file.json"
@@ -72,13 +75,13 @@ class AppSettingsManagerTest {
         noSuchAppSettings = runBlocking { appSettingsManager.loadAppSettings() }
 
         // then
-        Assert.assertNull(noSuchAppSettings)
+        assertNull(noSuchAppSettings)
     }
 
     @Test
     fun testReadAppSettings() {
         // given app settings to read
-        Mockito.doReturn(FixtureHelper.getFixtureAsFile("settings_sample.json"))
+        doReturn(FixtureHelper.getFixtureAsFile("settings_sample.json"))
             .`when`(appSettingsManager)
             .getAppSettingsAsFile()
 
@@ -86,8 +89,8 @@ class AppSettingsManagerTest {
         val appSettings = runBlocking { appSettingsManager.loadAppSettings() }
 
         // then
-        Assert.assertNotNull(appSettings)
-        Assert.assertEquals(
+        assertNotNull(appSettings)
+        assertEquals(
             AppSettings(
                 MapSettings(
                     arrayListOf(

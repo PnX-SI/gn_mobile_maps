@@ -10,11 +10,17 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
+import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
+import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
+import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlayProvider
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
@@ -22,9 +28,9 @@ import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
 import fr.geonature.maps.util.PermissionUtils
 import fr.geonature.maps.util.PermissionUtils.checkPermissions
-import java.io.File
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
@@ -33,9 +39,11 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import java.io.File
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -44,21 +52,28 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-open class MapFragment : Fragment() {
+open class MapFragment : Fragment(),
+    LayerSettingsDialogFragment.OnLayerSettingsDialogFragmentListener {
 
-    var onSelectedPOIsListener: OnSelectedPOIsListener? = null
+    var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
+    var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
 
     private lateinit var container: View
     private lateinit var mapView: MapView
     private lateinit var editFeatureFab: EditFeatureButton
     private lateinit var myLocationFab: MyLocationButton
     private lateinit var rotateCompassFab: RotateCompassButton
+    private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
+    private var mapSettings: MapSettings? = null
+    private lateinit var savedState: Bundle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = context ?: return
+        mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS)
+        savedState = savedInstanceState ?: Bundle()
 
         Configuration.getInstance()
             .apply {
@@ -94,10 +109,13 @@ open class MapFragment : Fragment() {
 
         this.container = view.findViewById(R.id.map_content)
         this.mapView = view.findViewById(R.id.map)
-        this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.editFeatureFab = view.findViewById(R.id.fab_poi)
         this.myLocationFab = view.findViewById(R.id.fab_location)
+        this.rotateCompassFab = view.findViewById(R.id.fab_compass)
+        this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
+
+        val mapSettings = mapSettings ?: return
 
         configureMapView()
 
@@ -109,14 +127,18 @@ open class MapFragment : Fragment() {
         )
 
         if (granted) {
-            configureTileProvider()
-            configureVectorLayers()
+            configureTileProvider(mapSettings.getTilesLayers())
+            configureVectorLayers(mapSettings.getVectorLayers())
         } else {
             requestPermissions(
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 REQUEST_STORAGE_PERMISSIONS
             )
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(savedState.apply { putAll(outState) })
     }
 
     override fun onDetach() {
@@ -148,10 +170,12 @@ open class MapFragment : Fragment() {
                 val requestPermissionsResult = checkPermissions(grantResults)
 
                 if (requestPermissionsResult) {
-                    configureTileProvider()
-                    configureVectorLayers()
-
                     showSnackbar(getString(R.string.snackbar_permissions_granted))
+
+                    val mapSettings = mapSettings ?: return
+
+                    configureTileProvider(mapSettings.getTilesLayers())
+                    configureVectorLayers(mapSettings.getVectorLayers())
                 } else {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
@@ -171,6 +195,11 @@ open class MapFragment : Fragment() {
                 grantResults
             )
         }
+    }
+
+    override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
+        configureTileProvider(layersSettings)
+        configureVectorLayers(layersSettings)
     }
 
     fun getSelectedPOIs(): List<GeoPoint> {
@@ -211,7 +240,7 @@ open class MapFragment : Fragment() {
         rotationGestureOverlay.isEnabled = true
         mapView.overlays.add(rotationGestureOverlay)
 
-        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
+        val mapSettings = mapSettings ?: return
 
         // configure and display scale bar
         if (mapSettings.showScale) {
@@ -226,6 +255,22 @@ open class MapFragment : Fragment() {
         if (mapSettings.showCompass) {
             rotateCompassFab.setMapView(mapView)
             rotateCompassFab.show()
+        }
+
+        // configure and show layers selector
+        if (mapSettings.layersSettings.isNotEmpty()) {
+            with(layersFab) {
+                setOnClickListener {
+                    LayerSettingsDialogFragment.newInstance(
+                        mapSettings.layersSettings,
+                        savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                            ?: emptyList()
+                    ).also {
+                        it.show(childFragmentManager, LAYER_SETTINGS_DIALOG_FRAGMENT)
+                    }
+                }
+                show()
+            }
         }
 
         // configure and display zoom control
@@ -268,7 +313,7 @@ open class MapFragment : Fragment() {
             }
 
             override fun onSelectedPOIs(pois: List<GeoPoint>) {
-                onSelectedPOIsListener?.onSelectedPOIs(pois)
+                onSelectedPOIsListener(pois)
             }
         })
 
@@ -321,20 +366,9 @@ open class MapFragment : Fragment() {
         }
     }
 
-    private fun configureTileProvider() {
+    private fun configureTileProvider(layersSettings: List<LayerSettings>) {
         val context = context ?: return
-        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
-
-        if (mapSettings.layersSettings.isEmpty()) {
-            Log.w(
-                TAG,
-                "No layers defined"
-            )
-
-            showSnackbar(getString(R.string.snackbar_layers_undefined))
-
-            return
-        }
+        val mapSettings = mapSettings ?: return
 
         if (!File(mapSettings.baseTilesPath).exists()) {
             Log.w(
@@ -352,30 +386,27 @@ open class MapFragment : Fragment() {
             return
         }
 
-        val tileSources = mapSettings.getLayersAsTileSources()
-            .map { File("${mapSettings.baseTilesPath}/$it") }
+        val tileSources = layersSettings.asSequence().filter { it.getType() == LayerType.TILES }
+            .map { File("${mapSettings.baseTilesPath}/${it.source}") }.toList()
 
-        val tileProvider = OfflineTileProvider(
-            SimpleRegisterReceiver(context),
-            tileSources.toTypedArray()
-        )
+        if (tileSources.isEmpty()) {
+            mapView.tileProvider?.detach()
+        }
 
-        mapView.tileProvider = tileProvider
-    }
-
-    private fun configureVectorLayers() {
-        val mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS) as MapSettings
-
-        if (mapSettings.layersSettings.isEmpty()) {
-            Log.w(
-                TAG,
-                "No vector layers defined"
+        if (tileSources.isNotEmpty()) {
+            val tileProvider = OfflineTileProvider(
+                SimpleRegisterReceiver(context),
+                tileSources.toTypedArray()
             )
 
-            showSnackbar(getString(R.string.snackbar_layers_undefined))
-
-            return
+            mapView.tileProvider = tileProvider
         }
+
+        updateActiveLayers(layersSettings, LayerType.TILES)
+    }
+
+    private fun configureVectorLayers(layersSettings: List<LayerSettings>) {
+        val mapSettings = mapSettings ?: return
 
         if ((mapSettings.baseTilesPath == null) || !File(mapSettings.baseTilesPath).exists()) {
             Log.w(
@@ -393,11 +424,23 @@ open class MapFragment : Fragment() {
             return
         }
 
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.launch(Main) {
+            mapView.overlays.asSequence()
+                .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                .forEach {
+                    mapView.overlays.remove(it)
+                }
+            val markerOverlaysFirstIndex =
+                mapView.overlays.indexOfFirst { it is Marker }.coerceAtLeast(0)
             val overlays =
-                FeatureOverlayProvider(mapSettings.baseTilesPath).loadFeaturesAsOverlays(mapSettings.getVectorLayers())
-            overlays.forEach { mapView.overlays.add(it) }
+                FeatureOverlayProvider(mapSettings.baseTilesPath).loadFeaturesAsOverlays(
+                    layersSettings.filter { it.getType() == LayerType.VECTOR })
+            overlays.forEach { mapView.overlays.add(markerOverlaysFirstIndex, it) }
             mapView.invalidate()
+
+            updateActiveLayers(layersSettings, LayerType.VECTOR)
+            delay(100)
+            onVectorLayersChangedListener(overlays)
         }
     }
 
@@ -410,8 +453,13 @@ open class MapFragment : Fragment() {
             .show()
     }
 
-    interface OnSelectedPOIsListener {
-        fun onSelectedPOIs(pois: List<GeoPoint>)
+    private fun updateActiveLayers(selectedLayersSettings: List<LayerSettings>, filter: LayerType) {
+        (savedState.getParcelableArrayList<LayerSettings>(KEY_ACTIVE_LAYERS)
+            ?: mutableListOf<LayerSettings>()).run {
+            this.removeAll { it.getType() == filter }
+            addAll(selectedLayersSettings.filter { it.getType() == filter })
+            savedState.putParcelableArrayList(KEY_ACTIVE_LAYERS, ArrayList(this.distinct()))
+        }
     }
 
     companion object {
@@ -423,6 +471,11 @@ open class MapFragment : Fragment() {
 
         private const val REQUEST_STORAGE_PERMISSIONS = 0
         private const val REQUEST_LOCATION_PERMISSIONS = 1
+
+        private const val KEY_ACTIVE_LAYERS = "active_layers"
+
+        private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
+            "layer_settings_dialog_fragment"
 
         private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 

@@ -146,7 +146,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testGetLayersAsTileSources() {
+    fun testGetTilesLayers() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -190,8 +190,13 @@ class MapSettingsTest {
         // then
         assertNotNull(mapSettings)
         assertArrayEquals(
-            arrayOf("nantes.mbtiles"),
-            mapSettings.getLayersAsTileSources().toTypedArray()
+            arrayOf(
+                LayerSettings(
+                    "Nantes",
+                    "nantes.mbtiles"
+                )
+            ),
+            mapSettings.getTilesLayers().toTypedArray()
         )
     }
 

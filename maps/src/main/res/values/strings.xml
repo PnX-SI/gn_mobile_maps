@@ -5,6 +5,12 @@
 
     <string name="compass_north">N</string>
 
+    <string name="alert_dialog_layers_title">Select layers</string>
+    <string name="alert_dialog_layers_cancel">Close</string>
+    <string name="alert_dialog_layers_type_tiles">Tiles layers</string>
+    <string name="alert_dialog_layers_type_vector">Vector layers</string>
+    <string name="alert_dialog_layers_no_data">No layers to display on the map</string>
+
     <string name="action_undo">Undo</string>
     <string name="action_title_poi_edit">Edit POI</string>
     <string name="action_poi_delete">Delete POI</string>

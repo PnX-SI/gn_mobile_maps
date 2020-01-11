@@ -130,19 +130,12 @@ data class MapSettings(
         return result
     }
 
-    fun getLayersAsTileSources(): List<String> {
-        return layersSettings.filter { it.source.endsWith(".mbtiles") }
-            .map { it.source }
+    fun getTilesLayers(): List<LayerSettings> {
+        return layersSettings.filter { it.getType() == LayerType.TILES }
     }
 
     fun getVectorLayers(): List<LayerSettings> {
-        return layersSettings.filter { layerSettings ->
-            arrayOf(
-                ".geojson",
-                ".json",
-                ".wkt"
-            ).any { layerSettings.source.endsWith(it) }
-        }
+        return layersSettings.filter { it.getType() == LayerType.VECTOR }
     }
 
     class Builder {
