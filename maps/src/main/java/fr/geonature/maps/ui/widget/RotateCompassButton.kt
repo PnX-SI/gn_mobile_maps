@@ -64,6 +64,20 @@ class RotateCompassButton(
                 null,
                 0f
             )
+
+            GlobalScope.launch(Dispatchers.Main) {
+                delay(
+                    Configuration.getInstance()
+                        .animationSpeedDefault.toLong() * 2
+                )
+
+                if (alpha == 1F && northThreshold(mapView.mapOrientation)) {
+                    animate().alpha(0F).setDuration(
+                        Configuration.getInstance()
+                            .animationSpeedShort.toLong()
+                    ).start()
+                }
+            }
         }
     }
 
