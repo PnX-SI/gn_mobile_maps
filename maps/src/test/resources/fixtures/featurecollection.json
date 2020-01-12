@@ -70,7 +70,6 @@
       "properties": {}
     },
     {
-      "id": "id5",
       "type": "Feature",
       "geometry": {
         "type": "Polygon",
@@ -99,7 +98,9 @@
           ]
         ]
       },
-      "properties": {}
+      "properties": {
+        "id": "id5"
+      }
     }
   ]
 }

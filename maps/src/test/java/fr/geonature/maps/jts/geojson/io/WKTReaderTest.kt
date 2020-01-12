@@ -5,7 +5,6 @@ import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.MockitoKotlinHelper.capture
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import java.io.StringReader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -47,7 +46,7 @@ class WKTReaderTest {
 
         // when parsing this file as WKT
         WKTReader().readFeatures(
-            StringReader(wkt),
+            wkt.reader(),
             onWKTReaderListener
         )
 
@@ -83,7 +82,7 @@ class WKTReaderTest {
         val wkt = getFixture("features.wkt")
 
         // when parsing this file as WKT
-        val features = WKTReader().readFeatures(StringReader(wkt))
+        val features = WKTReader().readFeatures(wkt.reader())
 
         // then
         assertNotNull(features)
@@ -139,7 +138,7 @@ class WKTReaderTest {
         val wkt = getFixture("features.wkt")
 
         // when parsing this file as WKT
-        val featureCollection = WKTReader().readFeatureCollection(StringReader(wkt))
+        val featureCollection = WKTReader().readFeatureCollection(wkt.reader())
 
         // then
         assertNotNull(featureCollection)

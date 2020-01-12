@@ -1,15 +1,11 @@
 package fr.geonature.maps.jts.geojson.io
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.JsonWriter
 import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import java.io.IOException
-import java.io.StringWriter
-import java.io.Writer
 import org.locationtech.jts.geom.CoordinateSequence
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
@@ -19,6 +15,9 @@ import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
+import java.io.IOException
+import java.io.StringWriter
+import java.io.Writer
 
 /**
  * Default `JsonWriter` about writing an [AbstractGeoJson] as `JSON`.
@@ -187,7 +186,7 @@ class GeoJsonWriter {
         writer: JsonWriter,
         geometry: Geometry
     ) {
-        if (TextUtils.isEmpty(geometry.geometryType)) {
+        if (geometry.geometryType.isNullOrBlank()) {
             throw IOException("invalid geometry type")
         }
 
@@ -357,7 +356,7 @@ class GeoJsonWriter {
         for (i in 0 until geometryCollection.numGeometries) {
             val geometry = geometryCollection.getGeometryN(i)
 
-            if (TextUtils.isEmpty(geometry.geometryType)) {
+            if (geometry.geometryType.isNullOrBlank()) {
                 Log.w(
                     TAG,
                     "invalid geometry type"

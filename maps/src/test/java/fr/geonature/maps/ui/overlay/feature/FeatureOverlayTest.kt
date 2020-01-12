@@ -4,7 +4,6 @@ import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.settings.LayerStyleSettings
-import java.io.StringReader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -38,13 +37,15 @@ class FeatureOverlayTest {
     @Test
     fun testCreateOverlayFromFeaturePoint() {
         // given a JSON Feature as Point
-        val reader = StringReader(getFixture("feature_point.json"))
+        val json = getFixture("feature_point.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+
+        feature!!
 
         // when create Overlay from Feature
         val featureOverlay = FeatureOverlay().apply { setFeature(feature) }
@@ -64,13 +65,15 @@ class FeatureOverlayTest {
     @Test
     fun testCreateOverlayFromFeatureLineString() {
         // given a JSON Feature as Point
-        val reader = StringReader(getFixture("feature_linestring.json"))
+        val json = getFixture("feature_linestring.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+
+        feature!!
 
         // when create Overlay from Feature
         val featureOverlay = FeatureOverlay().apply { setFeature(feature) }
@@ -90,13 +93,15 @@ class FeatureOverlayTest {
     @Test
     fun testCreateOverlayFromFeaturePolygon() {
         // given a JSON Feature as Point
-        val reader = StringReader(getFixture("feature_polygon_simple.json"))
+        val json = getFixture("feature_polygon_simple.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+
+        feature!!
 
         // when create Overlay from Feature
         val featureOverlay = FeatureOverlay().apply { setFeature(feature) }
@@ -116,16 +121,16 @@ class FeatureOverlayTest {
     @Test
     fun testCreateOverlayFromFeatureGeometryCollection() {
         // given a JSON Feature as GeometryCollection
-        val reader = StringReader(getFixture("feature_geometrycollection.json"))
+        val json = getFixture("feature_geometrycollection.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
 
         // when create Overlay from Feature
-        val featureOverlay = FeatureOverlay().apply { setFeature(feature) }
+        val featureOverlay = FeatureOverlay().apply { setFeature(feature!!) }
 
         // then
         assertEquals(

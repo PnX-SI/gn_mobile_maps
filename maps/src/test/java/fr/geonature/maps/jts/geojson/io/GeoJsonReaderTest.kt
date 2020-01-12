@@ -10,7 +10,6 @@ import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPolygon
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPolygon
-import java.io.StringReader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -52,10 +51,10 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeaturesFromPoint() {
         // given a JSON Feature as Point
-        val reader = StringReader(getFixture("feature_point.json"))
+        val json = getFixture("feature_point.json")
 
         // when read the JSON as Feature
-        val features = geoJsonReader.read(reader)
+        val features = geoJsonReader.read(json)
 
         // then
         assertNotNull(features)
@@ -70,12 +69,52 @@ class GeoJsonReaderTest {
     }
 
     @Test
-    fun testReadFeaturesFromLineString() {
-        // given a JSON Feature as LineString
-        val reader = StringReader(getFixture("feature_linestring.json"))
+    fun testReadFeaturesFromPointWithDifferentIds() {
+        // given a JSON Feature as Point
+        val json = getFixture("feature_point_id.json")
 
         // when read the JSON as Feature
-        val features = geoJsonReader.read(reader)
+        val features = geoJsonReader.read(json)
+
+        // then
+        assertNotNull(features)
+        assertEquals(
+            1,
+            features.size
+        )
+        assertEquals(
+            "id1",
+            features[0].id
+        )
+    }
+
+    @Test
+    fun testReadFeaturesFromPointWithPropertyId() {
+        // given a JSON Feature as Point
+        val json = getFixture("feature_point_property_id.json")
+
+        // when read the JSON as Feature
+        val features = geoJsonReader.read(json)
+
+        // then
+        assertNotNull(features)
+        assertEquals(
+            1,
+            features.size
+        )
+        assertEquals(
+            "id2",
+            features[0].id
+        )
+    }
+
+    @Test
+    fun testReadFeaturesFromLineString() {
+        // given a JSON Feature as LineString
+        val json = getFixture("feature_linestring.json")
+
+        // when read the JSON as Feature
+        val features = geoJsonReader.read(json)
 
         // then
         assertNotNull(features)
@@ -92,10 +131,10 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeaturesFromSimplePolygon() {
         // given a JSON Feature as simple Polygon
-        val reader = StringReader(getFixture("feature_polygon_simple.json"))
+        val json = getFixture("feature_polygon_simple.json")
 
         // when read the JSON as Feature
-        val features = geoJsonReader.read(reader)
+        val features = geoJsonReader.read(json)
 
         // then
         assertNotNull(features)
@@ -110,49 +149,12 @@ class GeoJsonReaderTest {
     }
 
     @Test
-    fun testReadFeaturesFromFeatureCollection() {
-        // given a JSON FeatureCollection
-        val json = getFixture("featurecollection.json")
-
-        // when read the JSON as FeatureCollection
-        val features = geoJsonReader.read(json)
-
-        // then
-        // then
-        assertNotNull(features)
-        assertEquals(
-            5,
-            features.size
-        )
-        assertEquals(
-            "id1",
-            features[0].id
-        )
-        assertEquals(
-            "id2",
-            features[1].id
-        )
-        assertEquals(
-            "id3",
-            features[2].id
-        )
-        assertEquals(
-            "id4",
-            features[3].id
-        )
-        assertEquals(
-            "id5",
-            features[4].id
-        )
-    }
-
-    @Test
     fun testReadFeaturesFromArrayOfFeatures() {
         // given an array of JSON Feature
-        val reader = StringReader(getFixture("features.json"))
+        val json = getFixture("features.json")
 
         // when read the JSON as Feature
-        val features = geoJsonReader.read(reader)
+        val features = geoJsonReader.read(json)
 
         // then
         assertNotNull(features)
@@ -186,13 +188,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsPoint() {
         // given a JSON Feature as Point
-        val reader = StringReader(getFixture("feature_point.json"))
+        val json = getFixture("feature_point.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -239,13 +243,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsMultiPoint() {
         // given a JSON Feature as MultiPoint
-        val reader = StringReader(getFixture("feature_multipoint.json"))
+        val json = getFixture("feature_multipoint.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -276,13 +282,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsLineString() {
         // given a JSON Feature as LineString
-        val reader = StringReader(getFixture("feature_linestring.json"))
+        val json = getFixture("feature_linestring.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -311,13 +319,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsMultiLineString() {
         // given a JSON Feature as MultiLineString
-        val reader = StringReader(getFixture("feature_multilinestring.json"))
+        val json = getFixture("feature_multilinestring.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -349,13 +359,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsSimplePolygon() {
         // given a JSON Feature as simple Polygon
-        val reader = StringReader(getFixture("feature_polygon_simple.json"))
+        val json = getFixture("feature_polygon_simple.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -396,13 +408,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsPolygonWithHoles() {
         // given a JSON Feature as Polygon with holes
-        val reader = StringReader(getFixture("feature_polygon_holes.json"))
+        val json = getFixture("feature_polygon_holes.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -469,13 +483,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsMultiPolygon() {
         // given a JSON Feature as MultiPolygon
-        val reader = StringReader(getFixture("feature_multipolygon.json"))
+        val json = getFixture("feature_multipolygon.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
 
         // then
         assertNotNull(feature)
+        feature!!
+
         assertEquals(
             "id1",
             feature.id
@@ -568,10 +584,11 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureAsGeometryCollection() {
         // given a JSON Feature as GeometryCollection
-        val reader = StringReader(getFixture("feature_geometrycollection.json"))
+        val json = getFixture("feature_geometrycollection.json")
 
         // when read the JSON as Feature
-        val feature = geoJsonReader.readFeature(reader)
+        val feature = geoJsonReader.readFeature(json)
+        feature!!
 
         // then
         assertNotNull(feature)
@@ -695,13 +712,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadEmptyFeatureCollection() {
         // given a JSON empty FeatureCollection
-        val reader = StringReader(getFixture("featurecollection_empty.json"))
+        val json = getFixture("featurecollection_empty.json")
 
         // when read the JSON as FeatureCollection
-        val featureCollection = geoJsonReader.readFeatureCollection(reader)
+        val featureCollection = geoJsonReader.readFeatureCollection(json)
 
         // then
         assertNotNull(featureCollection)
+        featureCollection!!
+
         assertEquals(
             "FeatureCollection",
             featureCollection.type
@@ -712,13 +731,15 @@ class GeoJsonReaderTest {
     @Test
     fun testReadFeatureCollection() {
         // given a JSON FeatureCollection
-        val reader = StringReader(getFixture("featurecollection.json"))
+        val json = getFixture("featurecollection.json")
 
         // when read the JSON as FeatureCollection
-        val featureCollection = geoJsonReader.readFeatureCollection(reader)
+        val featureCollection = geoJsonReader.readFeatureCollection(json)
 
         // then
         assertNotNull(featureCollection)
+        featureCollection!!
+
         assertEquals(
             "FeatureCollection",
             featureCollection.type
@@ -900,10 +921,10 @@ class GeoJsonReaderTest {
     @Test
     fun testReadGeometry() {
         // given a JSON Geometry as Point
-        val reader = StringReader(getFixture("geometry_point.json"))
+        val json = getFixture("geometry_point.json")
 
         // when read the JSON as Point
-        val point = geoJsonReader.readGeometry(reader)
+        val point = geoJsonReader.readGeometry(json)
 
         // then
         assertNotNull(point)

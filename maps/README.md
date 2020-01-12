@@ -18,11 +18,11 @@ Example:
   "layers": [
     {
       "label": "Nantes (Base)",
-      "name": "nantes.mbtiles"
+      "source": "nantes.mbtiles"
     },
     {
       "label": "Nantes (Data)",
-      "name": "nantes.wkt",
+      "source": "nantes.wkt",
       "style": {
         "stroke": true,
         "color": "#FF0000",

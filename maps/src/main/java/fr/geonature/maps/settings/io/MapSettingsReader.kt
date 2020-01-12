@@ -1,6 +1,5 @@
 package fr.geonature.maps.settings.io
 
-import android.text.TextUtils.isEmpty
 import android.util.JsonReader
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
@@ -8,10 +7,9 @@ import android.util.Log
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
+import org.osmdroid.util.GeoPoint
 import java.io.IOException
 import java.io.Reader
-import java.io.StringReader
-import org.osmdroid.util.GeoPoint
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
@@ -28,13 +26,13 @@ class MapSettingsReader {
      * @return a [MapSettings] instance from the `JSON` string or `null` if something goes wrong
      */
     fun read(json: String?): MapSettings? {
-        if (isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return null
         }
 
         try {
-            return read(StringReader(json))
-        } catch (ioe: IOException) {
+            return read(json.reader())
+        } catch (ioe: Exception) {
             Log.w(
                 TAG,
                 ioe.message
@@ -53,7 +51,7 @@ class MapSettingsReader {
      *
      * @throws IOException if something goes wrong
      */
-    @Throws(IOException::class)
+    @Throws(Exception::class)
     fun read(reader: Reader): MapSettings {
         val jsonReader = JsonReader(reader)
         val pager = read(jsonReader)
@@ -69,9 +67,9 @@ class MapSettingsReader {
      *
      * @return a [MapSettings] instance from [JsonReader]
      *
-     * @throws IOException if something goes wrong
+     * @throws Exception if something goes wrong
      */
-    @Throws(IOException::class)
+    @Throws(Exception::class)
     fun read(reader: JsonReader): MapSettings {
         val builder = MapSettings.Builder.newInstance()
 
@@ -140,6 +138,7 @@ class MapSettingsReader {
                     reader,
                     builder
                 )
+                else -> reader.skipValue()
             }
         }
 
@@ -178,6 +177,7 @@ class MapSettingsReader {
                 "label" -> builder.label(reader.nextString())
                 "source" -> builder.source(reader.nextString())
                 "style" -> builder.style(readLayerStyleSettings(reader))
+                else -> reader.skipValue()
             }
         }
 
@@ -215,6 +215,7 @@ class MapSettingsReader {
                         "fill" -> builder.fill(reader.nextBoolean())
                         "fillColor" -> builder.fillColor(reader.nextString())
                         "fillOpacity" -> builder.fillOpacity(reader.nextDouble().toFloat())
+                        else -> reader.skipValue()
                     }
                 }
 

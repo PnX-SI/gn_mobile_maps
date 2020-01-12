@@ -1,7 +1,6 @@
 package fr.geonature.maps.ui.widget
 
 import android.content.Context
-import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.Menu
 import android.view.MenuItem
@@ -13,8 +12,6 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
 import fr.geonature.maps.util.DrawableUtils
 import fr.geonature.maps.util.ThemeUtils
-import java.util.HashMap
-import java.util.UUID
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
@@ -25,6 +22,8 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
+import java.util.HashMap
+import java.util.UUID
 
 /**
  * Edit feature (POI) on the map.
@@ -116,7 +115,7 @@ class EditFeatureButton(
     }
 
     override fun onZoom(event: ZoomEvent?): Boolean {
-        if (!TextUtils.isEmpty(selectedPoi)) return true
+        if (!selectedPoi.isNullOrBlank()) return true
         if (pois.isNotEmpty() && listener?.getEditMode() == EditMode.SINGLE) return true
 
         if (listener?.getMinZoomEditing() ?: 0.0 <= event?.zoomLevel ?: 0.0) {

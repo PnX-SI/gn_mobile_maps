@@ -1,7 +1,6 @@
 package fr.geonature.maps.jts.geojson.io
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.JsonReader
 import android.util.JsonToken.BEGIN_ARRAY
 import android.util.JsonToken.BEGIN_OBJECT
@@ -13,12 +12,6 @@ import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import java.io.IOException
-import java.io.Reader
-import java.io.StringReader
-import java.lang.Double.parseDouble
-import java.lang.Integer.parseInt
-import java.util.ArrayList
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
@@ -30,6 +23,11 @@ import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
+import java.io.IOException
+import java.io.Reader
+import java.lang.Double.parseDouble
+import java.lang.Integer.parseInt
+import java.util.ArrayList
 
 /**
  * Default `JsonReader` about reading a `JSON` stream and build the corresponding
@@ -55,12 +53,12 @@ class GeoJsonReader {
      * @see .read
      */
     fun read(json: String?): List<Feature> {
-        if (TextUtils.isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return emptyList()
         }
 
         try {
-            return read(StringReader(json))
+            return read(json.reader())
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
@@ -175,12 +173,12 @@ class GeoJsonReader {
      * @see .readFeature
      */
     fun readFeature(json: String?): Feature? {
-        if (TextUtils.isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return null
         }
 
         try {
-            return readFeature(StringReader(json))
+            return readFeature(json.reader())
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
@@ -209,6 +207,54 @@ class GeoJsonReader {
         return feature
     }
 
+    @Throws(Exception::class)
+    fun readFeature(reader: JsonReader): Feature {
+        var id: String? = null
+        var type: String? = null
+        var geometry: Geometry? = null
+        var bundle: Bundle? = null
+
+        reader.beginObject()
+
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "id" -> id = reader.nextString()
+                "type" -> type = reader.nextString()
+                "geometry" -> geometry = readGeometry(reader)
+                "properties" -> bundle = readProperties(reader)
+                else -> reader.skipValue()
+            }
+        }
+
+        reader.endObject()
+
+        // try to find ID value from properties
+        id = if (id.isNullOrBlank()) bundle?.getString("id") else id
+
+        if (id.isNullOrBlank()) {
+            throw IOException("No id found for feature")
+        }
+
+        if ("Feature" != type) {
+            throw IOException("No such type found for feature $id")
+        }
+
+        if (geometry == null) {
+            throw IOException("No geometry found for feature $id")
+        }
+
+        val feature = Feature(
+            id,
+            geometry
+        )
+
+        if (bundle != null && !bundle.isEmpty) {
+            feature.properties.putAll(bundle)
+        }
+
+        return feature
+    }
+
     /**
      * parse a `JSON` string to convert as [FeatureCollection].
      *
@@ -219,12 +265,12 @@ class GeoJsonReader {
      * @see .readFeatureCollection
      */
     fun readFeatureCollection(json: String?): FeatureCollection? {
-        if (TextUtils.isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return null
         }
 
         try {
-            return readFeatureCollection(StringReader(json))
+            return readFeatureCollection(json.reader())
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
@@ -253,94 +299,6 @@ class GeoJsonReader {
         return featureCollection
     }
 
-    /**
-     * parse a `JSON` string to convert as `Geometry`.
-     *
-     * @param json the `JSON` string to parse
-     *
-     * @return a `Geometry` instance from the `JSON` string or `null` if something goes wrong
-     *
-     * @see .readGeometry
-     */
-    fun readGeometry(json: String?): Geometry? {
-        if (TextUtils.isEmpty(json)) {
-            return null
-        }
-
-        try {
-            return readGeometry(StringReader(json))
-        } catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe.message
-            )
-        }
-
-        return null
-    }
-
-    /**
-     * parse a `JSON` reader to convert as `Geometry`.
-     *
-     * @param in the `Reader` to parse
-     *
-     * @return a `Geometry` instance from the `JSON` reader
-     *
-     * @throws IOException if something goes wrong
-     */
-    @Throws(IOException::class)
-    fun readGeometry(`in`: Reader): Geometry {
-        val jsonReader = JsonReader(`in`)
-        val geometry = readGeometry(jsonReader)
-        jsonReader.close()
-
-        return geometry
-    }
-
-    @Throws(IOException::class)
-    fun readFeature(reader: JsonReader): Feature {
-        var id: String? = null
-        var type: String? = null
-        var geometry: Geometry? = null
-        var bundle: Bundle? = null
-
-        reader.beginObject()
-
-        while (reader.hasNext()) {
-            when (reader.nextName()) {
-                "id" -> id = reader.nextString()
-                "type" -> type = reader.nextString()
-                "geometry" -> geometry = readGeometry(reader)
-                "properties" -> bundle = readProperties(reader)
-            }
-        }
-
-        reader.endObject()
-
-        if (TextUtils.isEmpty(id)) {
-            throw IOException("No id found for feature")
-        }
-
-        if ("Feature" != type) {
-            throw IOException("No such type found for feature " + id!!)
-        }
-
-        if (geometry == null) {
-            throw IOException("No geometry found for feature " + id!!)
-        }
-
-        val feature = Feature(
-            id!!,
-            geometry
-        )
-
-        if (bundle != null && !bundle.isEmpty) {
-            feature.properties.putAll(bundle)
-        }
-
-        return feature
-    }
-
     @Throws(IOException::class)
     fun readFeatureCollection(reader: JsonReader): FeatureCollection {
         val featureCollection = FeatureCollection()
@@ -367,6 +325,50 @@ class GeoJsonReader {
         reader.endObject()
 
         return featureCollection
+    }
+
+    /**
+     * parse a `JSON` string to convert as `Geometry`.
+     *
+     * @param json the `JSON` string to parse
+     *
+     * @return a `Geometry` instance from the `JSON` string or `null` if something goes wrong
+     *
+     * @see .readGeometry
+     */
+    fun readGeometry(json: String?): Geometry? {
+        if (json.isNullOrBlank()) {
+            return null
+        }
+
+        try {
+            return readGeometry(json.reader())
+        } catch (ioe: IOException) {
+            Log.w(
+                TAG,
+                ioe.message
+            )
+        }
+
+        return null
+    }
+
+    /**
+     * parse a `JSON` reader to convert as `Geometry`.
+     *
+     * @param in the `Reader` to parse
+     *
+     * @return a `Geometry` instance from the `JSON` reader
+     *
+     * @throws IOException if something goes wrong
+     */
+    @Throws(IOException::class)
+    fun readGeometry(`in`: Reader): Geometry {
+        val jsonReader = JsonReader(`in`)
+        val geometry = readGeometry(jsonReader)
+        jsonReader.close()
+
+        return geometry
     }
 
     @Throws(IOException::class)
@@ -606,19 +608,19 @@ class GeoJsonReader {
             while (reader.hasNext()) {
                 when (val jsonToken = reader.peek()) {
                     NAME -> key = reader.nextName()
-                    STRING -> if (!TextUtils.isEmpty(key)) {
+                    STRING -> if (!key.isNullOrBlank()) {
                         bundle.putString(
                             key,
                             reader.nextString()
                         )
                     }
-                    BOOLEAN -> if (!TextUtils.isEmpty(key)) {
+                    BOOLEAN -> if (!key.isNullOrBlank()) {
                         bundle.putBoolean(
                             key,
                             reader.nextBoolean()
                         )
                     }
-                    NUMBER -> if (!TextUtils.isEmpty(key)) {
+                    NUMBER -> if (!key.isNullOrBlank()) {
                         val rawValue = reader.nextString()
 
                         try {
@@ -633,7 +635,7 @@ class GeoJsonReader {
                             )
                         }
                     }
-                    BEGIN_OBJECT -> if (!TextUtils.isEmpty(key)) {
+                    BEGIN_OBJECT -> if (!key.isNullOrBlank()) {
                         bundle.putBundle(
                             key,
                             readProperties(reader)

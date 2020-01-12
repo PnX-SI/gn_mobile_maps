@@ -2,7 +2,6 @@ package fr.geonature.maps.settings
 
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 
 /**
  * Default settings for a given layer source.
@@ -82,8 +81,8 @@ data class LayerSettings(
 
         @Throws(java.lang.IllegalArgumentException::class)
         fun build(): LayerSettings {
-            if (TextUtils.isEmpty(label)) throw IllegalArgumentException("layer attribute label is required")
-            if (TextUtils.isEmpty(source)) throw IllegalArgumentException("layer attribute source is required")
+            if (label.isNullOrBlank()) throw IllegalArgumentException("layer attribute label is required")
+            if (source.isNullOrBlank()) throw IllegalArgumentException("layer attribute source is required")
 
             return LayerSettings(this)
         }

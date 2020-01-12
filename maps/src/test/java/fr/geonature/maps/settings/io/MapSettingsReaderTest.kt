@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class MapSettingsReaderTest {
 
-    lateinit var mapSettingsReader: MapSettingsReader
+    private lateinit var mapSettingsReader: MapSettingsReader
 
     @Before
     fun setUp() {
@@ -55,6 +55,56 @@ class MapSettingsReaderTest {
                     )
                 ),
                 "/mnt/sdcard/osmdroid",
+                showScale = false,
+                showCompass = false,
+                showZoom = true,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
+                    arrayListOf(
+                        GeoPoint(
+                            47.253369,
+                            -1.605721
+                        ),
+                        GeoPoint(
+                            47.173845,
+                            -1.482811
+                        )
+                    )
+                ),
+                center = GeoPoint(
+                    47.225827,
+                    -1.554470
+                )
+            ),
+            mapSettings
+        )
+    }
+
+    @Test
+    fun testReadMapSettingsWithInvalidProperties() {
+        // given a JSON settings with some invalid layers settings
+        val json = getFixture("map_settings_with_invalid_properties.json")
+
+        // when read the JSON as MapSettings
+        val mapSettings = mapSettingsReader.read(json)
+
+        // then
+        assertNotNull(mapSettings)
+        assertEquals(
+            MapSettings(
+                arrayListOf(
+                    LayerSettings(
+                        "Nantes (Data)",
+                        "nantes.wkt",
+                        LayerStyleSettings.Builder.newInstance().stroke(true).color("#FF0000").weight(
+                            8
+                        ).opacity(0.9f).fill(true).fillColor("#FF8000").fillOpacity(0.2f).build()
+                    )
+                ),
+                null,
                 showScale = false,
                 showCompass = false,
                 showZoom = true,
