@@ -91,49 +91,64 @@ class GeoJsonReader {
     fun read(reader: JsonReader): List<Feature> {
         @Suppress("RemoveExplicitTypeArguments") return when (reader.peek()) {
             BEGIN_OBJECT -> {
-                val asFeature = try {
-                    readFeature(reader)
-                } catch (e: Exception) {
-                    Log.w(
-                        TAG,
-                        e.message
-                    )
+                val features = mutableListOf<Feature>()
+                var id: String? = null
+                var type: String? = null
+                var geometry: Geometry? = null
+                var bundle: Bundle? = null
 
-                    null
+                reader.beginObject()
+
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        "id" -> id = reader.nextString()
+                        "type" -> type = reader.nextString()
+                        "geometry" -> geometry = readGeometry(reader)
+                        "properties" -> bundle = readProperties(reader)
+                        "features" -> {
+                            reader.beginArray()
+
+                            while (reader.hasNext()) {
+                                try {
+                                    features.add(readFeature(reader))
+                                } catch (e: Exception) {
+                                    Log.w(TAG, e.message)
+                                }
+                            }
+
+                            reader.endArray()
+                        }
+                        else -> reader.skipValue()
+                    }
                 }
 
-                return if (asFeature == null) try {
-                    val features = mutableListOf<Feature>()
+                reader.endObject()
 
-                    reader.beginArray()
+                if ("Feature" == type) {
+                    // try to find ID value from properties
+                    id = if (id.isNullOrBlank()) bundle?.get("id")?.toString() else id
 
-                    while (reader.hasNext()) {
-                        val feature = try {
-                            readFeature(reader)
-                        } catch (ioe: IOException) {
-                            Log.w(
-                                TAG,
-                                ioe.message
-                            )
-
-                            null
-                        }
-
-                        if (feature != null) features.add(feature)
+                    if (id.isNullOrBlank()) {
+                        throw IOException("No id found for feature")
                     }
 
-                    reader.endArray()
+                    if (geometry == null) {
+                        throw IOException("No geometry found for feature $id")
+                    }
 
-                    return features
-                } catch (e: Exception) {
-                    Log.w(
-                        TAG,
-                        e.message
+                    val feature = Feature(
+                        id,
+                        geometry
                     )
 
-                    emptyList<Feature>()
+                    if (bundle != null && !bundle.isEmpty) {
+                        feature.properties.putAll(bundle)
+                    }
+
+                    features.add(feature)
                 }
-                else listOf(asFeature)
+
+                return features
             }
             BEGIN_ARRAY -> {
                 val features = mutableListOf<Feature>()
@@ -143,10 +158,10 @@ class GeoJsonReader {
                 while (reader.hasNext()) {
                     val feature = try {
                         readFeature(reader)
-                    } catch (ioe: IOException) {
+                    } catch (e: Exception) {
                         Log.w(
                             TAG,
-                            ioe.message
+                            e.message
                         )
 
                         null
@@ -229,7 +244,7 @@ class GeoJsonReader {
         reader.endObject()
 
         // try to find ID value from properties
-        id = if (id.isNullOrBlank()) bundle?.getString("id") else id
+        id = if (id.isNullOrBlank()) bundle?.get("id")?.toString() else id
 
         if (id.isNullOrBlank()) {
             throw IOException("No id found for feature")
@@ -314,7 +329,11 @@ class GeoJsonReader {
                     reader.beginArray()
 
                     while (reader.hasNext()) {
-                        featureCollection.addFeature(readFeature(reader))
+                        try {
+                            featureCollection.addFeature(readFeature(reader))
+                        } catch (e: Exception) {
+                            Log.w(TAG, e.message)
+                        }
                     }
 
                     reader.endArray()
@@ -606,7 +625,7 @@ class GeoJsonReader {
             var key: String? = null
 
             while (reader.hasNext()) {
-                when (val jsonToken = reader.peek()) {
+                when (reader.peek()) {
                     NAME -> key = reader.nextName()
                     STRING -> if (!key.isNullOrBlank()) {
                         bundle.putString(
@@ -641,7 +660,10 @@ class GeoJsonReader {
                             readProperties(reader)
                         )
                     }
-                    else -> throw IOException("Invalid object properties JSON token $jsonToken")
+                    else -> {
+                        key = null
+                        reader.skipValue()
+                    }
                 }
             }
 
