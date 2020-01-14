@@ -50,11 +50,11 @@ class LineStringOverlayTest {
         )
         assertEquals(
             LayerStyleSettings().color,
-            lineStringOverlay.backendOverlay.color
+            lineStringOverlay.backendOverlay.outlinePaint.color
         )
         assertEquals(
             LayerStyleSettings().weight.toFloat(),
-            lineStringOverlay.backendOverlay.width
+            lineStringOverlay.backendOverlay.outlinePaint.strokeWidth
         )
     }
 
@@ -90,11 +90,11 @@ class LineStringOverlayTest {
         // then
         assertEquals(
             style.color,
-            lineStringOverlay.backendOverlay.color
+            lineStringOverlay.backendOverlay.outlinePaint.color
         )
         assertEquals(
             style.weight.toFloat(),
-            lineStringOverlay.backendOverlay.width
+            lineStringOverlay.backendOverlay.outlinePaint.strokeWidth
         )
     }
 }

@@ -22,8 +22,10 @@ class LineStringOverlay : AbstractGeometryOverlay<LineString, Polyline>(Polyline
 
     override fun setStyle(layerStyle: LayerStyleSettings) {
         backendOverlay.apply {
-            color = layerStyle.color
-            width = layerStyle.weight.toFloat()
+            with(outlinePaint) {
+                color = layerStyle.color
+                strokeWidth = layerStyle.weight.toFloat()
+            }
         }
     }
 }

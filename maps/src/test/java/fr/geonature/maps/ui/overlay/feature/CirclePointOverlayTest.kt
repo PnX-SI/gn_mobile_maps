@@ -51,15 +51,15 @@ class CirclePointOverlayTest {
         )
         assertEquals(
             LayerStyleSettings().color,
-            circlePointOverlay.backendOverlay.strokeColor
+            circlePointOverlay.backendOverlay.outlinePaint.color
         )
         assertEquals(
             LayerStyleSettings().weight.toFloat(),
-            circlePointOverlay.backendOverlay.strokeWidth
+            circlePointOverlay.backendOverlay.outlinePaint.strokeWidth
         )
         assertEquals(
             LayerStyleSettings().fillColor,
-            circlePointOverlay.backendOverlay.fillColor
+            circlePointOverlay.backendOverlay.fillPaint.color
         )
     }
 
@@ -92,15 +92,15 @@ class CirclePointOverlayTest {
         // then
         assertEquals(
             style.color,
-            overlayAsCirclePolygon.backendOverlay.strokeColor
+            overlayAsCirclePolygon.backendOverlay.outlinePaint.color
         )
         assertEquals(
             style.weight.toFloat(),
-            overlayAsCirclePolygon.backendOverlay.strokeWidth
+            overlayAsCirclePolygon.backendOverlay.outlinePaint.strokeWidth
         )
         assertEquals(
             style.fillColor,
-            overlayAsCirclePolygon.backendOverlay.fillColor
+            overlayAsCirclePolygon.backendOverlay.fillPaint.color
         )
     }
 }

@@ -156,7 +156,7 @@ class FeatureCollectionOverlayTest {
         matchedOverlays.forEach {
             assertEquals(
                 Color.RED,
-                (it.backendOverlay as PolygonOverlay).backendOverlay.strokeColor
+                (it.backendOverlay as PolygonOverlay).backendOverlay.outlinePaint.color
             )
         }
 
@@ -189,7 +189,7 @@ class FeatureCollectionOverlayTest {
         matchedOverlays.forEach {
             assertEquals(
                 Color.RED,
-                (it.backendOverlay as PolygonOverlay).backendOverlay.strokeColor
+                (it.backendOverlay as PolygonOverlay).backendOverlay.outlinePaint.color
             )
         }
     }

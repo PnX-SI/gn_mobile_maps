@@ -65,15 +65,15 @@ class PolygonOverlayTest {
         assertTrue(polygonOverlay.backendOverlay.holes.isEmpty())
         assertEquals(
             LayerStyleSettings().color,
-            polygonOverlay.backendOverlay.strokeColor
+            polygonOverlay.backendOverlay.outlinePaint.color
         )
         assertEquals(
             LayerStyleSettings().weight.toFloat(),
-            polygonOverlay.backendOverlay.strokeWidth
+            polygonOverlay.backendOverlay.outlinePaint.strokeWidth
         )
         assertEquals(
             LayerStyleSettings().fillColor,
-            polygonOverlay.backendOverlay.fillColor
+            polygonOverlay.backendOverlay.fillPaint.color
         )
     }
 
@@ -148,15 +148,15 @@ class PolygonOverlayTest {
         )
         assertEquals(
             LayerStyleSettings().color,
-            polygonOverlay.backendOverlay.strokeColor
+            polygonOverlay.backendOverlay.outlinePaint.color
         )
         assertEquals(
             LayerStyleSettings().weight.toFloat(),
-            polygonOverlay.backendOverlay.strokeWidth
+            polygonOverlay.backendOverlay.outlinePaint.strokeWidth
         )
         assertEquals(
             LayerStyleSettings().fillColor,
-            polygonOverlay.backendOverlay.fillColor
+            polygonOverlay.backendOverlay.fillPaint.color
         )
     }
 
@@ -207,15 +207,15 @@ class PolygonOverlayTest {
         // then
         assertEquals(
             style.color,
-            overlayAsPolygon.backendOverlay.strokeColor
+            overlayAsPolygon.backendOverlay.outlinePaint.color
         )
         assertEquals(
             style.weight.toFloat(),
-            overlayAsPolygon.backendOverlay.strokeWidth
+            overlayAsPolygon.backendOverlay.outlinePaint.strokeWidth
         )
         assertEquals(
             style.fillColor,
-            overlayAsPolygon.backendOverlay.fillColor
+            overlayAsPolygon.backendOverlay.fillPaint.color
         )
     }
 }

@@ -34,16 +34,13 @@ class PolygonOverlay :
 
     override fun setStyle(layerStyle: LayerStyleSettings) {
         backendOverlay.apply {
-            if (layerStyle.stroke) {
-                strokeColor = layerStyle.color
-                strokeWidth = layerStyle.weight.toFloat()
-            } else {
-                strokeColor = Color.TRANSPARENT
-                strokeWidth = 0f
+            with(outlinePaint) {
+                color = if (layerStyle.stroke) layerStyle.color else Color.TRANSPARENT
+                strokeWidth = if (layerStyle.stroke) layerStyle.weight.toFloat() else 0f
             }
 
             if (layerStyle.fill) {
-                fillColor = layerStyle.fillColor
+                fillPaint.color = layerStyle.fillColor
             }
         }
     }
