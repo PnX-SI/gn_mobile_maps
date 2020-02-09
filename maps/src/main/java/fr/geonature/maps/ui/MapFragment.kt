@@ -3,25 +3,26 @@ package fr.geonature.maps.ui
 import android.Manifest
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
-import fr.geonature.maps.ui.overlay.feature.FeatureOverlayProvider
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
@@ -33,8 +34,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.modules.OfflineTileProvider
-import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -43,7 +42,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import java.io.File
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -57,6 +55,8 @@ open class MapFragment : Fragment(),
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
+
+    private var layerSettingsViewModel: LayerSettingsViewModel? = null
 
     private lateinit var container: View
     private lateinit var mapView: MapView
@@ -83,6 +83,13 @@ open class MapFragment : Fragment(),
                 )
                 isDebugMode = BuildConfig.DEBUG
             }
+
+        layerSettingsViewModel = activity?.run {
+            ViewModelProvider(this,
+                LayerSettingsViewModel.Factory {
+                    LayerSettingsViewModel(this.application, mapSettings?.baseTilesPath)
+                }).get(LayerSettingsViewModel::class.java)
+        }
     }
 
     override fun onCreateView(
@@ -127,8 +134,7 @@ open class MapFragment : Fragment(),
         )
 
         if (granted) {
-            configureTileProvider(mapSettings.getTilesLayers())
-            configureVectorLayers(mapSettings.getVectorLayers())
+            layerSettingsViewModel?.load(mapSettings.layersSettings)
         } else {
             requestPermissions(
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
@@ -174,8 +180,7 @@ open class MapFragment : Fragment(),
 
                     val mapSettings = mapSettings ?: return
 
-                    configureTileProvider(mapSettings.getTilesLayers())
-                    configureVectorLayers(mapSettings.getVectorLayers())
+                    layerSettingsViewModel?.load(mapSettings.layersSettings)
                 } else {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
@@ -198,8 +203,7 @@ open class MapFragment : Fragment(),
     }
 
     override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-        configureTileProvider(layersSettings)
-        configureVectorLayers(layersSettings)
+        layerSettingsViewModel?.load(layersSettings)
     }
 
     fun getSelectedPOIs(): List<GeoPoint> {
@@ -265,9 +269,10 @@ open class MapFragment : Fragment(),
                         mapSettings.layersSettings,
                         savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
                             ?: emptyList()
-                    ).also {
-                        it.show(childFragmentManager, LAYER_SETTINGS_DIALOG_FRAGMENT)
-                    }
+                    )
+                        .also {
+                            it.show(childFragmentManager, LAYER_SETTINGS_DIALOG_FRAGMENT)
+                        }
                 }
                 show()
             }
@@ -364,84 +369,40 @@ open class MapFragment : Fragment(),
         if (mapSettings.maxBounds != null) {
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
-    }
 
-    private fun configureTileProvider(layersSettings: List<LayerSettings>) {
-        val context = context ?: return
-        val mapSettings = mapSettings ?: return
+        layerSettingsViewModel?.tileProvider?.observe(this, Observer {
+            if (it == null) {
+                mapView.tileProvider?.detach()
+            }
+            else {
+                mapView.tileProvider = it
+            }
 
-        if (!File(mapSettings.baseTilesPath).exists()) {
-            Log.w(
-                TAG,
-                "Unable to load tiles from '${mapSettings.baseTilesPath}'"
+            updateActiveLayers(
+                layerSettingsViewModel?.getActiveLayers() ?: emptyList(),
+                LayerType.TILES
             )
-
-            showSnackbar(
-                getString(
-                    R.string.snackbar_base_path_undefined,
-                    mapSettings.baseTilesPath
+        })
+        layerSettingsViewModel?.vectorOverlays?.observe(this, Observer {
+            GlobalScope.launch(Main) {
+                mapView.overlays.asSequence()
+                    .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                    .forEach {
+                        mapView.overlays.remove(it)
+                    }
+                val markerOverlaysFirstIndex =
+                    mapView.overlays.indexOfFirst { it is Marker }
+                        .coerceAtLeast(0)
+                it.forEach { mapView.overlays.add(markerOverlaysFirstIndex, it) }
+                mapView.invalidate()
+                updateActiveLayers(
+                    layerSettingsViewModel?.getActiveLayers() ?: emptyList(),
+                    LayerType.VECTOR
                 )
-            )
-
-            return
-        }
-
-        val tileSources = layersSettings.asSequence().filter { it.getType() == LayerType.TILES }
-            .map { File("${mapSettings.baseTilesPath}/${it.source}") }.toList()
-
-        if (tileSources.isEmpty()) {
-            mapView.tileProvider?.detach()
-        }
-
-        if (tileSources.isNotEmpty()) {
-            val tileProvider = OfflineTileProvider(
-                SimpleRegisterReceiver(context),
-                tileSources.toTypedArray()
-            )
-
-            mapView.tileProvider = tileProvider
-        }
-
-        updateActiveLayers(layersSettings, LayerType.TILES)
-    }
-
-    private fun configureVectorLayers(layersSettings: List<LayerSettings>) {
-        val mapSettings = mapSettings ?: return
-
-        if ((mapSettings.baseTilesPath == null) || !File(mapSettings.baseTilesPath).exists()) {
-            Log.w(
-                TAG,
-                "Unable to load vector layers from '${mapSettings.baseTilesPath}'"
-            )
-
-            showSnackbar(
-                getString(
-                    R.string.snackbar_base_path_undefined,
-                    mapSettings.baseTilesPath
-                )
-            )
-
-            return
-        }
-
-        GlobalScope.launch(Main) {
-            mapView.overlays.asSequence()
-                .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
-                .forEach {
-                    mapView.overlays.remove(it)
-                }
-            val markerOverlaysFirstIndex =
-                mapView.overlays.indexOfFirst { it is Marker }.coerceAtLeast(0)
-            val overlays =
-                FeatureOverlayProvider(mapSettings.baseTilesPath).loadFeaturesAsOverlays(
-                    layersSettings.filter { it.getType() == LayerType.VECTOR })
-            overlays.forEach { mapView.overlays.add(markerOverlaysFirstIndex, it) }
-            mapView.invalidate()
-
-            updateActiveLayers(layersSettings, LayerType.VECTOR)
-            delay(100)
-            onVectorLayersChangedListener(overlays)
-        }
+                delay(100)
+                onVectorLayersChangedListener(it)
+            }
+        })
     }
 
     private fun showSnackbar(text: CharSequence) {
@@ -463,8 +424,6 @@ open class MapFragment : Fragment(),
     }
 
     companion object {
-
-        private val TAG = MapFragment::class.java.name
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
