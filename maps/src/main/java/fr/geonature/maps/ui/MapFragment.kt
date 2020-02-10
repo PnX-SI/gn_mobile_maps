@@ -87,7 +87,10 @@ open class MapFragment : Fragment(),
         layerSettingsViewModel = activity?.run {
             ViewModelProvider(this,
                 LayerSettingsViewModel.Factory {
-                    LayerSettingsViewModel(this.application, mapSettings?.baseTilesPath)
+                    LayerSettingsViewModel(
+                        this.application,
+                        mapSettings?.baseTilesPath
+                    )
                 }).get(LayerSettingsViewModel::class.java)
         }
     }
@@ -134,7 +137,10 @@ open class MapFragment : Fragment(),
         )
 
         if (granted) {
-            layerSettingsViewModel?.load(mapSettings.layersSettings)
+            layerSettingsViewModel?.also {
+                val activeLayers= savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)?: emptyList<LayerSettings>()
+                it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
+            }
         } else {
             requestPermissions(
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
@@ -180,7 +186,10 @@ open class MapFragment : Fragment(),
 
                     val mapSettings = mapSettings ?: return
 
-                    layerSettingsViewModel?.load(mapSettings.layersSettings)
+                    layerSettingsViewModel?.also {
+                        val activeLayers= savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)?: emptyList<LayerSettings>()
+                        it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
+                    }
                 } else {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
@@ -271,7 +280,10 @@ open class MapFragment : Fragment(),
                             ?: emptyList()
                     )
                         .also {
-                            it.show(childFragmentManager, LAYER_SETTINGS_DIALOG_FRAGMENT)
+                            it.show(
+                                childFragmentManager,
+                                LAYER_SETTINGS_DIALOG_FRAGMENT
+                            )
                         }
                 }
                 show()
@@ -370,39 +382,57 @@ open class MapFragment : Fragment(),
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
-        layerSettingsViewModel?.tileProvider?.observe(this, Observer {
-            if (it == null) {
-                mapView.tileProvider?.detach()
-            }
-            else {
-                mapView.tileProvider = it
-            }
+        activity?.run {
+            layerSettingsViewModel?.also { vm ->
+                vm.tileProvider.removeObservers(this)
+                vm.tileProvider.observe(
+                    this,
+                    Observer {
+                        if (it == null) {
+                            mapView.tileProvider?.detach()
+                        } else {
+                            mapView.tileProvider = it
+                        }
 
-            updateActiveLayers(
-                layerSettingsViewModel?.getActiveLayers() ?: emptyList(),
-                LayerType.TILES
-            )
-        })
-        layerSettingsViewModel?.vectorOverlays?.observe(this, Observer {
-            GlobalScope.launch(Main) {
-                mapView.overlays.asSequence()
-                    .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
-                    .forEach {
-                        mapView.overlays.remove(it)
-                    }
-                val markerOverlaysFirstIndex =
-                    mapView.overlays.indexOfFirst { it is Marker }
-                        .coerceAtLeast(0)
-                it.forEach { mapView.overlays.add(markerOverlaysFirstIndex, it) }
-                mapView.invalidate()
-                updateActiveLayers(
-                    layerSettingsViewModel?.getActiveLayers() ?: emptyList(),
-                    LayerType.VECTOR
-                )
-                delay(100)
-                onVectorLayersChangedListener(it)
+                        mapView.invalidate()
+
+                        updateActiveLayers(
+                            vm.getActiveLayers(),
+                            LayerType.TILES
+                        )
+                    })
+                vm.vectorOverlays.removeObservers(this)
+                vm.vectorOverlays.observe(
+                    this,
+                    Observer {
+                        GlobalScope.launch(Main) {
+                            mapView.overlays.asSequence()
+                                .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                                .forEach {
+                                    mapView.overlays.remove(it)
+                                }
+                            val markerOverlaysFirstIndex =
+                                mapView.overlays.indexOfFirst { it is Marker }
+                                    .coerceAtLeast(0)
+                            it.forEach {
+                                mapView.overlays.add(
+                                    markerOverlaysFirstIndex,
+                                    it
+                                )
+                            }
+
+                            mapView.invalidate()
+
+                            updateActiveLayers(
+                                vm.getActiveLayers(),
+                                LayerType.VECTOR
+                            )
+                            delay(100)
+                            onVectorLayersChangedListener(it)
+                        }
+                    })
             }
-        })
+        }
     }
 
     private fun showSnackbar(text: CharSequence) {
@@ -419,7 +449,10 @@ open class MapFragment : Fragment(),
             ?: mutableListOf<LayerSettings>()).run {
             this.removeAll { it.getType() == filter }
             addAll(selectedLayersSettings.filter { it.getType() == filter })
-            savedState.putParcelableArrayList(KEY_ACTIVE_LAYERS, ArrayList(this.distinct()))
+            savedState.putParcelableArrayList(
+                KEY_ACTIVE_LAYERS,
+                ArrayList(this.distinct())
+            )
         }
     }
 

@@ -39,8 +39,6 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     val vectorOverlays: LiveData<List<Overlay>> = _vectorOverlays
 
     fun load(layersSettings: List<LayerSettings>) {
-        activeLayers.clear()
-
         viewModelScope.launch {
             var rootPath = if (baseTilesPath?.startsWith("/") == true) {
                 File(baseTilesPath)
@@ -51,8 +49,10 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             rootPath =
                 if (rootPath.canRead()) rootPath else getExternalStorageDirectory(getApplication())
 
-            _tileProvider.value = buildTileProvider(rootPath, layersSettings)
-            _vectorOverlays.value = buildVectorOverlays(rootPath, layersSettings)
+            activeLayers.clear()
+
+            _tileProvider.postValue(buildTileProvider(rootPath, layersSettings))
+            _vectorOverlays.postValue(buildVectorOverlays(rootPath, layersSettings))
         }
     }
 
