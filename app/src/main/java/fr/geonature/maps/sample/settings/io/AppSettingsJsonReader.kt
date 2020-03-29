@@ -1,6 +1,5 @@
 package fr.geonature.maps.sample.settings.io
 
-import android.text.TextUtils
 import android.util.JsonReader
 import android.util.Log
 import fr.geonature.maps.sample.settings.IAppSettings
@@ -23,7 +22,7 @@ class AppSettingsJsonReader<T : IAppSettings>(private val onAppSettingsJsonReade
      * @return a [IAppSettings] instance from the `JSON` string or `null` if something goes wrong
      */
     fun read(json: String?): T? {
-        if (TextUtils.isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return null
         }
 
@@ -32,7 +31,7 @@ class AppSettingsJsonReader<T : IAppSettings>(private val onAppSettingsJsonReade
         } catch (e: Exception) {
             Log.w(
                 TAG,
-                e.message
+                e
             )
         }
 

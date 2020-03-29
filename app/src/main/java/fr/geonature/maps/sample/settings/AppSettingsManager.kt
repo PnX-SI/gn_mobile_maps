@@ -3,16 +3,17 @@ package fr.geonature.maps.sample.settings
 import android.app.Application
 import android.util.Log
 import fr.geonature.maps.sample.settings.io.AppSettingsJsonReader
-import fr.geonature.maps.sample.util.FileUtils.getFile
-import fr.geonature.maps.sample.util.FileUtils.getRootFolder
-import java.io.File
-import java.io.FileReader
-import java.io.IOException
+import fr.geonature.mountpoint.model.MountPoint
+import fr.geonature.mountpoint.util.FileUtils.getFile
+import fr.geonature.mountpoint.util.FileUtils.getRootFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileReader
+import java.io.IOException
 
 /**
  * Manage [IAppSettings].
@@ -31,7 +32,10 @@ class AppSettingsManager<T : IAppSettings>(
     init {
         GlobalScope.launch(Dispatchers.Main) {
             withContext(IO) {
-                val rootFolder = getRootFolder(application)
+                val rootFolder = getRootFolder(
+                    application,
+                    MountPoint.StorageType.INTERNAL
+                )
 
                 Log.i(
                     TAG,
@@ -81,7 +85,8 @@ class AppSettingsManager<T : IAppSettings>(
     internal fun getAppSettingsAsFile(): File {
         return getFile(
             getRootFolder(
-                application
+                application,
+                MountPoint.StorageType.INTERNAL
             ),
             getAppSettingsFilename()
         )
