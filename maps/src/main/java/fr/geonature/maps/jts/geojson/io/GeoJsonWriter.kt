@@ -54,7 +54,7 @@ class GeoJsonWriter {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             return null
@@ -109,7 +109,7 @@ class GeoJsonWriter {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             return null
@@ -146,8 +146,10 @@ class GeoJsonWriter {
         feature: Feature
     ) {
         writer.beginObject()
-        writer.name("id").value(feature.id)
-        writer.name("type").value(feature.type)
+        writer.name("id")
+            .value(feature.id)
+        writer.name("type")
+            .value(feature.type)
         writer.name("geometry")
         writeGeometry(
             writer,
@@ -166,7 +168,8 @@ class GeoJsonWriter {
         featureCollection: FeatureCollection
     ) {
         writer.beginObject()
-        writer.name("type").value(featureCollection.type)
+        writer.name("type")
+            .value(featureCollection.type)
         writer.name("features")
         writer.beginArray()
 
@@ -217,7 +220,8 @@ class GeoJsonWriter {
             )
             "GeometryCollection" -> {
                 writer.beginObject()
-                writer.name("type").value(geometry.geometryType)
+                writer.name("type")
+                    .value(geometry.geometryType)
                 writer.name("geometries")
                 writer.beginArray()
 
@@ -240,7 +244,8 @@ class GeoJsonWriter {
         point: Point
     ) {
         writer.beginObject()
-        writer.name("type").value(point.geometryType)
+        writer.name("type")
+            .value(point.geometryType)
         writer.name("coordinates")
         writeCoordinateSequence(
             writer,
@@ -255,7 +260,8 @@ class GeoJsonWriter {
         multiPoint: MultiPoint
     ) {
         writer.beginObject()
-        writer.name("type").value(multiPoint.geometryType)
+        writer.name("type")
+            .value(multiPoint.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -270,7 +276,8 @@ class GeoJsonWriter {
         lineString: LineString
     ) {
         writer.beginObject()
-        writer.name("type").value(lineString.geometryType)
+        writer.name("type")
+            .value(lineString.geometryType)
         writer.name("coordinates")
         writeCoordinateSequence(
             writer,
@@ -285,7 +292,8 @@ class GeoJsonWriter {
         multiLineString: MultiLineString
     ) {
         writer.beginObject()
-        writer.name("type").value(multiLineString.geometryType)
+        writer.name("type")
+            .value(multiLineString.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -300,7 +308,8 @@ class GeoJsonWriter {
         polygon: Polygon
     ) {
         writer.beginObject()
-        writer.name("type").value(polygon.geometryType)
+        writer.name("type")
+            .value(polygon.geometryType)
         writer.name("coordinates")
         writePolygonCoordinates(
             writer,
@@ -337,7 +346,8 @@ class GeoJsonWriter {
         multiPolygon: MultiPolygon
     ) {
         writer.beginObject()
-        writer.name("type").value(multiPolygon.geometryType)
+        writer.name("type")
+            .value(multiPolygon.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -449,15 +459,18 @@ class GeoJsonWriter {
             val value = bundle.get(key)
 
             if (value is String) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Boolean) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Number) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Bundle) {

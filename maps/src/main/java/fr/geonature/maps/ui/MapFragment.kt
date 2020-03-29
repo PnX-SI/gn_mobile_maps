@@ -2,7 +2,6 @@ package fr.geonature.maps.ui
 
 import android.Manifest
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +10,7 @@ import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
@@ -138,7 +138,8 @@ open class MapFragment : Fragment(),
 
         if (granted) {
             layerSettingsViewModel?.also {
-                val activeLayers= savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)?: emptyList<LayerSettings>()
+                val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                    ?: emptyList<LayerSettings>()
                 it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
             }
         } else {
@@ -187,7 +188,8 @@ open class MapFragment : Fragment(),
                     val mapSettings = mapSettings ?: return
 
                     layerSettingsViewModel?.also {
-                        val activeLayers= savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)?: emptyList<LayerSettings>()
+                        val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                            ?: emptyList<LayerSettings>()
                         it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
                     }
                 } else {
@@ -445,7 +447,7 @@ open class MapFragment : Fragment(),
     }
 
     private fun updateActiveLayers(selectedLayersSettings: List<LayerSettings>, filter: LayerType) {
-        (savedState.getParcelableArrayList<LayerSettings>(KEY_ACTIVE_LAYERS)
+        (savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
             ?: mutableListOf<LayerSettings>()).run {
             this.removeAll { it.getType() == filter }
             addAll(selectedLayersSettings.filter { it.getType() == filter })

@@ -35,7 +35,7 @@ class MapSettingsReader {
         } catch (ioe: Exception) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -188,7 +188,7 @@ class MapSettingsReader {
         } catch (iae: IllegalArgumentException) {
             Log.w(
                 TAG,
-                iae.message
+                iae
             )
 
             null
@@ -211,10 +211,16 @@ class MapSettingsReader {
                         "stroke" -> builder.stroke(reader.nextBoolean())
                         "color" -> builder.color(reader.nextString())
                         "weight" -> builder.weight(reader.nextInt())
-                        "opacity" -> builder.opacity(reader.nextDouble().toFloat())
+                        "opacity" -> builder.opacity(
+                            reader.nextDouble()
+                                .toFloat()
+                        )
                         "fill" -> builder.fill(reader.nextBoolean())
                         "fillColor" -> builder.fillColor(reader.nextString())
-                        "fillOpacity" -> builder.fillOpacity(reader.nextDouble().toFloat())
+                        "fillOpacity" -> builder.fillOpacity(
+                            reader.nextDouble()
+                                .toFloat()
+                        )
                         else -> reader.skipValue()
                     }
                 }
@@ -226,7 +232,7 @@ class MapSettingsReader {
                 } catch (iae: IllegalArgumentException) {
                     Log.w(
                         TAG,
-                        iae.message
+                        iae
                     )
 
                     null

@@ -23,7 +23,8 @@ data class LayerSettings(
     private constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings
+        parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings?
+            ?: LayerStyleSettings()
     )
 
     override fun describeContents(): Int {

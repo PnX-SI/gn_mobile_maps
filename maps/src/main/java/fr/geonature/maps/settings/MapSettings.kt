@@ -41,15 +41,18 @@ data class MapSettings(
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+        source.readByte() == Integer.valueOf(1)
+            .toByte(), // as boolean value
+        source.readByte() == Integer.valueOf(1)
+            .toByte(), // as boolean value
+        source.readByte() == Integer.valueOf(1)
+            .toByte(), // as boolean value
         source.readDouble(),
         source.readDouble(),
         source.readDouble(),
         source.readDouble(),
-        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox,
-        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint
+        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox?,
+        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint?
     ) {
         source.readTypedList(
             layersSettings,
@@ -222,7 +225,12 @@ data class MapSettings(
             source: String
         ) =
             apply {
-                addLayer(LayerSettings.Builder.newInstance().label(label).source(source).build())
+                addLayer(
+                    LayerSettings.Builder.newInstance()
+                        .label(label)
+                        .source(source)
+                        .build()
+                )
             }
 
         fun addLayer(layerSettings: LayerSettings) =

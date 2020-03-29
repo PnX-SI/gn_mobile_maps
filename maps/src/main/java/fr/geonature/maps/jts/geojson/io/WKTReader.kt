@@ -39,13 +39,15 @@ class WKTReader {
         try {
             line = bufferedReader.readLine()
 
-            do {
+            while (line != null) {
                 val matcher = wktLinePattern.matcher(line)
 
                 if (matcher.matches()) {
+                    val featureId = matcher.group(1) ?: return
+
                     try {
                         val feature = Feature(
-                            matcher.group(1),
+                            featureId,
                             wktReader.read(matcher.group(2))
                         )
                         featureCollection.addFeature(feature)
@@ -57,7 +59,7 @@ class WKTReader {
                     } catch (pe: ParseException) {
                         Log.w(
                             TAG,
-                            pe.message
+                            pe
                         )
                     }
                 }
@@ -65,14 +67,14 @@ class WKTReader {
                 currentLine++
 
                 line = bufferedReader.readLine()
-            } while (line != null)
+            }
 
             listener.onFinish(featureCollection)
             bufferedReader.close()
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             listener.onError(ioe)

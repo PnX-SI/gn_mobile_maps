@@ -62,7 +62,7 @@ class GeoJsonReader {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -112,7 +112,7 @@ class GeoJsonReader {
                                 try {
                                     features.add(readFeature(reader))
                                 } catch (e: Exception) {
-                                    Log.w(TAG, e.message)
+                                    Log.w(TAG, e)
                                 }
                             }
 
@@ -126,7 +126,8 @@ class GeoJsonReader {
 
                 if ("Feature" == type) {
                     // try to find ID value from properties
-                    id = if (id.isNullOrBlank()) bundle?.get("id")?.toString() else id
+                    id = if (id.isNullOrBlank()) bundle?.get("id")
+                        ?.toString() else id
 
                     if (id.isNullOrBlank()) {
                         throw IOException("No id found for feature")
@@ -161,7 +162,7 @@ class GeoJsonReader {
                     } catch (e: Exception) {
                         Log.w(
                             TAG,
-                            e.message
+                            e
                         )
 
                         null
@@ -197,7 +198,7 @@ class GeoJsonReader {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -244,7 +245,8 @@ class GeoJsonReader {
         reader.endObject()
 
         // try to find ID value from properties
-        id = if (id.isNullOrBlank()) bundle?.get("id")?.toString() else id
+        id = if (id.isNullOrBlank()) bundle?.get("id")
+            ?.toString() else id
 
         if (id.isNullOrBlank()) {
             throw IOException("No id found for feature")
@@ -289,7 +291,7 @@ class GeoJsonReader {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -332,7 +334,7 @@ class GeoJsonReader {
                         try {
                             featureCollection.addFeature(readFeature(reader))
                         } catch (e: Exception) {
-                            Log.w(TAG, e.message)
+                            Log.w(TAG, e)
                         }
                     }
 
@@ -365,7 +367,7 @@ class GeoJsonReader {
         } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -524,7 +526,8 @@ class GeoJsonReader {
                 linearRings.subList(
                     1,
                     linearRings.size
-                ).toTypedArray()
+                )
+                    .toTypedArray()
             )
         }
     }
