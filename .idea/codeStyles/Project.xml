@@ -11,11 +11,6 @@
           <option name="INSERT_LINE_BREAK_BEFORE_NAMESPACE_DECLARATION" value="true" />
         </value>
       </option>
-      <option name="VALUE_RESOURCE_FILE_SETTINGS">
-        <value>
-          <option name="WRAP_ATTRIBUTES" value="2" />
-        </value>
-      </option>
       <option name="OTHER_SETTINGS">
         <value>
           <option name="INSERT_LINE_BREAK_BEFORE_NAMESPACE_DECLARATION" value="true" />
@@ -32,6 +27,10 @@
       <option name="NAME_COUNT_TO_USE_STAR_IMPORT_FOR_MEMBERS" value="2147483647" />
       <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
     </JetCodeStyleSettings>
+    <XML>
+      <option name="XML_ATTRIBUTE_WRAP" value="2" />
+      <option name="XML_ALIGN_ATTRIBUTES" value="true" />
+    </XML>
     <codeStyleSettings language="XML">
       <indentOptions>
         <option name="CONTINUATION_INDENT_SIZE" value="4" />
@@ -152,7 +151,9 @@
       <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
       <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
       <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+      <option name="CALL_PARAMETERS_WRAP" value="2" />
       <option name="METHOD_CALL_CHAIN_WRAP" value="2" />
+      <option name="ENUM_CONSTANTS_WRAP" value="2" />
       <indentOptions>
         <option name="CONTINUATION_INDENT_SIZE" value="4" />
       </indentOptions>
