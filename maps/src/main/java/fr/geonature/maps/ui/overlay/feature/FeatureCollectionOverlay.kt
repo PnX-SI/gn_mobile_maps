@@ -51,7 +51,7 @@ class FeatureCollectionOverlay : FolderOverlay() {
     }
 
     fun getFeatureOverlays(filter: (overlay: FeatureOverlay) -> Boolean = { true }): List<FeatureOverlay> {
-        return items.asSequence()
+        return (items ?: emptyList()).asSequence()
             .filterNotNull()
             .filter { it is FeatureOverlay }
             .map { it as FeatureOverlay }

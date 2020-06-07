@@ -51,8 +51,11 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
 
             activeLayers.clear()
 
-            _tileProvider.postValue(buildTileProvider(rootPath, layersSettings))
-            _vectorOverlays.postValue(buildVectorOverlays(rootPath, layersSettings))
+            val tileProvider = buildTileProvider(rootPath, layersSettings)
+            val vectorOverlays = buildVectorOverlays(rootPath, layersSettings)
+
+            _tileProvider.postValue(tileProvider)
+            _vectorOverlays.postValue(vectorOverlays)
         }
     }
 
