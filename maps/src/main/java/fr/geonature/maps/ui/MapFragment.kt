@@ -14,7 +14,6 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
-import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerSettingsViewModel
@@ -81,7 +80,6 @@ open class MapFragment : Fragment(),
                     context,
                     PreferenceManager.getDefaultSharedPreferences(context)
                 )
-                isDebugMode = BuildConfig.DEBUG
             }
 
         layerSettingsViewModel = activity?.run {
