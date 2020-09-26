@@ -908,11 +908,26 @@ class GeoJsonReaderTest {
 
     @Test
     fun testReadGeometryFromInvalidJsonString() {
-        // when read an invalid JSON as FeatureCollection
-        val geometry = geoJsonReader.readGeometry("")
+        // when read a null string
+        assertNull(geoJsonReader.readGeometry(null))
 
-        // then
-        assertNull(geometry)
+        // when read an empty JSON string
+        assertNull(geoJsonReader.readGeometry(""))
+
+        // when read an empty JSON array
+        assertNull(geoJsonReader.readGeometry("[]"))
+
+        // when read an empty JSON object
+        assertNull(geoJsonReader.readGeometry("{}"))
+
+        // when read an invalid JSON object
+        assertNull(geoJsonReader.readGeometry("{\"attr\": \"val1\"}"))
+
+        // when read a JSON object with invalid type
+        assertNull(geoJsonReader.readGeometry("{\"type\": \"no_such_type\"}"))
+
+        // when read a JSON Point geometry object with missing coordinates
+        assertNull(geoJsonReader.readGeometry("{\"type\": \"Point\"}"))
     }
 
     @Test
