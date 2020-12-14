@@ -7,6 +7,7 @@ import android.view.MenuItem
 import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import androidx.appcompat.view.ActionMode
+import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
@@ -106,7 +107,12 @@ class EditFeatureButton(
     }
 
     init {
-        setImageDrawable(context.getDrawable(R.drawable.ic_add_poi))
+        setImageDrawable(
+            ContextCompat.getDrawable(
+                context,
+                R.drawable.ic_add_poi
+            )
+        )
         setOnClickListener { addPoi() }
     }
 
@@ -221,7 +227,8 @@ class EditFeatureButton(
 
                     if (!mapViewForMarker.isAnimating && !mapViewForMarker.boundingBox.increaseByScale(
                             0.75f
-                        ).contains(marker.position)
+                        )
+                            .contains(marker.position)
                     ) {
                         centerMapToMarker(marker)
                     }
@@ -369,6 +376,7 @@ class EditFeatureButton(
     }
 
     enum class EditMode {
-        SINGLE, MULTIPLE
+        SINGLE,
+        MULTIPLE
     }
 }

@@ -31,7 +31,7 @@ class MyLocationOverlay(
     private val myLocationProvider: IMyLocationProvider
     private val compassOrientationProvider: IOrientationProvider
     private var myLocationListener: MyLocationListener? = null
-    private val compassBitmap: Bitmap
+    private val compassBitmap: Bitmap?
     private var location: Location? = null
     private var compassOrientation = 0f
 
@@ -256,12 +256,15 @@ class MyLocationOverlay(
             x,
             y
         )
-        canvas.drawBitmap(
-            compassBitmap,
-            x - compassBitmap.width / 2,
-            y - compassBitmap.height + 8,
-            compassPaint
-        )
+
+        compassBitmap?.also {
+            canvas.drawBitmap(
+                it,
+                x - compassBitmap.width / 2,
+                y - compassBitmap.height + 8,
+                compassPaint
+            )
+        }
 
         canvas.restore()
     }

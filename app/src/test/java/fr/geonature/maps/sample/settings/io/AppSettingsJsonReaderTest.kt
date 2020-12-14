@@ -1,5 +1,6 @@
 package fr.geonature.maps.sample.settings.io
 
+import fr.geonature.commons.settings.io.AppSettingsJsonReader
 import fr.geonature.maps.sample.FixtureHelper.getFixture
 import fr.geonature.maps.sample.settings.AppSettings
 import fr.geonature.maps.settings.LayerSettings

@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -27,7 +26,6 @@ import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
 import fr.geonature.maps.util.PermissionUtils
-import fr.geonature.maps.util.PermissionUtils.checkPermissions
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -123,29 +121,8 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        val mapSettings = mapSettings ?: return
-
         configureMapView()
-
-        // check storage permissions
-        val context = context ?: return
-        val granted = PermissionUtils.checkSelfPermissions(
-            context,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-
-        if (granted) {
-            layerSettingsViewModel?.also {
-                val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                    ?: emptyList<LayerSettings>()
-                it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
-            }
-        } else {
-            requestPermissions(
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_STORAGE_PERMISSIONS
-            )
-        }
+        loadLayersSettings()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -169,46 +146,6 @@ open class MapFragment : Fragment(),
         super.onPause()
 
         mapView.onPause()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            REQUEST_STORAGE_PERMISSIONS -> {
-                val requestPermissionsResult = checkPermissions(grantResults)
-
-                if (requestPermissionsResult) {
-                    showSnackbar(getString(R.string.snackbar_permissions_granted))
-
-                    val mapSettings = mapSettings ?: return
-
-                    layerSettingsViewModel?.also {
-                        val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                            ?: emptyList<LayerSettings>()
-                        it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
-                    }
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-            }
-            REQUEST_LOCATION_PERMISSIONS -> {
-                val requestPermissionsResult = checkPermissions(grantResults)
-
-                if (requestPermissionsResult) {
-                    myLocationFab.requestLocation()
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-            }
-            else -> super.onRequestPermissionsResult(
-                requestCode,
-                permissions,
-                grantResults
-            )
-        }
     }
 
     override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
@@ -238,6 +175,32 @@ open class MapFragment : Fragment(),
         }
 
         return mapView.overlays.filter(filter)
+    }
+
+    private fun loadLayersSettings() {
+        val activity = activity as AppCompatActivity? ?: return
+        val mapSettings = mapSettings ?: return
+
+        // check storage permissions
+        PermissionUtils.requestPermissions(
+            activity,
+            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            { result ->
+                // then load layers settings
+                if (result.values.all { it }) {
+                    showSnackbar(getString(R.string.snackbar_permissions_granted))
+
+                    layerSettingsViewModel?.also {
+                        val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                            ?: emptyList<LayerSettings>()
+                        it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
+                    }
+                } else {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                }
+            },
+            null
+        )
     }
 
     private fun configureMapView() {
@@ -321,7 +284,7 @@ open class MapFragment : Fragment(),
             override fun makeSnackbar(
                 resId: Int,
                 duration: Int
-            ): Snackbar? {
+            ): Snackbar {
                 return Snackbar.make(
                     container,
                     resId,
@@ -344,18 +307,16 @@ open class MapFragment : Fragment(),
                 return mapSettings.maxBounds
             }
 
-            override fun checkPermissions(): Boolean {
-                val context = context ?: return false
-                val granted = PermissionUtils.checkSelfPermissions(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+            override suspend fun checkPermissions(vararg permission: String): Boolean {
+                val activity = activity as AppCompatActivity? ?: return false
+
+                val granted = PermissionUtils.requestPermissions(
+                    activity,
+                    permission.asList()
                 )
 
                 if (!granted) {
-                    requestPermissions(
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        REQUEST_LOCATION_PERMISSIONS
-                    )
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
 
                 return granted
@@ -387,7 +348,7 @@ open class MapFragment : Fragment(),
                 vm.tileProvider.removeObservers(this)
                 vm.tileProvider.observe(
                     this,
-                    Observer {
+                    {
                         if (it == null) {
                             mapView.tileProvider?.detach()
                         } else {
@@ -404,7 +365,7 @@ open class MapFragment : Fragment(),
                 vm.vectorOverlays.removeObservers(this)
                 vm.vectorOverlays.observe(
                     this,
-                    Observer {
+                    {
                         GlobalScope.launch(Main) {
                             mapView.overlays.asSequence()
                                 .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
@@ -460,9 +421,6 @@ open class MapFragment : Fragment(),
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
-
-        private const val REQUEST_STORAGE_PERMISSIONS = 0
-        private const val REQUEST_LOCATION_PERMISSIONS = 1
 
         private const val KEY_ACTIVE_LAYERS = "active_layers"
 

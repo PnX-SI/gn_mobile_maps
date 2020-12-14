@@ -2,6 +2,7 @@ package fr.geonature.maps.sample.settings.io
 
 import android.util.JsonReader
 import android.util.JsonToken
+import fr.geonature.commons.settings.io.AppSettingsJsonReader
 import fr.geonature.maps.sample.settings.AppSettings
 import fr.geonature.maps.settings.io.MapSettingsReader
 

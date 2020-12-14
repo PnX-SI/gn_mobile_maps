@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.util.AttributeSet
+import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.util.ThemeUtils
@@ -72,10 +73,12 @@ class RotateCompassButton(
                 )
 
                 if (alpha == 1F && northThreshold(mapView.mapOrientation)) {
-                    animate().alpha(0F).setDuration(
-                        Configuration.getInstance()
-                            .animationSpeedShort.toLong()
-                    ).start()
+                    animate().alpha(0F)
+                        .setDuration(
+                            Configuration.getInstance()
+                                .animationSpeedShort.toLong()
+                        )
+                        .start()
                 }
             }
         }
@@ -85,10 +88,12 @@ class RotateCompassButton(
         if (event == null) return true
 
         if (alpha == 0F && !northThreshold(event.source.mapOrientation)) {
-            animate().alpha(1F).setDuration(
-                Configuration.getInstance()
-                    .animationSpeedShort.toLong()
-            ).start()
+            animate().alpha(1F)
+                .setDuration(
+                    Configuration.getInstance()
+                        .animationSpeedShort.toLong()
+                )
+                .start()
         }
 
         updateImageDrawable(event.source.mapOrientation)
@@ -100,10 +105,12 @@ class RotateCompassButton(
             )
 
             if (alpha == 1F && northThreshold(mapView?.mapOrientation ?: 0F)) {
-                animate().alpha(0F).setDuration(
-                    Configuration.getInstance()
-                        .animationSpeedShort.toLong()
-                ).start()
+                animate().alpha(0F)
+                    .setDuration(
+                        Configuration.getInstance()
+                            .animationSpeedShort.toLong()
+                    )
+                    .start()
             }
         }
 
@@ -116,10 +123,11 @@ class RotateCompassButton(
     }
 
     private fun updateImageDrawable(mapOrientation: Float = 0f) {
-        val drawable = context.resources.getDrawable(
-            R.drawable.ic_compass,
-            context.theme
-        )
+        val drawable = ContextCompat.getDrawable(
+            context,
+            R.drawable.ic_compass
+        ) ?: return
+        
         drawable.setTint(ThemeUtils.getAccentColor(context))
 
         val bitmap = Bitmap.createBitmap(
@@ -142,7 +150,8 @@ class RotateCompassButton(
             textPaint.textSize = 32f
 
             canvas.drawText(
-                context.getText(R.string.compass_north).toString(),
+                context.getText(R.string.compass_north)
+                    .toString(),
                 (bitmap.width / 2).toFloat(),
                 (bitmap.height - textPaint.descent() - textPaint.ascent()) / 2,
                 textPaint

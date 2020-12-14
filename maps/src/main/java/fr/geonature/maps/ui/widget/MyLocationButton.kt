@@ -1,5 +1,6 @@
 package fr.geonature.maps.ui.widget
 
+import android.Manifest
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
@@ -8,11 +9,15 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -39,7 +44,12 @@ class MyLocationButton(
     private var myLocationState: MyLocationState = MyLocationState.INACTIVE
 
     init {
-        setImageDrawable(context.getDrawable(R.drawable.ic_gps_location_searching))
+        setImageDrawable(
+            ContextCompat.getDrawable(
+                context,
+                R.drawable.ic_gps_location_searching
+            )
+        )
     }
 
     override fun onScroll(event: ScrollEvent?): Boolean {
@@ -47,7 +57,10 @@ class MyLocationButton(
         if (mapView.isAnimating) return true
 
         if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
-            val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+            val drawable = ContextCompat.getDrawable(
+                context,
+                R.drawable.ic_gps_location_found
+            )
             drawable?.setTint(Color.DKGRAY)
             setImageDrawable(drawable)
 
@@ -61,7 +74,7 @@ class MyLocationButton(
         return true
     }
 
-    override fun onSaveInstanceState(): Parcelable? {
+    override fun onSaveInstanceState(): Parcelable {
         return Bundle().apply {
             putParcelable(
                 "superState",
@@ -77,7 +90,9 @@ class MyLocationButton(
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
             myLocationState =
-                if (state.getByte("locationState") == Integer.valueOf(1).toByte()) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+                if (state.getByte("locationState") == Integer.valueOf(1)
+                        .toByte()
+                ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
             super.onRestoreInstanceState(state.getParcelable("superState"))
 
             return
@@ -110,7 +125,10 @@ class MyLocationButton(
                 val context = context ?: return
                 if (location == null) return
 
-                val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                val drawable = ContextCompat.getDrawable(
+                    context,
+                    R.drawable.ic_gps_location_found
+                )
 
                 myLocationState = if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                     animateTo(
@@ -142,11 +160,13 @@ class MyLocationButton(
         })
 
         setOnClickListener {
-            if (onMyLocationButtonListener?.checkPermissions() == false) {
-                return@setOnClickListener
-            }
+            GlobalScope.launch(context = Dispatchers.Main) {
+                if (onMyLocationButtonListener?.checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION) == false) {
+                    return@launch
+                }
 
-            requestLocation()
+                requestLocation()
+            }
         }
 
         isEnabled = true
@@ -156,7 +176,7 @@ class MyLocationButton(
         if (myLocationState == MyLocationState.ACTIVE || myLocationState == MyLocationState.ACTIVE_TRACKER) enableMyLocation() else disableMyLocation()
     }
 
-    fun requestLocation() {
+    private fun requestLocation() {
         val myLocationOverlay = myLocationOverlay ?: return
         val mapView = onMyLocationButtonListener?.getMapView() ?: return
 
@@ -169,7 +189,10 @@ class MyLocationButton(
                     myLocationOverlay.getLastKnownLocation()
                 )
 
-                val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                val drawable = ContextCompat.getDrawable(
+                    context,
+                    R.drawable.ic_gps_location_found
+                )
                 drawable?.setTint(ThemeUtils.getAccentColor(context))
                 setImageDrawable(drawable)
 
@@ -216,10 +239,12 @@ class MyLocationButton(
     interface OnMyLocationButtonListener {
         fun getMapView(): MapView
         fun getMaxBounds(): BoundingBox?
-        fun checkPermissions(): Boolean
+        suspend fun checkPermissions(vararg permission: String): Boolean
     }
 
     internal enum class MyLocationState {
-        INACTIVE, ACTIVE, ACTIVE_TRACKER
+        INACTIVE,
+        ACTIVE,
+        ACTIVE_TRACKER
     }
 }

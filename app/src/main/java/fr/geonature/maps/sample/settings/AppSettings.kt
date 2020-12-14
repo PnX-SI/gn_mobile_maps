@@ -2,6 +2,7 @@ package fr.geonature.maps.sample.settings
 
 import android.os.Parcel
 import android.os.Parcelable
+import fr.geonature.commons.settings.IAppSettings
 import fr.geonature.maps.settings.MapSettings
 
 /**
