@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="preference_category_map">Map</string>
     <string name="preference_category_map_show_compass_key" translatable="false">map_show_compass</string>
     <string name="preference_category_map_show_compass">Display the compass</string>
     <string name="preference_category_map_show_scale_key" translatable="false">map_show_scale</string>

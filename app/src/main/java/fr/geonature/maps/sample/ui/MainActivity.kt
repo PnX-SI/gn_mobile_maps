@@ -1,15 +1,20 @@
 package fr.geonature.maps.sample.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.lifecycle.ViewModelProvider
 import fr.geonature.commons.util.observeOnce
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.settings.AppSettings
 import fr.geonature.maps.sample.settings.AppSettingsViewModel
+import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
@@ -41,6 +46,30 @@ class MainActivity : AppCompatActivity() {
             }).get(AppSettingsViewModel::class.java)
 
         checkPermissions()
+    }
+
+    @SuppressLint("RestrictedApi")
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(
+            R.menu.settings,
+            menu
+        )
+
+        if (menu is MenuBuilder) {
+            menu.setOptionalIconsVisible(true)
+        }
+
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_settings -> {
+                startActivity(PreferencesActivity.newIntent(this))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun checkPermissions() {
