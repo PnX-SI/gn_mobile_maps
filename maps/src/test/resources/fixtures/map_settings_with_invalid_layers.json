@@ -34,7 +34,7 @@
     {
       "label": "nantes.wkt",
       "source": "nantes.wkt",
-      "style": null
+      "properties": null
     }
   ]
 }

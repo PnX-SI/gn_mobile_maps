@@ -2,6 +2,7 @@ package fr.geonature.maps.settings
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.core.os.ParcelCompat
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -13,9 +14,11 @@ import org.osmdroid.util.GeoPoint
 data class MapSettings(
     val layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
-    val showScale: Boolean = true,
-    val showCompass: Boolean = true,
-    val showZoom: Boolean = false,
+    val useDefaultOnlineTileSource: Boolean = Builder.newInstance().useDefaultOnlineTileSource,
+    val showAttribution: Boolean = Builder.newInstance().showAttribution,
+    val showCompass: Boolean = Builder.newInstance().showCompass,
+    val showScale: Boolean = Builder.newInstance().showScale,
+    val showZoom: Boolean = Builder.newInstance().showZoom,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -27,8 +30,10 @@ data class MapSettings(
     private constructor(builder: Builder) : this(
         builder.layersSettings,
         builder.baseTilesPath,
-        builder.showScale,
+        builder.useDefaultOnlineTileSource,
+        builder.showAttribution,
         builder.showCompass,
+        builder.showScale,
         builder.showZoom,
         builder.zoom,
         builder.minZoomLevel,
@@ -41,12 +46,11 @@ data class MapSettings(
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
-        source.readByte() == Integer.valueOf(1)
-            .toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1)
-            .toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1)
-            .toByte(), // as boolean value
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
         source.readDouble(),
         source.readDouble(),
         source.readDouble(),
@@ -68,23 +72,42 @@ data class MapSettings(
         dest: Parcel?,
         flags: Int
     ) {
-        dest?.writeString(baseTilesPath)
-        dest?.writeByte((if (showScale) 1 else 0).toByte()) // as boolean value
-        dest?.writeByte((if (showCompass) 1 else 0).toByte()) // as boolean value
-        dest?.writeByte((if (showZoom) 1 else 0).toByte()) // as boolean value
-        dest?.writeDouble(zoom)
-        dest?.writeDouble(minZoomLevel)
-        dest?.writeDouble(maxZoomLevel)
-        dest?.writeDouble(minZoomEditing)
-        dest?.writeParcelable(
-            maxBounds,
-            0
-        )
-        dest?.writeParcelable(
-            center,
-            0
-        )
-        dest?.writeTypedList(layersSettings)
+        dest?.also {
+            it.writeString(baseTilesPath)
+            ParcelCompat.writeBoolean(
+                dest,
+                useDefaultOnlineTileSource
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showAttribution
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showCompass
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showScale
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showZoom
+            )
+            it.writeDouble(zoom)
+            it.writeDouble(minZoomLevel)
+            it.writeDouble(maxZoomLevel)
+            it.writeDouble(minZoomEditing)
+            it.writeParcelable(
+                maxBounds,
+                0
+            )
+            it.writeParcelable(
+                center,
+                0
+            )
+            it.writeTypedList(layersSettings)
+        }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -95,8 +118,10 @@ data class MapSettings(
 
         if (layersSettings != other.layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
-        if (showScale != other.showScale) return false
+        if (useDefaultOnlineTileSource != other.useDefaultOnlineTileSource) return false
+        if (showAttribution != other.showAttribution) return false
         if (showCompass != other.showCompass) return false
+        if (showScale != other.showScale) return false
         if (showZoom != other.showZoom) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
@@ -120,8 +145,10 @@ data class MapSettings(
     override fun hashCode(): Int {
         var result = layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
-        result = 31 * result + showScale.hashCode()
+        result = 31 * result + useDefaultOnlineTileSource.hashCode()
+        result = 31 * result + showAttribution.hashCode()
         result = 31 * result + showCompass.hashCode()
+        result = 31 * result + showScale.hashCode()
         result = 31 * result + showZoom.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
@@ -148,13 +175,34 @@ data class MapSettings(
         internal var baseTilesPath: String? = null
             private set
 
-        internal var showScale: Boolean = true
+        /**
+         * Whether to use the default online tiles source (default: `true`, default tiles source: *OSM*).
+         */
+        var useDefaultOnlineTileSource: Boolean = true
             private set
 
-        internal var showCompass: Boolean = true
+        /**
+         * Whether to show the layer attribution control (default: `true`).
+         */
+        var showAttribution: Boolean = true
             private set
 
-        internal var showZoom: Boolean = false
+        /**
+         * Whether to show north compass during map rotation (default: `true`).
+         */
+        var showCompass: Boolean = true
+            private set
+
+        /**
+         * Whether to show the map scale (default: `true`).
+         */
+        var showScale: Boolean = true
+            private set
+
+        /**
+         * Whether to show the zoom control (default: `false`).
+         */
+        var showZoom: Boolean = false
             private set
 
         internal var zoom: Double = 0.0
@@ -175,12 +223,16 @@ data class MapSettings(
         internal var center: GeoPoint? = null
             private set
 
-        fun from(mapSettings: MapSettings) =
+        fun from(mapSettings: MapSettings?) =
             apply {
+                if (mapSettings == null) return@apply
+                
                 this.layersSettings.addAll(mapSettings.layersSettings)
                 this.baseTilesPath = mapSettings.baseTilesPath
-                this.showScale = mapSettings.showScale
+                this.useDefaultOnlineTileSource = mapSettings.useDefaultOnlineTileSource
+                this.showAttribution = mapSettings.showAttribution
                 this.showCompass = mapSettings.showCompass
+                this.showScale = mapSettings.showScale
                 this.showZoom = mapSettings.showZoom
                 this.zoom = mapSettings.zoom
                 this.minZoomLevel = mapSettings.minZoomLevel
@@ -193,11 +245,17 @@ data class MapSettings(
         fun baseTilesPath(baseTilesPath: String) =
             apply { this.baseTilesPath = baseTilesPath }
 
-        fun showScale(showScale: Boolean) =
-            apply { this.showScale = showScale }
+        fun useDefaultOnlineTileSource(useDefaultOnlineTileSource: Boolean) =
+            apply { this.useDefaultOnlineTileSource = useDefaultOnlineTileSource }
+
+        fun showAttribution(showAttribution: Boolean) =
+            apply { this.showAttribution = showAttribution }
 
         fun showCompass(showCompass: Boolean) =
             apply { this.showCompass = showCompass }
+
+        fun showScale(showScale: Boolean) =
+            apply { this.showScale = showScale }
 
         fun showZoom(showZoom: Boolean) =
             apply { this.showZoom = showZoom }
@@ -244,8 +302,7 @@ data class MapSettings(
             MapSettings(this)
 
         companion object {
-            fun newInstance(): Builder =
-                Builder()
+            fun newInstance(): Builder = Builder()
         }
     }
 

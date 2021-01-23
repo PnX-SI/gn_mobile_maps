@@ -5,7 +5,8 @@
 
     <string name="alert_dialog_layers_title">Couches géographiques</string>
     <string name="alert_dialog_layers_cancel">Fermer</string>
-    <string name="alert_dialog_layers_type_tiles">Fonds cartographique</string>
+    <string name="alert_dialog_layers_type_tiles_online">Fonds en ligne</string>
+    <string name="alert_dialog_layers_type_tiles">Fonds embarquées</string>
     <string name="alert_dialog_layers_type_vector">Couches vectorielles</string>
     <string name="alert_dialog_layers_no_data">Aucune couche géographique à afficher</string>
 
@@ -22,6 +23,7 @@
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
 
+    <string name="button_layers_hint">Choix des couches géographiques</string>
     <string name="button_zoom_in_hint">Zoomer</string>
     <string name="button_zoom_out_hint">Dézoomer</string>
 

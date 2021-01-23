@@ -64,7 +64,9 @@ class LayerStyleSettingsTest {
         // then
         assertEquals(
             layerStyleSettings,
-            LayerStyleSettings.Builder.newInstance().from(layerStyleSettings).build()
+            LayerStyleSettings.Builder.newInstance()
+                .from(layerStyleSettings)
+                .build()
         )
 
         // when applying new style

@@ -26,15 +26,18 @@
       "label": "Nantes (Data)",
       "source": "nantes.wkt",
       "name": "nantes.wkt",
-      "style": {
-        "stroke": true,
-        "color": "#FF0000",
-        "weight": 8,
-        "opacity": 0.9,
-        "fill": true,
-        "fillColor": "#FF8000",
-        "fillOpacity": 0.2,
-        "no_such_style_property": "no_such_value"
+      "properties": {
+        "no_such_property": "no_such_value",
+        "style": {
+          "stroke": true,
+          "color": "#FF0000",
+          "weight": 8,
+          "opacity": 0.9,
+          "fill": true,
+          "fillColor": "#FF8000",
+          "fillOpacity": 0.2,
+          "no_such_style_property": "no_such_value"
+        }
       }
     }
   ]

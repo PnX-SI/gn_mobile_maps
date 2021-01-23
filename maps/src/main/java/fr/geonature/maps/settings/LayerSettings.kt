@@ -9,22 +9,21 @@ import android.os.Parcelable
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class LayerSettings(
-    var label: String,
-    var source: String,
-    var layerStyle: LayerStyleSettings = LayerStyleSettings()
-) : Parcelable {
+    val label: String,
+    val source: String, // TODO: manage source as list
+    val properties: LayerPropertiesSettings? = null
+) : Parcelable, Comparable<LayerSettings> {
 
     private constructor(builder: Builder) : this(
         builder.label!!,
         builder.source!!,
-        builder.layerStyle
+        builder.properties
     )
 
     private constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readParcelable(LayerStyleSettings::class.java.classLoader) as LayerStyleSettings?
-            ?: LayerStyleSettings()
+        parcel.readParcelable(LayerPropertiesSettings::class.java.classLoader)
     )
 
     override fun describeContents(): Int {
@@ -35,29 +34,33 @@ data class LayerSettings(
         dest: Parcel?,
         flags: Int
     ) {
-        dest?.writeString(label)
-        dest?.writeString(source)
-        dest?.writeParcelable(
-            layerStyle,
-            0
-        )
+        dest?.also {
+            it.writeString(label)
+            it.writeString(source)
+            it.writeParcelable(
+                properties,
+                0
+            )
+        }
+    }
+
+    override fun compareTo(other: LayerSettings): Int {
+        return when {
+            this == other -> 0
+            this.getType() != other.getType() -> this.getType().ordinal - other.getType().ordinal
+            this.getType() == other.getType() && this.isOnline() != other.isOnline() -> if (this.isOnline()) -1 else 1
+            this.getType() == other.getType() && this.label != other.label -> this.label.compareTo(other.label)
+            this.getType() == other.getType() -> this.source.compareTo(other.source)
+            else -> -1
+        }
     }
 
     fun getType(): LayerType {
-        if (source.endsWith("mbtiles")) {
-            return LayerType.TILES
-        }
+        return Builder.layerType(source)
+    }
 
-        if (arrayOf(
-                ".geojson",
-                ".json",
-                ".wkt"
-            ).any { source.endsWith(it) }
-        ) {
-            return LayerType.VECTOR
-        }
-
-        return LayerType.NOT_IMPLEMENTED
+    fun isOnline(): Boolean {
+        return Builder.isOnline(source)
     }
 
     class Builder {
@@ -68,17 +71,47 @@ data class LayerSettings(
         internal var source: String? = null
             private set
 
-        internal var layerStyle: LayerStyleSettings = LayerStyleSettings()
+        internal var properties: LayerPropertiesSettings? = null
             private set
 
         fun label(label: String) =
             apply { this.label = label }
 
         fun source(source: String) =
-            apply { this.source = source }
+            apply {
+                this.source = source
+                properties(this.properties)
+            }
 
-        fun style(layerStyle: LayerStyleSettings?) =
-            apply { this.layerStyle = layerStyle ?: LayerStyleSettings() }
+        fun properties(properties: LayerPropertiesSettings? = null) =
+            apply {
+                // set default properties for online source if none was given
+                if (isOnline(source) && properties == null) {
+                    this.properties = LayerPropertiesSettings.Builder.newInstance()
+                        .minZoomLevel()
+                        .maxZoomLevel()
+                        .tileSizePixels()
+                        .tileMimeType()
+                        .build()
+
+                    return@apply
+                }
+
+                // set default style for vector source if none was given
+                if (layerType(source) == LayerType.VECTOR && properties?.style == null) {
+                    this.properties = LayerPropertiesSettings.Builder.newInstance()
+                        .from(this.properties)
+                        .style(
+                            LayerStyleSettings.Builder.newInstance()
+                                .build()
+                        )
+                        .build()
+
+                    return@apply
+                }
+
+                this.properties = properties
+            }
 
         @Throws(java.lang.IllegalArgumentException::class)
         fun build(): LayerSettings {
@@ -89,8 +122,22 @@ data class LayerSettings(
         }
 
         companion object {
-            fun newInstance(): Builder =
-                Builder()
+            fun newInstance(): Builder = Builder()
+
+            internal val layerType: (source: String?) -> LayerType = { source ->
+                when {
+                    isOnline(source) || source?.endsWith("mbtiles") == true -> LayerType.TILES
+                    arrayOf(
+                        ".geojson",
+                        ".json",
+                        ".wkt"
+                    ).any { source?.endsWith(it) == true } -> LayerType.VECTOR
+                    else -> LayerType.NOT_IMPLEMENTED
+                }
+            }
+
+            internal val isOnline: (source: String?) -> Boolean =
+                { it?.startsWith("http") == true }
         }
     }
 

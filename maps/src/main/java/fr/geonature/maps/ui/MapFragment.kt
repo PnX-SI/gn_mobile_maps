@@ -1,6 +1,7 @@
 package fr.geonature.maps.ui
 
 import android.Manifest
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,11 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.useDefaultOnlineSource
 import fr.geonature.maps.util.PermissionUtils
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
@@ -35,6 +41,7 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -62,14 +69,15 @@ open class MapFragment : Fragment(),
     private lateinit var rotateCompassFab: RotateCompassButton
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
-    private var mapSettings: MapSettings? = null
+    private lateinit var mapSettings: MapSettings
     private lateinit var savedState: Bundle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = context ?: return
-        mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS)
+
+        mapSettings = getMapSettings(context)
         savedState = savedInstanceState ?: Bundle()
 
         Configuration.getInstance()
@@ -85,7 +93,7 @@ open class MapFragment : Fragment(),
                 LayerSettingsViewModel.Factory {
                     LayerSettingsViewModel(
                         this.application,
-                        mapSettings?.baseTilesPath
+                        mapSettings.baseTilesPath
                     )
                 }).get(LayerSettingsViewModel::class.java)
         }
@@ -177,9 +185,27 @@ open class MapFragment : Fragment(),
         return mapView.overlays.filter(filter)
     }
 
+    private fun getMapSettings(context: Context): MapSettings {
+        // read map settings from arguments or build the default one
+        val mapSettingsBuilder = MapSettings.Builder.newInstance()
+            .from(arguments?.getParcelable(ARG_MAP_SETTINGS))
+
+        setDefaultPreferences(
+            context,
+            mapSettingsBuilder.build()
+        )
+
+        // update map settings according to preferences
+        return mapSettingsBuilder
+            .useDefaultOnlineTileSource(mapSettingsBuilder.layersSettings.isEmpty() || useDefaultOnlineSource(context))
+            .showCompass(showCompass(context))
+            .showScale(showScale(context))
+            .showZoom(showZoom(context))
+            .build()
+    }
+
     private fun loadLayersSettings() {
         val activity = activity as AppCompatActivity? ?: return
-        val mapSettings = mapSettings ?: return
 
         // check storage permissions
         PermissionUtils.requestPermissions(
@@ -190,10 +216,38 @@ open class MapFragment : Fragment(),
                 if (result.values.all { it }) {
                     showSnackbar(getString(R.string.snackbar_permissions_granted))
 
-                    layerSettingsViewModel?.also {
+                    layerSettingsViewModel?.also { vm ->
+                        vm.setLayersSettings(
+                            mapSettings.layersSettings,
+                            mapSettings.useDefaultOnlineTileSource
+                        )
+
+                        if (vm.getLayerSettings()
+                                .isNotEmpty()
+                        ) {
+                            // configure and show layers selector
+                            with(layersFab) {
+                                setOnClickListener {
+                                    LayerSettingsDialogFragment.newInstance(
+                                        vm.getLayerSettings(),
+                                        savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                                            ?: emptyList()
+                                    )
+                                        .also {
+                                            it.show(
+                                                childFragmentManager,
+                                                LAYER_SETTINGS_DIALOG_FRAGMENT
+                                            )
+                                        }
+                                }
+                                show()
+                            }
+                        }
+
                         val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
                             ?: emptyList<LayerSettings>()
-                        it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
+
+                        vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
                     }
                 } else {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
@@ -216,15 +270,12 @@ open class MapFragment : Fragment(),
         rotationGestureOverlay.isEnabled = true
         mapView.overlays.add(rotationGestureOverlay)
 
-        val mapSettings = mapSettings ?: return
-
-        // configure and display scale bar
-        if (mapSettings.showScale) {
-            val scaleBarOverlay = ScaleBarOverlay(mapView)
-            scaleBarOverlay.setCentred(false)
-            scaleBarOverlay.setAlignBottom(true)
-            scaleBarOverlay.setAlignRight(false)
-            mapView.overlays.add(scaleBarOverlay)
+        // configure and display attribution notice for the current online source
+        if (mapSettings.showAttribution) {
+            val copyrightOverlay = CopyrightOverlay(context)
+            copyrightOverlay.setAlignBottom(true)
+            copyrightOverlay.setAlignRight(true)
+            mapView.overlays.add(copyrightOverlay)
         }
 
         // configure and display map compass
@@ -233,24 +284,13 @@ open class MapFragment : Fragment(),
             rotateCompassFab.show()
         }
 
-        // configure and show layers selector
-        if (mapSettings.layersSettings.isNotEmpty()) {
-            with(layersFab) {
-                setOnClickListener {
-                    LayerSettingsDialogFragment.newInstance(
-                        mapSettings.layersSettings,
-                        savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                            ?: emptyList()
-                    )
-                        .also {
-                            it.show(
-                                childFragmentManager,
-                                LAYER_SETTINGS_DIALOG_FRAGMENT
-                            )
-                        }
-                }
-                show()
-            }
+        // configure and display scale bar
+        if (mapSettings.showScale) {
+            val scaleBarOverlay = ScaleBarOverlay(mapView)
+            scaleBarOverlay.setCentred(false)
+            scaleBarOverlay.setAlignBottom(true)
+            scaleBarOverlay.setAlignRight(false)
+            mapView.overlays.add(scaleBarOverlay)
         }
 
         // configure and display zoom control
@@ -436,7 +476,7 @@ open class MapFragment : Fragment(),
          */
         @JvmStatic
         fun newInstance(
-            mapSettings: MapSettings,
+            mapSettings: MapSettings?,
             editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE
         ) =
             MapFragment().apply {

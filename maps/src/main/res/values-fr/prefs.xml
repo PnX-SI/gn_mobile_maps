@@ -2,6 +2,7 @@
 <resources>
 
     <string name="preference_category_map">Carte</string>
+    <string name="preference_category_map_use_default_online_source">Utiliser le fond cartographique par défaut (OSM)</string>
     <string name="preference_category_map_show_compass">Afficher la boussole</string>
     <string name="preference_category_map_show_scale">Afficher l\'échelle</string>
     <string name="preference_category_map_show_zoom">Afficher le zoom</string>

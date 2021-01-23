@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.R
@@ -75,7 +76,6 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             val layerSettings = v.tag as LayerSettings
             val isSelected = selectedItems.contains(layerSettings)
 
-
             if (isSelected) {
                 selectedItems.remove(layerSettings)
                 checkbox.isChecked = false
@@ -84,13 +84,16 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 checkbox.isChecked = true
             }
 
+            notifyDataSetChanged()
+
             listener.onSelectedLayersSettings(selectedItems)
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractViewHolder {
         return when (ViewType.values()[viewType]) {
-            ViewType.HEADER -> LayerHeaderViewHolder(parent)
+            ViewType.HEADER_LAYER_ONLINE -> LayerOnlineHeaderViewHolder(parent)
+            ViewType.HEADER_LAYER -> LayerHeaderViewHolder(parent)
             else -> LayerViewHolder(parent)
         }
     }
@@ -111,14 +114,62 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Sets layers.
      */
     fun setItems(newItems: List<LayerSettings>) {
-        val newItemsWithViewType = mutableListOf<Pair<LayerSettings, ViewType>>()
-        newItems.asSequence().sortedBy { it.getType() }.forEach {
-            if (it.getType() != newItemsWithViewType.lastOrNull()?.first?.getType()) {
-                newItemsWithViewType.add(Pair(it, ViewType.HEADER))
-            }
-
-            newItemsWithViewType.add(Pair(it, ViewType.LAYER))
-        }
+        val newItemsWithViewType =
+            newItems.asSequence()
+                .sorted()
+                .mapIndexed { index, layerSettings ->
+                    when {
+                        // first item
+                        index == 0 -> mutableListOf(
+                            Pair(
+                                layerSettings,
+                                if (layerSettings.isOnline()) ViewType.HEADER_LAYER_ONLINE else ViewType.HEADER_LAYER
+                            ),
+                            Pair(
+                                layerSettings,
+                                ViewType.LAYER
+                            )
+                        )
+                        // same type but one of them refer to an online source
+                        newItems[index - 1].getType() == layerSettings.getType() && newItems[index - 1].isOnline() != layerSettings.isOnline() -> mutableListOf(
+                            Pair(
+                                layerSettings,
+                                if (layerSettings.isOnline()) ViewType.HEADER_LAYER_ONLINE else ViewType.HEADER_LAYER
+                            ),
+                            Pair(
+                                layerSettings,
+                                ViewType.LAYER
+                            )
+                        )
+                        // different type
+                        newItems[index - 1].getType() != layerSettings.getType() -> mutableListOf(
+                            Pair(
+                                layerSettings,
+                                if (layerSettings.isOnline()) ViewType.HEADER_LAYER_ONLINE else ViewType.HEADER_LAYER
+                            ),
+                            Pair(
+                                layerSettings,
+                                ViewType.LAYER
+                            )
+                        )
+                        // same type
+                        newItems[index - 1].getType() == layerSettings.getType() -> mutableListOf(
+                            Pair(
+                                layerSettings,
+                                ViewType.LAYER
+                            )
+                        )
+                        // default case
+                        else -> mutableListOf(
+                            Pair(
+                                layerSettings,
+                                ViewType.LAYER
+                            )
+                        )
+                    }
+                }
+                .flatMap { it.asSequence() }
+                .toList()
 
         if (this.items.isEmpty()) {
             this.items.addAll(newItemsWithViewType)
@@ -175,11 +226,49 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
     fun setSelectedLayers(selectedLayersSettings: List<LayerSettings>) {
         this.selectedItems.clear()
         this.selectedItems.addAll(selectedLayersSettings)
+
         notifyDataSetChanged()
     }
 
     abstract inner class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         abstract fun bind(item: LayerSettings)
+    }
+
+    inner class LayerOnlineHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
+        LayoutInflater.from(parent.context)
+            .inflate(
+                R.layout.list_layer_header,
+                parent,
+                false
+            )
+    ) {
+        private val title: TextView = itemView.findViewById(android.R.id.title)
+        private val icon: ImageView = itemView.findViewById(android.R.id.icon)
+        private val switch: SwitchCompat = itemView.findViewById(android.R.id.toggle)
+
+        override fun bind(item: LayerSettings) {
+            title.setText(R.string.alert_dialog_layers_type_tiles_online)
+            icon.setImageResource(R.drawable.ic_layer_online)
+
+            with(switch) {
+                visibility = View.VISIBLE
+                isChecked = selectedItems.contains(item)
+                setOnCheckedChangeListener { _, isChecked ->
+                    selectedItems.removeAll { it.isOnline() }
+
+                    if (isChecked) {
+                        items.firstOrNull { it.first.isOnline() }
+                            ?.also {
+                                selectedItems.add(it.first)
+                            }
+                    }
+
+                    // notifyDataSetChanged()
+
+                    listener.onSelectedLayersSettings(selectedItems)
+                }
+            }
+        }
     }
 
     inner class LayerHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
@@ -231,7 +320,8 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
     }
 
     enum class ViewType {
-        HEADER,
+        HEADER_LAYER_ONLINE,
+        HEADER_LAYER,
         LAYER
     }
 
