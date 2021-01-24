@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="preference_category_storage">Mémoire</string>
+    <string name="preference_category_storage_internal">Mémoire interne</string>
+    <string name="preference_category_storage_external">Mémoire externe</string>
     <string name="preference_category_about">À propos</string>
     <string name="preference_category_about_app_version">Version de l\'application</string>
 
