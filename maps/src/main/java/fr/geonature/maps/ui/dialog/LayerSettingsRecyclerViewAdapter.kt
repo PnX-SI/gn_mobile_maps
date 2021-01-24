@@ -74,12 +74,16 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             val checkbox: CheckBox = v.findViewById(android.R.id.checkbox)
 
             val layerSettings = v.tag as LayerSettings
-            val isSelected = selectedItems.contains(layerSettings)
+            val isAlreadySelected = selectedItems.contains(layerSettings)
 
-            if (isSelected) {
+            if (isAlreadySelected) {
                 selectedItems.remove(layerSettings)
                 checkbox.isChecked = false
             } else {
+                if (layerSettings.isOnline()) {
+                    selectedItems.removeAll { it.isOnline() }
+                }
+
                 selectedItems.add(layerSettings)
                 checkbox.isChecked = true
             }
@@ -253,19 +257,19 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             with(switch) {
                 visibility = View.VISIBLE
                 isChecked = selectedItems.contains(item)
-                setOnCheckedChangeListener { _, isChecked ->
+                setOnClickListener {
                     selectedItems.removeAll { it.isOnline() }
 
-                    if (isChecked) {
+                    if (switch.isChecked) {
                         items.firstOrNull { it.first.isOnline() }
                             ?.also {
                                 selectedItems.add(it.first)
                             }
                     }
 
-                    // notifyDataSetChanged()
-
                     listener.onSelectedLayersSettings(selectedItems)
+
+                    notifyDataSetChanged()
                 }
             }
         }
