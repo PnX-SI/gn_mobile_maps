@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
@@ -46,6 +47,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -79,14 +82,6 @@ open class MapFragment : Fragment(),
 
         mapSettings = getMapSettings(context)
         savedState = savedInstanceState ?: Bundle()
-
-        Configuration.getInstance()
-            .apply {
-                load(
-                    context,
-                    PreferenceManager.getDefaultSharedPreferences(context)
-                )
-            }
 
         layerSettingsViewModel = activity?.run {
             ViewModelProvider(this,
@@ -129,8 +124,24 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        configureMapView()
-        loadLayersSettings()
+        lifecycleScope.launch {
+            val isAllPermissionsGranted = checkPermissions()
+
+            // all permissions granted
+            if (isAllPermissionsGranted) {
+                // then load map configuration from preferences
+                Configuration.getInstance()
+                    .apply {
+                        load(
+                            context,
+                            PreferenceManager.getDefaultSharedPreferences(context)
+                        )
+                    }
+
+                configureMapView()
+                loadLayersSettings()
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -185,6 +196,29 @@ open class MapFragment : Fragment(),
         return mapView.overlays.filter(filter)
     }
 
+    private suspend fun checkPermissions() = suspendCoroutine<Boolean> { continuation ->
+        val activity = activity as AppCompatActivity?
+
+        if (activity == null) {
+            continuation.resume(false)
+            return@suspendCoroutine
+        }
+
+        // check storage permissions
+        PermissionUtils.requestPermissions(activity,
+            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            { result ->
+                // all permissions granted
+                if (result.values.all { it }) {
+                    showSnackbar(getString(R.string.snackbar_permissions_granted))
+                    continuation.resume(true)
+                } else {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                    continuation.resume(false)
+                }
+            })
+    }
+
     private fun getMapSettings(context: Context): MapSettings {
         // read map settings from arguments or build the default one
         val mapSettingsBuilder = MapSettings.Builder.newInstance()
@@ -205,56 +239,39 @@ open class MapFragment : Fragment(),
     }
 
     private fun loadLayersSettings() {
-        val activity = activity as AppCompatActivity? ?: return
+        layerSettingsViewModel?.also { vm ->
+            vm.setLayersSettings(
+                mapSettings.layersSettings,
+                mapSettings.useDefaultOnlineTileSource
+            )
 
-        // check storage permissions
-        PermissionUtils.requestPermissions(
-            activity,
-            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            { result ->
-                // then load layers settings
-                if (result.values.all { it }) {
-                    showSnackbar(getString(R.string.snackbar_permissions_granted))
-
-                    layerSettingsViewModel?.also { vm ->
-                        vm.setLayersSettings(
-                            mapSettings.layersSettings,
-                            mapSettings.useDefaultOnlineTileSource
+            if (vm.getLayerSettings()
+                    .isNotEmpty()
+            ) {
+                // configure and show layers selector
+                with(layersFab) {
+                    setOnClickListener {
+                        LayerSettingsDialogFragment.newInstance(
+                            vm.getLayerSettings(),
+                            savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                                ?: emptyList()
                         )
-
-                        if (vm.getLayerSettings()
-                                .isNotEmpty()
-                        ) {
-                            // configure and show layers selector
-                            with(layersFab) {
-                                setOnClickListener {
-                                    LayerSettingsDialogFragment.newInstance(
-                                        vm.getLayerSettings(),
-                                        savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                                            ?: emptyList()
-                                    )
-                                        .also {
-                                            it.show(
-                                                childFragmentManager,
-                                                LAYER_SETTINGS_DIALOG_FRAGMENT
-                                            )
-                                        }
-                                }
-                                show()
+                            .also {
+                                it.show(
+                                    childFragmentManager,
+                                    LAYER_SETTINGS_DIALOG_FRAGMENT
+                                )
                             }
-                        }
-
-                        val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                            ?: emptyList<LayerSettings>()
-
-                        vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
                     }
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                    show()
                 }
-            },
-            null
-        )
+            }
+
+            val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                ?: emptyList<LayerSettings>()
+
+            vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
+        }
     }
 
     private fun configureMapView() {
@@ -476,8 +493,8 @@ open class MapFragment : Fragment(),
          */
         @JvmStatic
         fun newInstance(
-            mapSettings: MapSettings?,
-            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE
+            mapSettings: MapSettings,
+            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
         ) =
             MapFragment().apply {
                 arguments = Bundle().apply {
