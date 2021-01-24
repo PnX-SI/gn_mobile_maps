@@ -59,7 +59,7 @@ object MapSettingsPreferencesUtils {
     fun useDefaultOnlineSource(context: Context): Boolean {
         return getDefaultSharedPreferences(context)
             .getBoolean(
-                context.getString(R.string.preference_category_map_show_zoom_key),
+                context.getString(R.string.preference_category_map_use_default_online_source_key),
                 MapSettings.Builder.newInstance().useDefaultOnlineTileSource
             )
     }
