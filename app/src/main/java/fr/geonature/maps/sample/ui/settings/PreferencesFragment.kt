@@ -3,6 +3,7 @@ package fr.geonature.maps.sample.ui.settings
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import fr.geonature.maps.sample.R
+import fr.geonature.maps.sample.util.PreferencesUtils.updatePreferences
 
 /**
  * Global settings.
@@ -10,6 +11,12 @@ import fr.geonature.maps.sample.R
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 class PreferencesFragment : PreferenceFragmentCompat() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        updatePreferences(preferenceScreen)
+    }
 
     override fun onCreatePreferences(
         savedInstanceState: Bundle?,

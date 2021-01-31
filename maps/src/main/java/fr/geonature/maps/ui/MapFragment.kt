@@ -1,10 +1,13 @@
 package fr.geonature.maps.ui
 
 import android.Manifest
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
@@ -25,7 +28,11 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
-import fr.geonature.maps.util.PermissionUtils
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.useDefaultOnlineSource
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -35,6 +42,7 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -62,33 +70,60 @@ open class MapFragment : Fragment(),
     private lateinit var rotateCompassFab: RotateCompassButton
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
-    private var mapSettings: MapSettings? = null
+    private lateinit var mapSettings: MapSettings
     private lateinit var savedState: Bundle
+    private lateinit var requestWriteExternalStoragePermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = context ?: return
-        mapSettings = arguments?.getParcelable(ARG_MAP_SETTINGS)
-        savedState = savedInstanceState ?: Bundle()
 
-        Configuration.getInstance()
-            .apply {
-                load(
-                    context,
-                    PreferenceManager.getDefaultSharedPreferences(context)
-                )
-            }
+        mapSettings = getMapSettings(context)
+        savedState = savedInstanceState ?: Bundle()
 
         layerSettingsViewModel = activity?.run {
             ViewModelProvider(this,
                 LayerSettingsViewModel.Factory {
                     LayerSettingsViewModel(
                         this.application,
-                        mapSettings?.baseTilesPath
+                        mapSettings.baseTilesPath
                     )
                 }).get(LayerSettingsViewModel::class.java)
         }
+
+        requestWriteExternalStoragePermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) {
+                if (it) {
+                    showSnackbar(getString(R.string.snackbar_permissions_granted))
+
+                    // then load map configuration from preferences
+                    Configuration.getInstance()
+                        .apply {
+                            load(
+                                context,
+                                PreferenceManager.getDefaultSharedPreferences(context)
+                            )
+                        }
+
+                    configureMapView()
+                    loadLayersSettings()
+                } else {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                }
+            }
+        requestLocationPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                if (!it) {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                    return@registerForActivityResult
+                }
+
+                myLocationFab.requestLocation()
+            }
     }
 
     override fun onCreateView(
@@ -121,8 +156,7 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        configureMapView()
-        loadLayersSettings()
+        requestWriteExternalStoragePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -177,30 +211,59 @@ open class MapFragment : Fragment(),
         return mapView.overlays.filter(filter)
     }
 
-    private fun loadLayersSettings() {
-        val activity = activity as AppCompatActivity? ?: return
-        val mapSettings = mapSettings ?: return
+    private fun getMapSettings(context: Context): MapSettings {
+        // read map settings from arguments or build the default one
+        val mapSettingsBuilder = MapSettings.Builder.newInstance()
+            .from(arguments?.getParcelable(ARG_MAP_SETTINGS))
 
-        // check storage permissions
-        PermissionUtils.requestPermissions(
-            activity,
-            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            { result ->
-                // then load layers settings
-                if (result.values.all { it }) {
-                    showSnackbar(getString(R.string.snackbar_permissions_granted))
-
-                    layerSettingsViewModel?.also {
-                        val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                            ?: emptyList<LayerSettings>()
-                        it.load(if (activeLayers.isEmpty()) mapSettings.layersSettings else activeLayers)
-                    }
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-            },
-            null
+        setDefaultPreferences(
+            context,
+            mapSettingsBuilder.build()
         )
+
+        // update map settings according to preferences
+        return mapSettingsBuilder
+            .useDefaultOnlineTileSource(mapSettingsBuilder.layersSettings.isEmpty() || useDefaultOnlineSource(context))
+            .showCompass(showCompass(context))
+            .showScale(showScale(context))
+            .showZoom(showZoom(context))
+            .build()
+    }
+
+    private fun loadLayersSettings() {
+        layerSettingsViewModel?.also { vm ->
+            vm.setLayersSettings(
+                mapSettings.layersSettings,
+                mapSettings.useDefaultOnlineTileSource
+            )
+
+            if (vm.getLayerSettings()
+                    .isNotEmpty()
+            ) {
+                // configure and show layers selector
+                with(layersFab) {
+                    setOnClickListener {
+                        LayerSettingsDialogFragment.newInstance(
+                            vm.getLayerSettings(),
+                            savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                                ?: emptyList()
+                        )
+                            .also {
+                                it.show(
+                                    childFragmentManager,
+                                    LAYER_SETTINGS_DIALOG_FRAGMENT
+                                )
+                            }
+                    }
+                    show()
+                }
+            }
+
+            val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                ?: emptyList<LayerSettings>()
+
+            vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
+        }
     }
 
     private fun configureMapView() {
@@ -216,15 +279,12 @@ open class MapFragment : Fragment(),
         rotationGestureOverlay.isEnabled = true
         mapView.overlays.add(rotationGestureOverlay)
 
-        val mapSettings = mapSettings ?: return
-
-        // configure and display scale bar
-        if (mapSettings.showScale) {
-            val scaleBarOverlay = ScaleBarOverlay(mapView)
-            scaleBarOverlay.setCentred(false)
-            scaleBarOverlay.setAlignBottom(true)
-            scaleBarOverlay.setAlignRight(false)
-            mapView.overlays.add(scaleBarOverlay)
+        // configure and display attribution notice for the current online source
+        if (mapSettings.showAttribution) {
+            val copyrightOverlay = CopyrightOverlay(context)
+            copyrightOverlay.setAlignBottom(true)
+            copyrightOverlay.setAlignRight(true)
+            mapView.overlays.add(copyrightOverlay)
         }
 
         // configure and display map compass
@@ -233,24 +293,13 @@ open class MapFragment : Fragment(),
             rotateCompassFab.show()
         }
 
-        // configure and show layers selector
-        if (mapSettings.layersSettings.isNotEmpty()) {
-            with(layersFab) {
-                setOnClickListener {
-                    LayerSettingsDialogFragment.newInstance(
-                        mapSettings.layersSettings,
-                        savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
-                            ?: emptyList()
-                    )
-                        .also {
-                            it.show(
-                                childFragmentManager,
-                                LAYER_SETTINGS_DIALOG_FRAGMENT
-                            )
-                        }
-                }
-                show()
-            }
+        // configure and display scale bar
+        if (mapSettings.showScale) {
+            val scaleBarOverlay = ScaleBarOverlay(mapView)
+            scaleBarOverlay.setCentred(false)
+            scaleBarOverlay.setAlignBottom(true)
+            scaleBarOverlay.setAlignRight(false)
+            mapView.overlays.add(scaleBarOverlay)
         }
 
         // configure and display zoom control
@@ -307,19 +356,8 @@ open class MapFragment : Fragment(),
                 return mapSettings.maxBounds
             }
 
-            override suspend fun checkPermissions(vararg permission: String): Boolean {
-                val activity = activity as AppCompatActivity? ?: return false
-
-                val granted = PermissionUtils.requestPermissions(
-                    activity,
-                    permission.asList()
-                )
-
-                if (!granted) {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-
-                return granted
+            override fun checkPermissions(permission: String) {
+                requestLocationPermissionLauncher.launch(permission)
             }
         })
 
@@ -437,7 +475,7 @@ open class MapFragment : Fragment(),
         @JvmStatic
         fun newInstance(
             mapSettings: MapSettings,
-            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.MULTIPLE
+            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
         ) =
             MapFragment().apply {
                 arguments = Bundle().apply {

@@ -15,9 +15,6 @@ import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -160,13 +157,7 @@ class MyLocationButton(
         })
 
         setOnClickListener {
-            GlobalScope.launch(context = Dispatchers.Main) {
-                if (onMyLocationButtonListener?.checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION) == false) {
-                    return@launch
-                }
-
-                requestLocation()
-            }
+            onMyLocationButtonListener?.checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
         isEnabled = true
@@ -176,7 +167,7 @@ class MyLocationButton(
         if (myLocationState == MyLocationState.ACTIVE || myLocationState == MyLocationState.ACTIVE_TRACKER) enableMyLocation() else disableMyLocation()
     }
 
-    private fun requestLocation() {
+    internal fun requestLocation() {
         val myLocationOverlay = myLocationOverlay ?: return
         val mapView = onMyLocationButtonListener?.getMapView() ?: return
 
@@ -231,7 +222,7 @@ class MyLocationButton(
     ) {
         mapView.controller.animateTo(
             GeoPoint(location),
-            mapView.maxZoomLevel - 1.0,
+            18.0,
             Configuration.getInstance().animationSpeedDefault.toLong()
         )
     }
@@ -239,7 +230,7 @@ class MyLocationButton(
     interface OnMyLocationButtonListener {
         fun getMapView(): MapView
         fun getMaxBounds(): BoundingBox?
-        suspend fun checkPermissions(vararg permission: String): Boolean
+        fun checkPermissions(permission: String)
     }
 
     internal enum class MyLocationState {

@@ -4,6 +4,7 @@ import android.util.JsonReader
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
 import android.util.Log
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
@@ -79,8 +80,10 @@ class MapSettingsReader {
 
             when (reader.nextName()) {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
-                "show_scale" -> builder.showScale(reader.nextBoolean())
+                "use_default_online_tile_source" -> builder.useDefaultOnlineTileSource(reader.nextBoolean())
+                "show_attribution" -> builder.showAttribution(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
+                "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_zoom" -> builder.showZoom(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
@@ -176,7 +179,7 @@ class MapSettingsReader {
             when (reader.nextName()) {
                 "label" -> builder.label(reader.nextString())
                 "source" -> builder.source(reader.nextString())
-                "style" -> builder.style(readLayerStyleSettings(reader))
+                "properties" -> builder.properties(readLayerPropertiesSettings(reader))
                 else -> reader.skipValue()
             }
         }
@@ -192,6 +195,37 @@ class MapSettingsReader {
             )
 
             null
+        }
+    }
+
+    private fun readLayerPropertiesSettings(reader: JsonReader): LayerPropertiesSettings? {
+        return when (val jsonToken = reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                null
+            }
+            BEGIN_OBJECT -> {
+                reader.beginObject()
+
+                val builder = LayerPropertiesSettings.Builder.newInstance()
+
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        "min_zoom" -> builder.minZoomLevel(reader.nextInt())
+                        "max_zoom" -> builder.maxZoomLevel(reader.nextInt())
+                        "tile_size" -> builder.tileSizePixels(reader.nextInt())
+                        "tile_mime_type" -> builder.tileMimeType(reader.nextString())
+                        "attribution" -> builder.attribution(reader.nextString())
+                        "style" -> builder.style(readLayerStyleSettings(reader))
+                        else -> reader.skipValue()
+                    }
+                }
+
+                reader.endObject()
+
+                builder.build()
+            }
+            else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
     }
 
@@ -227,16 +261,7 @@ class MapSettingsReader {
 
                 reader.endObject()
 
-                return try {
-                    builder.build()
-                } catch (iae: IllegalArgumentException) {
-                    Log.w(
-                        TAG,
-                        iae
-                    )
-
-                    null
-                }
+                builder.build()
             }
             else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }

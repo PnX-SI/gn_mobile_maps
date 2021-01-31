@@ -13,13 +13,13 @@ import androidx.core.graphics.ColorUtils
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class LayerStyleSettings(
-    var stroke: Boolean = true,
+    val stroke: Boolean = true,
     @ColorInt
-    var color: Int = Color.DKGRAY,
-    var weight: Int = 8,
-    var fill: Boolean = false,
+    val color: Int = Color.DKGRAY,
+    val weight: Int = 8,
+    val fill: Boolean = false,
     @ColorInt
-    var fillColor: Int = Color.TRANSPARENT
+    val fillColor: Int = Color.TRANSPARENT
 ) : Parcelable {
 
     private constructor(builder: Builder) : this(
@@ -31,10 +31,12 @@ data class LayerStyleSettings(
     )
 
     private constructor(parcel: Parcel) : this(
-        parcel.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+        parcel.readByte() == Integer.valueOf(1)
+            .toByte(), // as boolean value
         parcel.readInt(),
         parcel.readInt(),
-        parcel.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+        parcel.readByte() == Integer.valueOf(1)
+            .toByte(), // as boolean value
         parcel.readInt()
     )
 
@@ -84,8 +86,10 @@ data class LayerStyleSettings(
         )
         private var fillOpacity: Float = 0.2f
 
-        fun from(layerStyleSettings: LayerStyleSettings) =
+        fun from(layerStyleSettings: LayerStyleSettings?) =
             apply {
+                if (layerStyleSettings == null) return@apply
+
                 stroke = layerStyleSettings.stroke
                 color(layerStyleSettings.color)
                 weight = layerStyleSettings.weight
@@ -102,13 +106,15 @@ data class LayerStyleSettings(
         ) =
             apply {
                 this.color = color
-                this.opacity = (Color.alpha(color).toDouble() / 255).toFloat()
+                this.opacity = (Color.alpha(color)
+                    .toDouble() / 255).toFloat()
             }
 
         fun color(colorString: String) =
             apply {
                 this.color = Color.parseColor(colorString)
-                var opacity = (Color.alpha(color).toDouble() / 255).toFloat()
+                var opacity = (Color.alpha(color)
+                    .toDouble() / 255).toFloat()
                 opacity = if (opacity == 1f) this.opacity else opacity
 
                 opacity(opacity)
@@ -149,14 +155,16 @@ data class LayerStyleSettings(
         ) =
             apply {
                 this.fillColor = fillColor
-                this.fillOpacity = (Color.alpha(fillColor).toDouble() / 255).toFloat()
+                this.fillOpacity = (Color.alpha(fillColor)
+                    .toDouble() / 255).toFloat()
             }
 
         fun fillColor(fillColorString: String) =
             apply {
                 this.fillColor = Color.parseColor(fillColorString)
 
-                var fillOpacity = (Color.alpha(fillColor).toDouble() / 255).toFloat()
+                var fillOpacity = (Color.alpha(fillColor)
+                    .toDouble() / 255).toFloat()
                 fillOpacity = if (fillOpacity == 1f) this.fillOpacity else fillOpacity
 
                 fillOpacity(fillOpacity)

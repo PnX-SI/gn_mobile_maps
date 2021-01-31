@@ -2,6 +2,7 @@ package fr.geonature.maps.settings
 
 import android.os.Parcel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -22,6 +23,7 @@ class LayerSettingsTest {
             .source("nantes.mbtiles")
             .build()
 
+        // then
         assertEquals(
             LayerSettings(
                 "Nantes",
@@ -32,21 +34,79 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testBuilderWithDefaultLayerStyle() {
-        // given a layer settings instance from its builder
-        val layerSettings = LayerSettings.Builder.newInstance()
-            .label("Nantes")
-            .source("nantes.wkt")
-            .style(LayerStyleSettings.Builder.newInstance().build())
-            .build()
+    fun testBuilderWithDefaultProperties() {
+        assertEquals(
+            LayerSettings(
+                "Nantes",
+                "nantes.unknown",
+                null
+            ),
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.unknown")
+                .build()
+        )
+
+        assertEquals(
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org",
+                LayerPropertiesSettings(
+                    minZoomLevel = 0,
+                    maxZoomLevel = 19,
+                    tileSizePixels = 256,
+                    tileMimeType = "image/png",
+                    attribution = null,
+                    style = null
+                )
+            ),
+            LayerSettings.Builder.newInstance()
+                .label("OSM")
+                .source("https://a.tile.openstreetmap.org")
+                .build()
+        )
 
         assertEquals(
             LayerSettings(
                 "Nantes",
                 "nantes.wkt",
-                LayerStyleSettings()
+                LayerPropertiesSettings(
+                    minZoomLevel = 0,
+                    maxZoomLevel = 0,
+                    tileSizePixels = 0,
+                    tileMimeType = null,
+                    attribution = null,
+                    style = LayerStyleSettings()
+                )
             ),
-            layerSettings
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.wkt")
+                .build()
+        )
+
+        assertEquals(
+            LayerSettings(
+                "Nantes",
+                "nantes.geojson",
+                LayerPropertiesSettings(
+                    minZoomLevel = 0,
+                    maxZoomLevel = 0,
+                    tileSizePixels = 0,
+                    tileMimeType = null,
+                    attribution = "Some attribution",
+                    style = LayerStyleSettings()
+                )
+            ),
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .attribution("Some attribution")
+                        .build()
+                )
+                .source("nantes.geojson")
+                .build()
         )
     }
 
@@ -75,37 +135,50 @@ class LayerSettingsTest {
     @Test
     fun testGetType() {
         assertEquals(
-            LayerType.TILES, LayerSettings(
+            LayerType.TILES,
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            ).getType()
+        )
+
+        assertEquals(
+            LayerType.TILES,
+            LayerSettings(
                 "Nantes",
                 "nantes.mbtiles"
             ).getType()
         )
 
         assertEquals(
-            LayerType.VECTOR, LayerSettings(
+            LayerType.VECTOR,
+            LayerSettings(
                 "Nantes",
                 "nantes.wkt"
             ).getType()
         )
 
         assertEquals(
-            LayerType.VECTOR, LayerSettings(
+            LayerType.VECTOR,
+            LayerSettings(
                 "Nantes",
                 "nantes.json"
             ).getType()
         )
 
         assertEquals(
-            LayerType.VECTOR, LayerSettings(
+            LayerType.VECTOR,
+            LayerSettings(
                 "Nantes",
                 "nantes.geojson"
             ).getType()
         )
 
         assertEquals(
-            LayerType.NOT_IMPLEMENTED, LayerSettings(
+            LayerType.NOT_IMPLEMENTED,
+            LayerSettings(
                 "Nantes",
-                "nantes"
+                "nantes.unknown"
             ).getType()
         )
     }
@@ -118,7 +191,7 @@ class LayerSettingsTest {
             "nantes.mbtiles"
         )
 
-        // when we obtain a Parcel object to write the TileSourceSettings instance to it
+        // when we obtain a Parcel object to write the LayerPropertiesSettings instance to it
         val parcel = Parcel.obtain()
         layerSettings.writeToParcel(
             parcel,
@@ -132,6 +205,82 @@ class LayerSettingsTest {
         assertEquals(
             layerSettings,
             LayerSettings.createFromParcel(parcel)
+        )
+    }
+
+    @Test
+    fun testComparable() {
+        assertTrue(
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            ) < LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            ) == LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            ) < LayerSettings(
+                "OSM #1",
+                "https://a.tile.openstreetmap.org"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            ) < LayerSettings(
+                "OSM",
+                "https://b.tile.openstreetmap.org"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            ) < LayerSettings(
+                "Nantes #1",
+                "nantes2.mbtiles"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            ) < LayerSettings(
+                "Nantes",
+                "nantes2.mbtiles"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            ) == LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "Nantes",
+                "nantes.mbtiles"
+            ) < LayerSettings(
+                "Nantes",
+                "nantes.unknown"
+            )
         )
     }
 }

@@ -42,9 +42,10 @@ class LayerSettingsDialogFragment : DialogFragment() {
             null
         )
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
-        val emptyTextView = view.findViewById<TextView>(R.id.emptyTextView).apply {
-            setText(R.string.alert_dialog_layers_no_data)
-        }
+        val emptyTextView = view.findViewById<TextView>(R.id.emptyTextView)
+            .apply {
+                setText(R.string.alert_dialog_layers_no_data)
+            }
 
         // Set the adapter
         adapter = LayerSettingsRecyclerViewAdapter(object :
@@ -139,8 +140,14 @@ class LayerSettingsDialogFragment : DialogFragment() {
             selection: List<LayerSettings> = emptyList()
         ) = LayerSettingsDialogFragment().apply {
             arguments = Bundle().apply {
-                putParcelableArrayList(ARG_LAYERS, ArrayList(layersSettings))
-                putParcelableArrayList(ARG_LAYERS_SELECTION, ArrayList(selection))
+                putParcelableArrayList(
+                    ARG_LAYERS,
+                    ArrayList(layersSettings)
+                )
+                putParcelableArrayList(
+                    ARG_LAYERS_SELECTION,
+                    ArrayList(selection)
+                )
             }
         }
     }

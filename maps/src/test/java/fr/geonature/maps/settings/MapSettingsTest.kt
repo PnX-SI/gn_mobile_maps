@@ -33,6 +33,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
             .zoom(8.0)
@@ -74,6 +75,7 @@ class MapSettingsTest {
                 ),
                 "/mnt/sdcard",
                 showScale = false,
+                showAttribution = false,
                 showCompass = false,
                 showZoom = true,
                 zoom = 8.0,
@@ -110,6 +112,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -141,7 +144,9 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.Builder.newInstance().from(mapSettings).build()
+            MapSettings.Builder.newInstance()
+                .from(mapSettings)
+                .build()
         )
     }
 
@@ -160,6 +165,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -196,7 +202,8 @@ class MapSettingsTest {
                     "nantes.mbtiles"
                 )
             ),
-            mapSettings.getTilesLayers().toTypedArray()
+            mapSettings.getTilesLayers()
+                .toTypedArray()
         )
     }
 
@@ -215,6 +222,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -256,18 +264,43 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     "nantes.wkt",
-                    "nantes.wkt"
+                    "nantes.wkt",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
                 ),
                 LayerSettings(
                     "nantes.json",
-                    "nantes.json"
+                    "nantes.json",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
                 ),
                 LayerSettings(
                     "nantes.geojson",
-                    "nantes.geojson"
+                    "nantes.geojson",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
                 )
             ),
-            mapSettings.getVectorLayers().toTypedArray()
+            mapSettings.getVectorLayers()
+                .toTypedArray()
         )
     }
 
@@ -286,6 +319,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
             .zoom(8.0)

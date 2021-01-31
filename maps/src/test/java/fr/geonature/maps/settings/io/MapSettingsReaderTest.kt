@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings.io
 
 import fr.geonature.maps.FixtureHelper.getFixture
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
@@ -49,13 +50,25 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "Nantes (Data)",
                         "nantes.wkt",
-                        LayerStyleSettings.Builder.newInstance().stroke(true).color("#FF0000").weight(
-                            8
-                        ).opacity(0.9f).fill(true).fillColor("#FF8000").fillOpacity(0.2f).build()
+                        LayerPropertiesSettings(
+                            style =
+                            LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#FF0000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
                     )
                 ),
                 "/mnt/sdcard/osmdroid",
                 showScale = false,
+                showAttribution = false,
                 showCompass = false,
                 showZoom = true,
                 zoom = 8.0,
@@ -99,13 +112,25 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "Nantes (Data)",
                         "nantes.wkt",
-                        LayerStyleSettings.Builder.newInstance().stroke(true).color("#FF0000").weight(
-                            8
-                        ).opacity(0.9f).fill(true).fillColor("#FF8000").fillOpacity(0.2f).build()
+                        LayerPropertiesSettings(
+                            style =
+                            LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#FF0000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
                     )
                 ),
                 null,
                 showScale = false,
+                showAttribution = true,
                 showCompass = false,
                 showZoom = true,
                 zoom = 8.0,
@@ -152,11 +177,20 @@ class MapSettingsReaderTest {
                     ),
                     LayerSettings(
                         "nantes.wkt",
-                        "nantes.wkt"
+                        "nantes.wkt",
+                        LayerPropertiesSettings(
+                            minZoomLevel = 0,
+                            maxZoomLevel = 0,
+                            tileSizePixels = 0,
+                            tileMimeType = null,
+                            attribution = null,
+                            style = LayerStyleSettings()
+                        )
                     )
                 ),
                 null,
                 showScale = false,
+                showAttribution = true,
                 showCompass = false,
                 showZoom = false,
                 zoom = 8.0,

@@ -52,6 +52,7 @@
             android:layout_marginEnd="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin"
             android:clickable="true"
+            android:contentDescription="@string/button_layers_hint"
             android:focusable="true"
             android:src="@drawable/ic_layers"
             android:visibility="invisible"
