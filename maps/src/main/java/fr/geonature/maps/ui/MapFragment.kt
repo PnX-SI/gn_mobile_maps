@@ -6,11 +6,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
@@ -32,7 +33,6 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useDefaultOnlineSource
-import fr.geonature.maps.util.PermissionUtils
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -47,8 +47,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -74,6 +72,8 @@ open class MapFragment : Fragment(),
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
     private lateinit var savedState: Bundle
+    private lateinit var requestWriteExternalStoragePermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +92,38 @@ open class MapFragment : Fragment(),
                     )
                 }).get(LayerSettingsViewModel::class.java)
         }
+
+        requestWriteExternalStoragePermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) {
+                if (it) {
+                    showSnackbar(getString(R.string.snackbar_permissions_granted))
+
+                    // then load map configuration from preferences
+                    Configuration.getInstance()
+                        .apply {
+                            load(
+                                context,
+                                PreferenceManager.getDefaultSharedPreferences(context)
+                            )
+                        }
+
+                    configureMapView()
+                    loadLayersSettings()
+                } else {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                }
+            }
+        requestLocationPermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                if (!it) {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                    return@registerForActivityResult
+                }
+
+                myLocationFab.requestLocation()
+            }
     }
 
     override fun onCreateView(
@@ -124,24 +156,7 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        lifecycleScope.launch {
-            val isAllPermissionsGranted = checkPermissions()
-
-            // all permissions granted
-            if (isAllPermissionsGranted) {
-                // then load map configuration from preferences
-                Configuration.getInstance()
-                    .apply {
-                        load(
-                            context,
-                            PreferenceManager.getDefaultSharedPreferences(context)
-                        )
-                    }
-
-                configureMapView()
-                loadLayersSettings()
-            }
-        }
+        requestWriteExternalStoragePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -194,29 +209,6 @@ open class MapFragment : Fragment(),
         }
 
         return mapView.overlays.filter(filter)
-    }
-
-    private suspend fun checkPermissions() = suspendCoroutine<Boolean> { continuation ->
-        val activity = activity as AppCompatActivity?
-
-        if (activity == null) {
-            continuation.resume(false)
-            return@suspendCoroutine
-        }
-
-        // check storage permissions
-        PermissionUtils.requestPermissions(activity,
-            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            { result ->
-                // all permissions granted
-                if (result.values.all { it }) {
-                    showSnackbar(getString(R.string.snackbar_permissions_granted))
-                    continuation.resume(true)
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                    continuation.resume(false)
-                }
-            })
     }
 
     private fun getMapSettings(context: Context): MapSettings {
@@ -364,19 +356,8 @@ open class MapFragment : Fragment(),
                 return mapSettings.maxBounds
             }
 
-            override suspend fun checkPermissions(vararg permission: String): Boolean {
-                val activity = activity as AppCompatActivity? ?: return false
-
-                val granted = PermissionUtils.requestPermissions(
-                    activity,
-                    permission.asList()
-                )
-
-                if (!granted) {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-
-                return granted
+            override fun checkPermissions(permission: String) {
+                requestLocationPermissionLauncher.launch(permission)
             }
         })
 
