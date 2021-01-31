@@ -35,7 +35,7 @@ class HomeListFragment : Fragment() {
             adapter = MenuItemRecyclerViewAdapter(object :
                 MenuItemRecyclerViewAdapter.OnMenuItemRecyclerViewAdapterListener {
                 override fun onClick(menuItem: MenuItem) {
-                    listener?.onSelectedMapSettings(menuItem.mapSettings)
+                    listener?.onSelectedMenuItem(menuItem)
                 }
             })
 
@@ -73,7 +73,7 @@ class HomeListFragment : Fragment() {
                     getString(R.string.home_menu_entry_default),
                     MapSettings.Builder.newInstance()
                         .minZoomLevel(3.0)
-                        .zoom(5.0)
+                        .zoom(6.0)
                         .build()
                 ),
                 MenuItem(getString(R.string.home_menu_entry_from_storage))
@@ -85,7 +85,7 @@ class HomeListFragment : Fragment() {
      * Callback used by [HomeListFragment].
      */
     interface OnHomeListFragmentListener {
-        fun onSelectedMapSettings(mapSettings: MapSettings?)
+        fun onSelectedMenuItem(menuItem: MenuItem)
     }
 
     companion object {
