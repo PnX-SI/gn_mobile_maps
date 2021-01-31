@@ -23,7 +23,7 @@ object LowPassSensorValuesFilter {
     /**
      * Filter the given input values against the previous values and return a low-pass filtered result.
      *
-     * @param input  float array to smooth.
+     * @param input float array to smooth.
      * @param output float array representing the previous values.
      *
      * @see [http://en.wikipedia.org/wiki/Low-pass_filter.Algorithmic_implementation](http://en.wikipedia.org/wiki/Low-pass_filter.Algorithmic_implementation)

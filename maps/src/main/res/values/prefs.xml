@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="preference_category_map">Map</string>
+    <string name="preference_category_map_use_default_online_source_key" translatable="false">map_use_default_online_source</string>
+    <string name="preference_category_map_use_default_online_source">Use the default online source (OSM)</string>
+    <string name="preference_category_map_show_compass_key" translatable="false">map_show_compass</string>
+    <string name="preference_category_map_show_compass">Display the compass</string>
+    <string name="preference_category_map_show_scale_key" translatable="false">map_show_scale</string>
+    <string name="preference_category_map_show_scale">Display the map scale</string>
+    <string name="preference_category_map_show_zoom_key" translatable="false">map_show_zoom</string>
+    <string name="preference_category_map_show_zoom">Display the zoom control</string>
+
+</resources>

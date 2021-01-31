@@ -1,8 +1,8 @@
 package fr.geonature.maps.jts.geojson.io
 
+import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.MockitoKotlinHelper.capture
-import fr.geonature.maps.FixtureHelper.getFixture
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
 import org.junit.Assert.assertEquals
@@ -19,8 +19,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import java.io.StringReader
 
 /**
  * Unit tests about [WKTReader].
@@ -48,7 +46,7 @@ class WKTReaderTest {
 
         // when parsing this file as WKT
         WKTReader().readFeatures(
-            StringReader(wkt),
+            wkt.reader(),
             onWKTReaderListener
         )
 
@@ -59,7 +57,7 @@ class WKTReaderTest {
         ).onError(any(Throwable::class.java))
         verify(
             onWKTReaderListener,
-            times(3)
+            times(4)
         ).onProgress(
             anyInt(),
             any(Feature::class.java)
@@ -69,9 +67,10 @@ class WKTReaderTest {
         val featureCollection = featureCollectionArgumentCaptor.value
         assertNotNull(featureCollection)
         assertEquals(
-            3,
+            4,
             featureCollection.getFeatures().size
         )
+        assertNotNull(featureCollection.getFeature("1"))
         assertNotNull(featureCollection.getFeature("69"))
         assertNotNull(featureCollection.getFeature("19"))
         assertNotNull(featureCollection.getFeature("146"))
@@ -83,46 +82,53 @@ class WKTReaderTest {
         val wkt = getFixture("features.wkt")
 
         // when parsing this file as WKT
-        val features = WKTReader().readFeatures(StringReader(wkt))
+        val features = WKTReader().readFeatures(wkt.reader())
 
         // then
         assertNotNull(features)
         assertEquals(
-            3,
+            4,
             features.size
         )
+
         assertEquals(
-            "69",
+            "1",
             features[0].id
         )
-        assertNotNull(
-            features[0].geometry
-        )
+        assertNotNull(features[0].geometry)
         assertEquals(
-            "Polygon",
+            "Point",
             features[0].geometry.geometryType
         )
+
         assertEquals(
-            "19",
+            "69",
             features[1].id
         )
-        assertNotNull(
-            features[1].geometry
-        )
+        assertNotNull(features[1].geometry)
         assertEquals(
             "Polygon",
             features[1].geometry.geometryType
         )
+
         assertEquals(
-            "146",
+            "19",
             features[2].id
         )
-        assertNotNull(
-            features[2].geometry
-        )
+        assertNotNull(features[2].geometry)
         assertEquals(
             "Polygon",
             features[2].geometry.geometryType
+        )
+
+        assertEquals(
+            "146",
+            features[3].id
+        )
+        assertNotNull(features[3].geometry)
+        assertEquals(
+            "Polygon",
+            features[3].geometry.geometryType
         )
     }
 
@@ -132,14 +138,15 @@ class WKTReaderTest {
         val wkt = getFixture("features.wkt")
 
         // when parsing this file as WKT
-        val featureCollection = WKTReader().readFeatureCollection(StringReader(wkt))
+        val featureCollection = WKTReader().readFeatureCollection(wkt.reader())
 
         // then
         assertNotNull(featureCollection)
         assertEquals(
-            3,
+            4,
             featureCollection.getFeatures().size
         )
+        assertNotNull(featureCollection.getFeature("1"))
         assertNotNull(featureCollection.getFeature("69"))
         assertNotNull(featureCollection.getFeature("19"))
         assertNotNull(featureCollection.getFeature("146"))

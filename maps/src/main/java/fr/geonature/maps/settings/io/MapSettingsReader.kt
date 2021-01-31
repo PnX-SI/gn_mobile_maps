@@ -1,14 +1,16 @@
 package fr.geonature.maps.settings.io
 
-import android.text.TextUtils.isEmpty
 import android.util.JsonReader
+import android.util.JsonToken.BEGIN_OBJECT
+import android.util.JsonToken.NULL
 import android.util.Log
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import org.osmdroid.util.GeoPoint
 import java.io.IOException
 import java.io.Reader
-import java.io.StringReader
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
@@ -25,17 +27,16 @@ class MapSettingsReader {
      * @return a [MapSettings] instance from the `JSON` string or `null` if something goes wrong
      */
     fun read(json: String?): MapSettings? {
-        if (isEmpty(json)) {
+        if (json.isNullOrBlank()) {
             return null
         }
 
         try {
-            return read(StringReader(json))
-        }
-        catch (ioe: IOException) {
+            return read(json.reader())
+        } catch (ioe: Exception) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
         }
 
@@ -51,7 +52,7 @@ class MapSettingsReader {
      *
      * @throws IOException if something goes wrong
      */
-    @Throws(IOException::class)
+    @Throws(Exception::class)
     fun read(reader: Reader): MapSettings {
         val jsonReader = JsonReader(reader)
         val pager = read(jsonReader)
@@ -67,9 +68,9 @@ class MapSettingsReader {
      *
      * @return a [MapSettings] instance from [JsonReader]
      *
-     * @throws IOException if something goes wrong
+     * @throws Exception if something goes wrong
      */
-    @Throws(IOException::class)
+    @Throws(Exception::class)
     fun read(reader: JsonReader): MapSettings {
         val builder = MapSettings.Builder.newInstance()
 
@@ -79,8 +80,11 @@ class MapSettingsReader {
 
             when (reader.nextName()) {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
-                "show_scale" -> builder.showScale(reader.nextBoolean())
+                "use_default_online_tile_source" -> builder.useDefaultOnlineTileSource(reader.nextBoolean())
+                "show_attribution" -> builder.showAttribution(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
+                "show_scale" -> builder.showScale(reader.nextBoolean())
+                "show_zoom" -> builder.showZoom(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
 
@@ -137,6 +141,7 @@ class MapSettingsReader {
                     reader,
                     builder
                 )
+                else -> reader.skipValue()
             }
         }
 
@@ -153,10 +158,10 @@ class MapSettingsReader {
         reader.beginArray()
 
         while (reader.hasNext()) {
-            val tileSourceSettings = readLayerSettings(reader)
+            val layerSettings = readLayerSettings(reader)
 
-            if (tileSourceSettings != null) {
-                builder.addLayer(tileSourceSettings)
+            if (layerSettings != null) {
+                builder.addLayer(layerSettings)
             }
         }
 
@@ -174,6 +179,8 @@ class MapSettingsReader {
             when (reader.nextName()) {
                 "label" -> builder.label(reader.nextString())
                 "source" -> builder.source(reader.nextString())
+                "properties" -> builder.properties(readLayerPropertiesSettings(reader))
+                else -> reader.skipValue()
             }
         }
 
@@ -181,14 +188,82 @@ class MapSettingsReader {
 
         return try {
             builder.build()
-        }
-        catch (iae: IllegalArgumentException) {
+        } catch (iae: IllegalArgumentException) {
             Log.w(
                 TAG,
-                iae.message
+                iae
             )
 
             null
+        }
+    }
+
+    private fun readLayerPropertiesSettings(reader: JsonReader): LayerPropertiesSettings? {
+        return when (val jsonToken = reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                null
+            }
+            BEGIN_OBJECT -> {
+                reader.beginObject()
+
+                val builder = LayerPropertiesSettings.Builder.newInstance()
+
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        "min_zoom" -> builder.minZoomLevel(reader.nextInt())
+                        "max_zoom" -> builder.maxZoomLevel(reader.nextInt())
+                        "tile_size" -> builder.tileSizePixels(reader.nextInt())
+                        "tile_mime_type" -> builder.tileMimeType(reader.nextString())
+                        "attribution" -> builder.attribution(reader.nextString())
+                        "style" -> builder.style(readLayerStyleSettings(reader))
+                        else -> reader.skipValue()
+                    }
+                }
+
+                reader.endObject()
+
+                builder.build()
+            }
+            else -> throw IOException("Invalid object properties JSON token $jsonToken")
+        }
+    }
+
+    private fun readLayerStyleSettings(reader: JsonReader): LayerStyleSettings? {
+        return when (val jsonToken = reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                null
+            }
+            BEGIN_OBJECT -> {
+                reader.beginObject()
+
+                val builder = LayerStyleSettings.Builder.newInstance()
+
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        "stroke" -> builder.stroke(reader.nextBoolean())
+                        "color" -> builder.color(reader.nextString())
+                        "weight" -> builder.weight(reader.nextInt())
+                        "opacity" -> builder.opacity(
+                            reader.nextDouble()
+                                .toFloat()
+                        )
+                        "fill" -> builder.fill(reader.nextBoolean())
+                        "fillColor" -> builder.fillColor(reader.nextString())
+                        "fillOpacity" -> builder.fillOpacity(
+                            reader.nextDouble()
+                                .toFloat()
+                        )
+                        else -> reader.skipValue()
+                    }
+                }
+
+                reader.endObject()
+
+                builder.build()
+            }
+            else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
     }
 

@@ -1,13 +1,10 @@
 package fr.geonature.maps.jts.geojson.filter
 
-import org.osmdroid.util.GeoPoint
-
-import java.util.ArrayList
-import java.util.TreeMap
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
 import fr.geonature.maps.jts.geojson.GeometryUtils
-import fr.geonature.maps.jts.geojson.IFeatureFilterVisitor
+import java.util.TreeMap
+import org.osmdroid.util.GeoPoint
 
 /**
  * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
@@ -23,17 +20,21 @@ class NearestFeaturesFilter(
     private val features: MutableMap<Double, Feature> = TreeMap()
 
     val filteredFeatures: List<Feature>
-        get() = ArrayList(this.features.values)
+        get() = this.features.values.toList()
 
-    override fun filter(feature: Feature) {
+    override fun filter(feature: Feature): Boolean {
         val distanceFromFeature = GeometryUtils.distanceTo(
             GeometryUtils.toPoint(geoPoint),
             feature.geometry
         )
 
-        if (this.maxDistance >= distanceFromFeature) {
+        val matches = this.maxDistance >= distanceFromFeature
+
+        if (matches) {
             features[distanceFromFeature] = feature
         }
+
+        return matches
     }
 
     companion object {
@@ -41,9 +42,9 @@ class NearestFeaturesFilter(
         /**
          * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
          *
-         * @param geoPoint    the current [GeoPoint] to use.
+         * @param geoPoint the current [GeoPoint] to use.
          * @param maxDistance the max distance in meters as filter
-         * @param features    a `List` of [Feature]s on which to apply the filter
+         * @param features a `List` of [Feature]s on which to apply the filter
          *
          * @return an ordered `List` of nearest filtered [Feature]s found
          */
@@ -67,8 +68,8 @@ class NearestFeaturesFilter(
         /**
          * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
          *
-         * @param geoPoint          the current [GeoPoint] to use.
-         * @param maxDistance       the max distance in meters as filter
+         * @param geoPoint the current [GeoPoint] to use.
+         * @param maxDistance the max distance in meters as filter
          * @param featureCollection the [FeatureCollection] on which to apply the filter
          *
          * @return an ordered `List` of nearest filtered [Feature]s found

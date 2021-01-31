@@ -5,6 +5,13 @@
 
     <string name="compass_north">N</string>
 
+    <string name="alert_dialog_layers_title">Select layers</string>
+    <string name="alert_dialog_layers_cancel">Close</string>
+    <string name="alert_dialog_layers_type_tiles_online">Online layers</string>
+    <string name="alert_dialog_layers_type_tiles">Tiles layers</string>
+    <string name="alert_dialog_layers_type_vector">Vector layers</string>
+    <string name="alert_dialog_layers_no_data">No layers to display on the map</string>
+
     <string name="action_undo">Undo</string>
     <string name="action_title_poi_edit">Edit POI</string>
     <string name="action_poi_delete">Delete POI</string>
@@ -14,8 +21,12 @@
     <string name="snackbar_permissions_granted">Permissions were been granted</string>
     <string name="snackbar_permissions_rationale">Some permissions are needed</string>
     <string name="snackbar_layers_undefined">No layers defined</string>
-    <string name="snackbar_base_path_undefined">Unable to load tiles from path \'%1$s\'</string>
+    <string name="snackbar_base_path_undefined">Unable to load layers from path \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+
+    <string name="button_layers_hint">Select layers</string>
+    <string name="button_zoom_in_hint">Zoom in</string>
+    <string name="button_zoom_out_hint">Zoom out</string>
 
 </resources>

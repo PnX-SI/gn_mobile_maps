@@ -4,12 +4,12 @@ import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import org.locationtech.jts.io.ParseException
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.Reader
 import java.util.ArrayList
 import java.util.regex.Pattern
+import org.locationtech.jts.io.ParseException
 
 /**
  * Converts a GeoJSON in Well-Known Text format to a [AbstractGeoJson] implementation.
@@ -18,13 +18,13 @@ import java.util.regex.Pattern
  */
 class WKTReader {
 
-    private val wktLinePattern = Pattern.compile("^([0-9]+),([A-Z]+\\(.+\\))$")
+    private val wktLinePattern = Pattern.compile("^([0-9]+),([A-Z]+\\s*\\(.+\\))$")
     private val wktReader: org.locationtech.jts.io.WKTReader = org.locationtech.jts.io.WKTReader()
 
     /**
      * parse a Well-Known Text format reader to convert as [Feature].
      *
-     * @param in       the `Reader` to use
+     * @param in the `Reader` to use
      * @param listener the callback to monitor the progression
      */
     fun readFeatures(
@@ -39,13 +39,15 @@ class WKTReader {
         try {
             line = bufferedReader.readLine()
 
-            do {
+            while (line != null) {
                 val matcher = wktLinePattern.matcher(line)
 
                 if (matcher.matches()) {
+                    val featureId = matcher.group(1) ?: return
+
                     try {
                         val feature = Feature(
-                            matcher.group(1),
+                            featureId,
                             wktReader.read(matcher.group(2))
                         )
                         featureCollection.addFeature(feature)
@@ -54,34 +56,29 @@ class WKTReader {
                             currentLine + 1,
                             feature
                         )
-                    }
-                    catch (pe: ParseException) {
+                    } catch (pe: ParseException) {
                         Log.w(
                             TAG,
-                            pe.message
+                            pe
                         )
                     }
-
                 }
 
                 currentLine++
 
                 line = bufferedReader.readLine()
             }
-            while (line != null)
 
             listener.onFinish(featureCollection)
             bufferedReader.close()
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             listener.onError(ioe)
         }
-
     }
 
     /**

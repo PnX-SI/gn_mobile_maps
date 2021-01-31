@@ -1,7 +1,6 @@
 package fr.geonature.maps.jts.geojson.io
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.JsonWriter
 import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
@@ -52,11 +51,10 @@ class GeoJsonWriter {
                 writer,
                 feature
             )
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             return null
@@ -68,7 +66,7 @@ class GeoJsonWriter {
     /**
      * Convert the given [Feature] as `JSON` and write it to the given `Writer`.
      *
-     * @param out     the `Writer` to use
+     * @param out the `Writer` to use
      * @param feature the [Feature] to convert
      *
      * @throws IOException if something goes wrong
@@ -108,11 +106,10 @@ class GeoJsonWriter {
                 writer,
                 featureCollection
             )
-        }
-        catch (ioe: IOException) {
+        } catch (ioe: IOException) {
             Log.w(
                 TAG,
-                ioe.message
+                ioe
             )
 
             return null
@@ -124,7 +121,7 @@ class GeoJsonWriter {
     /**
      * Convert the given [FeatureCollection] as `JSON` and write it to the given `Writer`.
      *
-     * @param out               the `Writer` to use
+     * @param out the `Writer` to use
      * @param featureCollection the [FeatureCollection] to convert
      *
      * @throws IOException if something goes wrong
@@ -149,8 +146,10 @@ class GeoJsonWriter {
         feature: Feature
     ) {
         writer.beginObject()
-        writer.name("id").value(feature.id)
-        writer.name("type").value(feature.type)
+        writer.name("id")
+            .value(feature.id)
+        writer.name("type")
+            .value(feature.type)
         writer.name("geometry")
         writeGeometry(
             writer,
@@ -164,12 +163,13 @@ class GeoJsonWriter {
     }
 
     @Throws(IOException::class)
-    private fun writeFeatureCollection(
+    fun writeFeatureCollection(
         writer: JsonWriter,
         featureCollection: FeatureCollection
     ) {
         writer.beginObject()
-        writer.name("type").value(featureCollection.type)
+        writer.name("type")
+            .value(featureCollection.type)
         writer.name("features")
         writer.beginArray()
 
@@ -185,11 +185,11 @@ class GeoJsonWriter {
     }
 
     @Throws(IOException::class)
-    private fun writeGeometry(
+    fun writeGeometry(
         writer: JsonWriter,
         geometry: Geometry
     ) {
-        if (TextUtils.isEmpty(geometry.geometryType)) {
+        if (geometry.geometryType.isNullOrBlank()) {
             throw IOException("invalid geometry type")
         }
 
@@ -220,7 +220,8 @@ class GeoJsonWriter {
             )
             "GeometryCollection" -> {
                 writer.beginObject()
-                writer.name("type").value(geometry.geometryType)
+                writer.name("type")
+                    .value(geometry.geometryType)
                 writer.name("geometries")
                 writer.beginArray()
 
@@ -243,7 +244,8 @@ class GeoJsonWriter {
         point: Point
     ) {
         writer.beginObject()
-        writer.name("type").value(point.geometryType)
+        writer.name("type")
+            .value(point.geometryType)
         writer.name("coordinates")
         writeCoordinateSequence(
             writer,
@@ -258,7 +260,8 @@ class GeoJsonWriter {
         multiPoint: MultiPoint
     ) {
         writer.beginObject()
-        writer.name("type").value(multiPoint.geometryType)
+        writer.name("type")
+            .value(multiPoint.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -273,7 +276,8 @@ class GeoJsonWriter {
         lineString: LineString
     ) {
         writer.beginObject()
-        writer.name("type").value(lineString.geometryType)
+        writer.name("type")
+            .value(lineString.geometryType)
         writer.name("coordinates")
         writeCoordinateSequence(
             writer,
@@ -288,7 +292,8 @@ class GeoJsonWriter {
         multiLineString: MultiLineString
     ) {
         writer.beginObject()
-        writer.name("type").value(multiLineString.geometryType)
+        writer.name("type")
+            .value(multiLineString.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -303,7 +308,8 @@ class GeoJsonWriter {
         polygon: Polygon
     ) {
         writer.beginObject()
-        writer.name("type").value(polygon.geometryType)
+        writer.name("type")
+            .value(polygon.geometryType)
         writer.name("coordinates")
         writePolygonCoordinates(
             writer,
@@ -340,7 +346,8 @@ class GeoJsonWriter {
         multiPolygon: MultiPolygon
     ) {
         writer.beginObject()
-        writer.name("type").value(multiPolygon.geometryType)
+        writer.name("type")
+            .value(multiPolygon.geometryType)
         writer.name("coordinates")
         writeGeometryCollection(
             writer,
@@ -359,7 +366,7 @@ class GeoJsonWriter {
         for (i in 0 until geometryCollection.numGeometries) {
             val geometry = geometryCollection.getGeometryN(i)
 
-            if (TextUtils.isEmpty(geometry.geometryType)) {
+            if (geometry.geometryType.isNullOrBlank()) {
                 Log.w(
                     TAG,
                     "invalid geometry type"
@@ -452,15 +459,18 @@ class GeoJsonWriter {
             val value = bundle.get(key)
 
             if (value is String) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Boolean) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Number) {
-                writer.name(key).value(value)
+                writer.name(key)
+                    .value(value)
             }
 
             if (value is Bundle) {

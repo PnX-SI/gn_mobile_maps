@@ -1,5 +1,6 @@
 package fr.geonature.maps.ui.widget
 
+import android.Manifest
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
@@ -8,6 +9,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
@@ -39,7 +41,12 @@ class MyLocationButton(
     private var myLocationState: MyLocationState = MyLocationState.INACTIVE
 
     init {
-        setImageDrawable(context.getDrawable(R.drawable.ic_gps_location_searching))
+        setImageDrawable(
+            ContextCompat.getDrawable(
+                context,
+                R.drawable.ic_gps_location_searching
+            )
+        )
     }
 
     override fun onScroll(event: ScrollEvent?): Boolean {
@@ -47,7 +54,10 @@ class MyLocationButton(
         if (mapView.isAnimating) return true
 
         if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
-            val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+            val drawable = ContextCompat.getDrawable(
+                context,
+                R.drawable.ic_gps_location_found
+            )
             drawable?.setTint(Color.DKGRAY)
             setImageDrawable(drawable)
 
@@ -61,8 +71,7 @@ class MyLocationButton(
         return true
     }
 
-
-    override fun onSaveInstanceState(): Parcelable? {
+    override fun onSaveInstanceState(): Parcelable {
         return Bundle().apply {
             putParcelable(
                 "superState",
@@ -78,7 +87,9 @@ class MyLocationButton(
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
             myLocationState =
-                if (state.getByte("locationState") == Integer.valueOf(1).toByte()) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+                if (state.getByte("locationState") == Integer.valueOf(1)
+                        .toByte()
+                ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
             super.onRestoreInstanceState(state.getParcelable("superState"))
 
             return
@@ -111,7 +122,10 @@ class MyLocationButton(
                 val context = context ?: return
                 if (location == null) return
 
-                val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                val drawable = ContextCompat.getDrawable(
+                    context,
+                    R.drawable.ic_gps_location_found
+                )
 
                 myLocationState = if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                     animateTo(
@@ -120,8 +134,7 @@ class MyLocationButton(
                     )
                     drawable?.setTint(ThemeUtils.getAccentColor(context))
                     MyLocationState.ACTIVE_TRACKER
-                }
-                else {
+                } else {
                     drawable?.setTint(Color.DKGRAY)
                     MyLocationState.ACTIVE
                 }
@@ -144,11 +157,7 @@ class MyLocationButton(
         })
 
         setOnClickListener {
-            if (onMyLocationButtonListener?.checkPermissions() == false) {
-                return@setOnClickListener
-            }
-
-            requestLocation()
+            onMyLocationButtonListener?.checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
         isEnabled = true
@@ -158,28 +167,29 @@ class MyLocationButton(
         if (myLocationState == MyLocationState.ACTIVE || myLocationState == MyLocationState.ACTIVE_TRACKER) enableMyLocation() else disableMyLocation()
     }
 
-    fun requestLocation() {
+    internal fun requestLocation() {
         val myLocationOverlay = myLocationOverlay ?: return
         val mapView = onMyLocationButtonListener?.getMapView() ?: return
 
         if (myLocationOverlay.isEnabled) {
             if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                 disableMyLocation()
-            }
-            else {
+            } else {
                 animateTo(
                     mapView,
                     myLocationOverlay.getLastKnownLocation()
                 )
 
-                val drawable = context.getDrawable(R.drawable.ic_gps_location_found)
+                val drawable = ContextCompat.getDrawable(
+                    context,
+                    R.drawable.ic_gps_location_found
+                )
                 drawable?.setTint(ThemeUtils.getAccentColor(context))
                 setImageDrawable(drawable)
 
                 myLocationState = MyLocationState.ACTIVE_TRACKER
             }
-        }
-        else {
+        } else {
             enableMyLocation(MyLocationState.ACTIVE_TRACKER)
         }
     }
@@ -212,7 +222,7 @@ class MyLocationButton(
     ) {
         mapView.controller.animateTo(
             GeoPoint(location),
-            mapView.maxZoomLevel - 1.0,
+            18.0,
             Configuration.getInstance().animationSpeedDefault.toLong()
         )
     }
@@ -220,10 +230,12 @@ class MyLocationButton(
     interface OnMyLocationButtonListener {
         fun getMapView(): MapView
         fun getMaxBounds(): BoundingBox?
-        fun checkPermissions(): Boolean
+        fun checkPermissions(permission: String)
     }
 
     internal enum class MyLocationState {
-        INACTIVE, ACTIVE, ACTIVE_TRACKER
+        INACTIVE,
+        ACTIVE,
+        ACTIVE_TRACKER
     }
 }

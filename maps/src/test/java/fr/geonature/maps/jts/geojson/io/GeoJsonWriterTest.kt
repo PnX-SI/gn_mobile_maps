@@ -22,7 +22,6 @@ import org.locationtech.jts.geom.GeometryFactory
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 /**
  * Unit tests about [GeoJsonWriter].

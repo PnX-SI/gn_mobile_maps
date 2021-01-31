@@ -3,6 +3,7 @@ package fr.geonature.maps.jts.geojson
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
 import org.locationtech.jts.geom.Geometry
 
 /**

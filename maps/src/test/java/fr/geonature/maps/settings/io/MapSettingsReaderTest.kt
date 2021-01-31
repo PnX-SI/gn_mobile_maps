@@ -1,7 +1,9 @@
 package fr.geonature.maps.settings.io
 
 import fr.geonature.maps.FixtureHelper.getFixture
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -21,7 +23,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class MapSettingsReaderTest {
 
-    lateinit var mapSettingsReader: MapSettingsReader
+    private lateinit var mapSettingsReader: MapSettingsReader
 
     @Before
     fun setUp() {
@@ -42,13 +44,95 @@ class MapSettingsReaderTest {
             MapSettings(
                 arrayListOf(
                     LayerSettings(
-                        "Nantes",
+                        "Nantes (Base)",
                         "nantes.mbtiles"
+                    ),
+                    LayerSettings(
+                        "Nantes (Data)",
+                        "nantes.wkt",
+                        LayerPropertiesSettings(
+                            style =
+                            LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#FF0000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
                     )
                 ),
                 "/mnt/sdcard/osmdroid",
                 showScale = false,
+                showAttribution = false,
                 showCompass = false,
+                showZoom = true,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
+                    arrayListOf(
+                        GeoPoint(
+                            47.253369,
+                            -1.605721
+                        ),
+                        GeoPoint(
+                            47.173845,
+                            -1.482811
+                        )
+                    )
+                ),
+                center = GeoPoint(
+                    47.225827,
+                    -1.554470
+                )
+            ),
+            mapSettings
+        )
+    }
+
+    @Test
+    fun testReadMapSettingsWithInvalidProperties() {
+        // given a JSON settings with some invalid layers settings
+        val json = getFixture("map_settings_with_invalid_properties.json")
+
+        // when read the JSON as MapSettings
+        val mapSettings = mapSettingsReader.read(json)
+
+        // then
+        assertNotNull(mapSettings)
+        assertEquals(
+            MapSettings(
+                arrayListOf(
+                    LayerSettings(
+                        "Nantes (Data)",
+                        "nantes.wkt",
+                        LayerPropertiesSettings(
+                            style =
+                            LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#FF0000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
+                    )
+                ),
+                null,
+                showScale = false,
+                showAttribution = true,
+                showCompass = false,
+                showZoom = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -93,12 +177,22 @@ class MapSettingsReaderTest {
                     ),
                     LayerSettings(
                         "nantes.wkt",
-                        "nantes.wkt"
+                        "nantes.wkt",
+                        LayerPropertiesSettings(
+                            minZoomLevel = 0,
+                            maxZoomLevel = 0,
+                            tileSizePixels = 0,
+                            tileMimeType = null,
+                            attribution = null,
+                            style = LayerStyleSettings()
+                        )
                     )
                 ),
                 null,
                 showScale = false,
+                showAttribution = true,
                 showCompass = false,
+                showZoom = false,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,

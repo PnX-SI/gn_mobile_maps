@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/preference_category_map">
+
+        <SwitchPreference
+            android:key="@string/preference_category_map_use_default_online_source_key"
+            android:title="@string/preference_category_map_use_default_online_source" />
+        <SwitchPreference
+            android:key="@string/preference_category_map_show_scale_key"
+            android:title="@string/preference_category_map_show_scale" />
+        <SwitchPreference
+            android:key="@string/preference_category_map_show_compass_key"
+            android:title="@string/preference_category_map_show_compass" />
+        <SwitchPreference
+            android:key="@string/preference_category_map_show_zoom_key"
+            android:title="@string/preference_category_map_show_zoom" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

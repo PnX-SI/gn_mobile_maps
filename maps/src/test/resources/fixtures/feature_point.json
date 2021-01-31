@@ -13,6 +13,7 @@
     "year": 1831,
     "double_attribute": 3.14,
     "boolean_attribute_false": false,
-    "boolean_attribute_true": true
+    "boolean_attribute_true": true,
+    "undefined_attribute": null
   }
 }

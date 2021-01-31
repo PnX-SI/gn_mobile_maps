@@ -2,6 +2,7 @@ package fr.geonature.maps.settings
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.core.os.ParcelCompat
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -13,8 +14,11 @@ import org.osmdroid.util.GeoPoint
 data class MapSettings(
     val layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
-    val showScale: Boolean = true,
-    val showCompass: Boolean = true,
+    val useDefaultOnlineTileSource: Boolean = Builder.newInstance().useDefaultOnlineTileSource,
+    val showAttribution: Boolean = Builder.newInstance().showAttribution,
+    val showCompass: Boolean = Builder.newInstance().showCompass,
+    val showScale: Boolean = Builder.newInstance().showScale,
+    val showZoom: Boolean = Builder.newInstance().showZoom,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -26,8 +30,11 @@ data class MapSettings(
     private constructor(builder: Builder) : this(
         builder.layersSettings,
         builder.baseTilesPath,
-        builder.showScale,
+        builder.useDefaultOnlineTileSource,
+        builder.showAttribution,
         builder.showCompass,
+        builder.showScale,
+        builder.showZoom,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -39,14 +46,17 @@ data class MapSettings(
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
-        source.readByte() == Integer.valueOf(1).toByte(), // as boolean value
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
+        ParcelCompat.readBoolean(source),
         source.readDouble(),
         source.readDouble(),
         source.readDouble(),
         source.readDouble(),
-        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox,
-        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint
+        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox?,
+        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint?
     ) {
         source.readTypedList(
             layersSettings,
@@ -62,22 +72,42 @@ data class MapSettings(
         dest: Parcel?,
         flags: Int
     ) {
-        dest?.writeString(baseTilesPath)
-        dest?.writeByte((if (showScale) 1 else 0).toByte()) // as boolean value
-        dest?.writeByte((if (showCompass) 1 else 0).toByte()) // as boolean value
-        dest?.writeDouble(zoom)
-        dest?.writeDouble(minZoomLevel)
-        dest?.writeDouble(maxZoomLevel)
-        dest?.writeDouble(minZoomEditing)
-        dest?.writeParcelable(
-            maxBounds,
-            0
-        )
-        dest?.writeParcelable(
-            center,
-            0
-        )
-        dest?.writeTypedList(layersSettings)
+        dest?.also {
+            it.writeString(baseTilesPath)
+            ParcelCompat.writeBoolean(
+                dest,
+                useDefaultOnlineTileSource
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showAttribution
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showCompass
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showScale
+            )
+            ParcelCompat.writeBoolean(
+                dest,
+                showZoom
+            )
+            it.writeDouble(zoom)
+            it.writeDouble(minZoomLevel)
+            it.writeDouble(maxZoomLevel)
+            it.writeDouble(minZoomEditing)
+            it.writeParcelable(
+                maxBounds,
+                0
+            )
+            it.writeParcelable(
+                center,
+                0
+            )
+            it.writeTypedList(layersSettings)
+        }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -88,7 +118,11 @@ data class MapSettings(
 
         if (layersSettings != other.layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
+        if (useDefaultOnlineTileSource != other.useDefaultOnlineTileSource) return false
+        if (showAttribution != other.showAttribution) return false
+        if (showCompass != other.showCompass) return false
         if (showScale != other.showScale) return false
+        if (showZoom != other.showZoom) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
         if (maxZoomLevel != other.maxZoomLevel) return false
@@ -99,8 +133,7 @@ data class MapSettings(
             if (maxBounds.latSouth != other.maxBounds.latSouth) return false
             if (maxBounds.lonWest != other.maxBounds.lonWest) return false
             if (maxBounds.lonEast != other.maxBounds.lonEast) return false
-        }
-        else {
+        } else {
             if (maxBounds != other.maxBounds) return false
         }
 
@@ -112,7 +145,11 @@ data class MapSettings(
     override fun hashCode(): Int {
         var result = layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
+        result = 31 * result + useDefaultOnlineTileSource.hashCode()
+        result = 31 * result + showAttribution.hashCode()
+        result = 31 * result + showCompass.hashCode()
         result = 31 * result + showScale.hashCode()
+        result = 31 * result + showZoom.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
         result = 31 * result + maxZoomLevel.hashCode()
@@ -123,31 +160,105 @@ data class MapSettings(
         return result
     }
 
-    fun getLayersAsTileSources(): List<String> {
-        return layersSettings.filter { it.source.endsWith(".mbtiles") }
-            .map { it.source }
+    fun getTilesLayers(): List<LayerSettings> {
+        return layersSettings.filter { it.getType() == LayerType.TILES }
     }
 
-    data class Builder(
-        val layersSettings: MutableList<LayerSettings> = mutableListOf(),
-        var baseTilesPath: String? = null,
-        var showScale: Boolean = true,
-        var showCompass: Boolean = true,
-        var zoom: Double = 0.0,
-        var minZoomLevel: Double = 0.0,
-        var maxZoomLevel: Double = 0.0,
-        var minZoomEditing: Double = 0.0,
-        var maxBounds: BoundingBox? = null,
-        var center: GeoPoint? = null
-    ) {
+    fun getVectorLayers(): List<LayerSettings> {
+        return layersSettings.filter { it.getType() == LayerType.VECTOR }
+    }
+
+    class Builder {
+
+        internal val layersSettings: MutableList<LayerSettings> = mutableListOf()
+
+        internal var baseTilesPath: String? = null
+            private set
+
+        /**
+         * Whether to use the default online tiles source (default: `true`, default tiles source: *OSM*).
+         */
+        var useDefaultOnlineTileSource: Boolean = true
+            private set
+
+        /**
+         * Whether to show the layer attribution control (default: `true`).
+         */
+        var showAttribution: Boolean = true
+            private set
+
+        /**
+         * Whether to show north compass during map rotation (default: `true`).
+         */
+        var showCompass: Boolean = true
+            private set
+
+        /**
+         * Whether to show the map scale (default: `true`).
+         */
+        var showScale: Boolean = true
+            private set
+
+        /**
+         * Whether to show the zoom control (default: `false`).
+         */
+        var showZoom: Boolean = false
+            private set
+
+        internal var zoom: Double = 0.0
+            private set
+
+        internal var minZoomLevel: Double = 0.0
+            private set
+
+        internal var maxZoomLevel: Double = 0.0
+            private set
+
+        internal var minZoomEditing: Double = 0.0
+            private set
+
+        internal var maxBounds: BoundingBox? = null
+            private set
+
+        internal var center: GeoPoint? = null
+            private set
+
+        fun from(mapSettings: MapSettings?) =
+            apply {
+                if (mapSettings == null) return@apply
+                
+                this.layersSettings.addAll(mapSettings.layersSettings)
+                this.baseTilesPath = mapSettings.baseTilesPath
+                this.useDefaultOnlineTileSource = mapSettings.useDefaultOnlineTileSource
+                this.showAttribution = mapSettings.showAttribution
+                this.showCompass = mapSettings.showCompass
+                this.showScale = mapSettings.showScale
+                this.showZoom = mapSettings.showZoom
+                this.zoom = mapSettings.zoom
+                this.minZoomLevel = mapSettings.minZoomLevel
+                this.maxZoomLevel = mapSettings.maxZoomLevel
+                this.minZoomEditing = mapSettings.minZoomEditing
+                this.maxBounds = mapSettings.maxBounds
+                this.center = mapSettings.center
+            }
+
         fun baseTilesPath(baseTilesPath: String) =
             apply { this.baseTilesPath = baseTilesPath }
+
+        fun useDefaultOnlineTileSource(useDefaultOnlineTileSource: Boolean) =
+            apply { this.useDefaultOnlineTileSource = useDefaultOnlineTileSource }
+
+        fun showAttribution(showAttribution: Boolean) =
+            apply { this.showAttribution = showAttribution }
+
+        fun showCompass(showCompass: Boolean) =
+            apply { this.showCompass = showCompass }
 
         fun showScale(showScale: Boolean) =
             apply { this.showScale = showScale }
 
-        fun showCompass(showCompass: Boolean) =
-            apply { this.showCompass = showCompass }
+        fun showZoom(showZoom: Boolean) =
+            apply { this.showZoom = showZoom }
 
         fun zoom(zoom: Double) =
             apply { this.zoom = zoom }
@@ -173,7 +284,10 @@ data class MapSettings(
         ) =
             apply {
                 addLayer(
-                    LayerSettings.Builder.newInstance().label(label).source(source).build()
+                    LayerSettings.Builder.newInstance()
+                        .label(label)
+                        .source(source)
+                        .build()
                 )
             }
 
@@ -188,8 +302,7 @@ data class MapSettings(
             MapSettings(this)
 
         companion object {
-            fun newInstance(): Builder =
-                Builder()
+            fun newInstance(): Builder = Builder()
         }
     }
 

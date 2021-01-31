@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
+import androidx.core.content.res.ResourcesCompat
 
 /**
  * Helper class about [Drawable]s.
@@ -16,30 +17,50 @@ import androidx.annotation.DrawableRes
 object DrawableUtils {
 
     fun toBitmap(
-        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        context: Context,
+        @DrawableRes drawableResourceId: Int,
+        @ColorInt tintColor: Int,
         scale: Float = 1.0f
-    ): Bitmap {
-        val drawable = context.resources.getDrawable(drawableResourceId, context.theme)
+    ): Bitmap? {
+        val drawable = ResourcesCompat.getDrawable(
+            context.resources,
+            drawableResourceId,
+            context.theme
+        ) ?: return null
         drawable.setTint(tintColor)
 
         return Bitmap.createBitmap(
             (drawable.intrinsicWidth * scale).toInt(),
             (drawable.intrinsicHeight * scale).toInt(),
             Bitmap.Config.ARGB_8888
-        ).also {
-            val canvas = Canvas(it)
-            drawable.setBounds(0, 0, canvas.width, canvas.height)
-            drawable.draw(canvas)
-        }
+        )
+            .also {
+                val canvas = Canvas(it)
+                drawable.setBounds(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                )
+                drawable.draw(canvas)
+            }
     }
 
     fun createScaledDrawable(
-        context: Context, @DrawableRes drawableResourceId: Int, @ColorInt tintColor: Int,
+        context: Context,
+        @DrawableRes drawableResourceId: Int,
+        @ColorInt tintColor: Int,
         scale: Float = 1.0f
     ): Drawable {
 
         return BitmapDrawable(
-            context.resources, toBitmap(context, drawableResourceId, tintColor, scale)
+            context.resources,
+            toBitmap(
+                context,
+                drawableResourceId,
+                tintColor,
+                scale
+            )
         )
     }
 }

@@ -3,6 +3,13 @@
 
     <string name="compass_north">N</string>
 
+    <string name="alert_dialog_layers_title">Couches géographiques</string>
+    <string name="alert_dialog_layers_cancel">Fermer</string>
+    <string name="alert_dialog_layers_type_tiles_online">Fonds en ligne</string>
+    <string name="alert_dialog_layers_type_tiles">Fonds embarquées</string>
+    <string name="alert_dialog_layers_type_vector">Couches vectorielles</string>
+    <string name="alert_dialog_layers_no_data">Aucune couche géographique à afficher</string>
+
     <string name="action_undo">Annuler</string>
     <string name="action_title_poi_edit">Éditer le marqueur</string>
     <string name="action_poi_delete">Supprimer le marqueur</string>
@@ -12,8 +19,12 @@
     <string name="snackbar_permissions_granted">Les permissions ont été accordées</string>
     <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>
     <string name="snackbar_layers_undefined">Aucun fond de défini</string>
-    <string name="snackbar_base_path_undefined">Impossible de charger les fonds depuis \'%1$s\'</string>
+    <string name="snackbar_base_path_undefined">Impossible de charger les couches depuis \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
+
+    <string name="button_layers_hint">Choix des couches géographiques</string>
+    <string name="button_zoom_in_hint">Zoomer</string>
+    <string name="button_zoom_out_hint">Dézoomer</string>
 
 </resources>

@@ -33,7 +33,8 @@
     },
     {
       "label": "nantes.wkt",
-      "source": "nantes.wkt"
+      "source": "nantes.wkt",
+      "properties": null
     }
   ]
 }

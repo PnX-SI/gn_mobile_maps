@@ -13,23 +13,38 @@ object ThemeUtils {
 
     @ColorInt
     fun getPrimaryColor(context: Context): Int {
-        return getColor(context, R.attr.colorPrimary)
+        return getColor(
+            context,
+            R.attr.colorPrimary
+        )
     }
 
     @ColorInt
     fun getPrimaryDarkColor(context: Context): Int {
-        return getColor(context, R.attr.colorPrimaryDark)
+        return getColor(
+            context,
+            R.attr.colorPrimaryDark
+        )
     }
 
     @ColorInt
     fun getAccentColor(context: Context): Int {
-        return getColor(context, R.attr.colorAccent)
+        return getColor(
+            context,
+            R.attr.colorAccent
+        )
     }
 
     @ColorInt
-    private fun getColor(context: Context, colorAttribute: Int): Int {
+    private fun getColor(
+        context: Context,
+        colorAttribute: Int
+    ): Int {
         val typedArray = context.theme.obtainStyledAttributes(intArrayOf(colorAttribute))
-        val color = typedArray.getColor(0, 0)
+        val color = typedArray.getColor(
+            0,
+            0
+        )
 
         typedArray.recycle()
 

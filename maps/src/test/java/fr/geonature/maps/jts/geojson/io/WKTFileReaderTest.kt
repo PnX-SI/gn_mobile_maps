@@ -20,7 +20,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 /**
  * Unit tests about [WKTFileReader].
@@ -54,17 +53,17 @@ class WKTFileReaderTest {
         )
 
         // then
-        verify(onWKTFileReaderListener).onStart(3)
+        verify(onWKTFileReaderListener).onStart(4)
         verify(
             onWKTFileReaderListener,
             never()
         ).onError(any(Throwable::class.java))
         verify(
             onWKTFileReaderListener,
-            times(3)
+            times(4)
         ).onProgress(
             anyInt(),
-            eq(3),
+            eq(4),
             any(Feature::class.java)
         )
         verify(onWKTFileReaderListener).onFinish(capture(featureCollectionArgumentCaptor))
@@ -72,9 +71,10 @@ class WKTFileReaderTest {
         val featureCollection = featureCollectionArgumentCaptor.value
         assertNotNull(featureCollection)
         assertEquals(
-            3,
+            4,
             featureCollection.getFeatures().size
         )
+        assertNotNull(featureCollection.getFeature("1"))
         assertNotNull(featureCollection.getFeature("69"))
         assertNotNull(featureCollection.getFeature("19"))
         assertNotNull(featureCollection.getFeature("146"))

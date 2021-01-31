@@ -33,7 +33,9 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
+            .showZoom(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -73,7 +75,9 @@ class MapSettingsTest {
                 ),
                 "/mnt/sdcard",
                 showScale = false,
+                showAttribution = false,
                 showCompass = false,
+                showZoom = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -94,7 +98,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testGetLayersAsTileSources() {
+    fun testFromExistingMapSettings() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -108,6 +112,7 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -131,6 +136,58 @@ class MapSettingsTest {
             )
             // with identical tile source
             .addLayer(
+                "Nantes 2",
+                "nantes.mbtiles"
+            )
+            .build()
+
+        // then
+        assertEquals(
+            mapSettings,
+            MapSettings.Builder.newInstance()
+                .from(mapSettings)
+                .build()
+        )
+    }
+
+    @Test
+    fun testGetTilesLayers() {
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721
+        )
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811
+        )
+
+        // given map settings instance from its builder
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
+            .showScale(false)
+            .showAttribution(false)
+            .showCompass(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .addLayer(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+            .addLayer(
                 "nantes.wkt",
                 "nantes.wkt"
             )
@@ -139,8 +196,111 @@ class MapSettingsTest {
         // then
         assertNotNull(mapSettings)
         assertArrayEquals(
-            arrayOf("nantes.mbtiles"),
-            mapSettings.getLayersAsTileSources().toTypedArray()
+            arrayOf(
+                LayerSettings(
+                    "Nantes",
+                    "nantes.mbtiles"
+                )
+            ),
+            mapSettings.getTilesLayers()
+                .toTypedArray()
+        )
+    }
+
+    @Test
+    fun testGetVectorLayers() {
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721
+        )
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811
+        )
+
+        // given map settings instance from its builder
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
+            .showScale(false)
+            .showAttribution(false)
+            .showCompass(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .addLayer(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+            .addLayer(
+                "nantes.wkt",
+                "nantes.wkt"
+            )
+            .addLayer(
+                "nantes.json",
+                "nantes.json"
+            )
+            .addLayer(
+                "nantes.geojson",
+                "nantes.geojson"
+            )
+            .build()
+
+        // then
+        assertNotNull(mapSettings)
+        assertArrayEquals(
+            arrayOf(
+                LayerSettings(
+                    "nantes.wkt",
+                    "nantes.wkt",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
+                ),
+                LayerSettings(
+                    "nantes.json",
+                    "nantes.json",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
+                ),
+                LayerSettings(
+                    "nantes.geojson",
+                    "nantes.geojson",
+                    LayerPropertiesSettings(
+                        minZoomLevel = 0,
+                        maxZoomLevel = 0,
+                        tileSizePixels = 0,
+                        tileMimeType = null,
+                        attribution = null,
+                        style = LayerStyleSettings()
+                    )
+                )
+            ),
+            mapSettings.getVectorLayers()
+                .toTypedArray()
         )
     }
 
@@ -159,7 +319,9 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
+            .showAttribution(false)
             .showCompass(false)
+            .showZoom(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
