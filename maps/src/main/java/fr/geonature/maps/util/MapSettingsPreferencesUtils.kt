@@ -3,6 +3,8 @@ package fr.geonature.maps.util
 import android.content.Context
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
+import androidx.preference.PreferenceScreen
+import androidx.preference.SwitchPreference
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.MapSettings
 
@@ -18,8 +20,13 @@ object MapSettingsPreferencesUtils {
      *
      * @param context the current context
      * @param mapSettings the [MapSettings] to read
+     * @param preferenceScreen preference screen to update if any
      */
-    fun setDefaultPreferences(context: Context, mapSettings: MapSettings) {
+    fun setDefaultPreferences(
+        context: Context,
+        mapSettings: MapSettings,
+        preferenceScreen: PreferenceScreen? = null
+    ) {
         mutableMapOf(
             Pair(
                 context.getString(R.string.preference_category_map_use_default_online_source_key),
@@ -37,9 +44,8 @@ object MapSettingsPreferencesUtils {
                 context.getString(R.string.preference_category_map_show_zoom_key),
                 mapSettings.showZoom
             ),
-        ).asSequence()
-            .filter { !getDefaultSharedPreferences(context).contains(it.key) }
-            .forEach {
+        ).forEach {
+            if (!getDefaultSharedPreferences(context).contains(it.key)) {
                 getDefaultSharedPreferences(context).edit()
                     .putBoolean(
                         it.key,
@@ -47,6 +53,9 @@ object MapSettingsPreferencesUtils {
                     )
                     .apply()
             }
+
+            preferenceScreen?.findPreference<SwitchPreference>(it.key)?.isChecked = it.value
+        }
     }
 
     /**
