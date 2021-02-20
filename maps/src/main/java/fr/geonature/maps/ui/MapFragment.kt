@@ -396,7 +396,7 @@ open class MapFragment : Fragment(),
                         mapView.invalidate()
 
                         updateActiveLayers(
-                            vm.getActiveLayers(),
+                            vm.getSelectedLayers(),
                             LayerType.TILES
                         )
                     })
@@ -423,7 +423,7 @@ open class MapFragment : Fragment(),
                             mapView.invalidate()
 
                             updateActiveLayers(
-                                vm.getActiveLayers(),
+                                vm.getSelectedLayers(),
                                 LayerType.VECTOR
                             )
                             delay(100)

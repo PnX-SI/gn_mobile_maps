@@ -266,11 +266,6 @@ class MapSettingsTest {
                     "nantes.wkt",
                     "nantes.wkt",
                     LayerPropertiesSettings(
-                        minZoomLevel = 0,
-                        maxZoomLevel = 0,
-                        tileSizePixels = 0,
-                        tileMimeType = null,
-                        attribution = null,
                         style = LayerStyleSettings()
                     )
                 ),
@@ -278,11 +273,6 @@ class MapSettingsTest {
                     "nantes.json",
                     "nantes.json",
                     LayerPropertiesSettings(
-                        minZoomLevel = 0,
-                        maxZoomLevel = 0,
-                        tileSizePixels = 0,
-                        tileMimeType = null,
-                        attribution = null,
                         style = LayerStyleSettings()
                     )
                 ),
@@ -290,11 +280,6 @@ class MapSettingsTest {
                     "nantes.geojson",
                     "nantes.geojson",
                     LayerPropertiesSettings(
-                        minZoomLevel = 0,
-                        maxZoomLevel = 0,
-                        tileSizePixels = 0,
-                        tileMimeType = null,
-                        attribution = null,
                         style = LayerStyleSettings()
                     )
                 )

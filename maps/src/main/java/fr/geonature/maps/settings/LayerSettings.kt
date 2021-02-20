@@ -11,19 +11,19 @@ import android.os.Parcelable
 data class LayerSettings(
     val label: String,
     val source: String, // TODO: manage source as list
-    val properties: LayerPropertiesSettings? = null
+    val properties: LayerPropertiesSettings = LayerPropertiesSettings()
 ) : Parcelable, Comparable<LayerSettings> {
 
     private constructor(builder: Builder) : this(
         builder.label!!,
         builder.source!!,
-        builder.properties
+        builder.properties!!
     )
 
     private constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readParcelable(LayerPropertiesSettings::class.java.classLoader)
+        parcel.readParcelable(LayerPropertiesSettings::class.java.classLoader)!!
     )
 
     override fun describeContents(): Int {
@@ -85,9 +85,22 @@ data class LayerSettings(
 
         fun properties(properties: LayerPropertiesSettings? = null) =
             apply {
+                // set default properties
+                this.properties = LayerPropertiesSettings.Builder.newInstance()
+                    .from(properties)
+                    .build()
+
                 // set default properties for online source if none was given
-                if (isOnline(source) && properties == null) {
+                if (isOnline(source) &&
+                    this.properties?.let {
+                        it.minZoomLevel < 0 ||
+                            it.maxZoomLevel < 0 ||
+                            it.tileSizePixels < 0 ||
+                            it.tileMimeType.isNullOrBlank()
+                    } != false
+                ) {
                     this.properties = LayerPropertiesSettings.Builder.newInstance()
+                        .from(this.properties)
                         .minZoomLevel()
                         .maxZoomLevel()
                         .tileSizePixels()
@@ -98,7 +111,7 @@ data class LayerSettings(
                 }
 
                 // set default style for vector source if none was given
-                if (layerType(source) == LayerType.VECTOR && properties?.style == null) {
+                if (layerType(source) == LayerType.VECTOR && this.properties?.style == null) {
                     this.properties = LayerPropertiesSettings.Builder.newInstance()
                         .from(this.properties)
                         .style(
@@ -109,8 +122,6 @@ data class LayerSettings(
 
                     return@apply
                 }
-
-                this.properties = properties
             }
 
         @Throws(java.lang.IllegalArgumentException::class)

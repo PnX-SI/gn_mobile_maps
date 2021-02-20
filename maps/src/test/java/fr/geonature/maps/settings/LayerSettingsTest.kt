@@ -2,6 +2,7 @@ package fr.geonature.maps.settings
 
 import android.os.Parcel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,8 +39,7 @@ class LayerSettingsTest {
         assertEquals(
             LayerSettings(
                 "Nantes",
-                "nantes.unknown",
-                null
+                "nantes.unknown"
             ),
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
@@ -71,11 +71,6 @@ class LayerSettingsTest {
                 "Nantes",
                 "nantes.wkt",
                 LayerPropertiesSettings(
-                    minZoomLevel = 0,
-                    maxZoomLevel = 0,
-                    tileSizePixels = 0,
-                    tileMimeType = null,
-                    attribution = null,
                     style = LayerStyleSettings()
                 )
             ),
@@ -90,10 +85,6 @@ class LayerSettingsTest {
                 "Nantes",
                 "nantes.geojson",
                 LayerPropertiesSettings(
-                    minZoomLevel = 0,
-                    maxZoomLevel = 0,
-                    tileSizePixels = 0,
-                    tileMimeType = null,
                     attribution = "Some attribution",
                     style = LayerStyleSettings()
                 )
@@ -180,6 +171,40 @@ class LayerSettingsTest {
                 "Nantes",
                 "nantes.unknown"
             ).getType()
+        )
+    }
+
+    @Test
+    fun testActiveLayer() {
+        assertTrue(
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.mbtiles")
+                .build().properties.active
+        )
+
+        assertTrue(
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.mbtiles")
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .active()
+                        .build()
+                )
+                .build().properties.active
+        )
+
+        assertFalse(
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.mbtiles")
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .active(false)
+                        .build()
+                )
+                .build().properties.active
         )
     }
 

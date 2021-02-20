@@ -15,6 +15,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="false"
+        android:duplicateParentState="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,6 +25,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="?attr/listPreferredItemPaddingEnd"
+        android:duplicateParentState="true"
         android:ellipsize="end"
         android:singleLine="true"
         android:textAppearance="?attr/textAppearanceListItem"
