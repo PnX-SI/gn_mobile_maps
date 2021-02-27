@@ -277,6 +277,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             }
             .map {
                 FeatureCollectionOverlay().apply {
+                    name = it.first.label
                     setFeatures(
                         it.second,
                         it.first.properties.style ?: LayerStyleSettings()

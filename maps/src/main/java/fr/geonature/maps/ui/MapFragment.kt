@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -38,6 +39,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -381,56 +385,97 @@ open class MapFragment : Fragment(),
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
-        activity?.run {
-            layerSettingsViewModel?.also { vm ->
-                vm.tileProvider.removeObservers(this)
-                vm.tileProvider.observe(
-                    this,
-                    {
-                        if (it == null) {
-                            mapView.tileProvider?.detach()
-                        } else {
-                            mapView.tileProvider = it
+        activity?.also {
+            configureLayers(it)
+        }
+    }
+
+    private fun configureLayers(activity: FragmentActivity) {
+        layerSettingsViewModel?.also { vm ->
+            mapView.addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean {
+                    return true
+                }
+
+                override fun onZoom(event: ZoomEvent?): Boolean {
+                    val selectedVectorsLayers =
+                        vm.getSelectedLayers { it.getType() == LayerType.VECTOR }
+                            .map {
+                                val zoomLevel = event?.zoomLevel ?: return@map it
+
+                                it.properties.active = it.properties.minZoomLevel.toDouble()
+                                    .coerceAtLeast(0.0)
+                                    .rangeTo(
+                                        it.properties.maxZoomLevel.toDouble()
+                                            .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE
+                                    )
+                                    .contains(zoomLevel)
+
+                                it
+                            }
+
+                    updateSelectedLayers(
+                        selectedVectorsLayers,
+                        LayerType.VECTOR
+                    )
+
+                    getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
+                        (overlay as FeatureCollectionOverlay).isEnabled =
+                            selectedVectorsLayers.find { it.label == overlay.name }?.properties?.active
+                                ?: true
+                    }
+
+                    return true
+                }
+            })
+
+            vm.tileProvider.removeObservers(activity)
+            vm.tileProvider.observe(
+                activity,
+                {
+                    if (it == null) {
+                        mapView.tileProvider?.detach()
+                    } else {
+                        mapView.tileProvider = it
+                    }
+
+                    mapView.invalidate()
+
+                    updateSelectedLayers(
+                        vm.getSelectedLayers(),
+                        LayerType.TILES
+                    )
+                })
+            vm.vectorOverlays.removeObservers(activity)
+            vm.vectorOverlays.observe(
+                activity,
+                {
+                    GlobalScope.launch(Main) {
+                        mapView.overlays.asSequence()
+                            .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                            .forEach {
+                                mapView.overlays.remove(it)
+                            }
+                        val markerOverlaysFirstIndex =
+                            mapView.overlays.indexOfFirst { it is Marker }
+                                .coerceAtLeast(0)
+                        it.forEach {
+                            mapView.overlays.add(
+                                markerOverlaysFirstIndex,
+                                it
+                            )
                         }
 
                         mapView.invalidate()
 
-                        updateActiveLayers(
+                        updateSelectedLayers(
                             vm.getSelectedLayers(),
-                            LayerType.TILES
+                            LayerType.VECTOR
                         )
-                    })
-                vm.vectorOverlays.removeObservers(this)
-                vm.vectorOverlays.observe(
-                    this,
-                    {
-                        GlobalScope.launch(Main) {
-                            mapView.overlays.asSequence()
-                                .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
-                                .forEach {
-                                    mapView.overlays.remove(it)
-                                }
-                            val markerOverlaysFirstIndex =
-                                mapView.overlays.indexOfFirst { it is Marker }
-                                    .coerceAtLeast(0)
-                            it.forEach {
-                                mapView.overlays.add(
-                                    markerOverlaysFirstIndex,
-                                    it
-                                )
-                            }
-
-                            mapView.invalidate()
-
-                            updateActiveLayers(
-                                vm.getSelectedLayers(),
-                                LayerType.VECTOR
-                            )
-                            delay(100)
-                            onVectorLayersChangedListener(it)
-                        }
-                    })
-            }
+                        delay(100)
+                        onVectorLayersChangedListener(it)
+                    }
+                })
         }
     }
 
@@ -443,7 +488,10 @@ open class MapFragment : Fragment(),
             .show()
     }
 
-    private fun updateActiveLayers(selectedLayersSettings: List<LayerSettings>, filter: LayerType) {
+    private fun updateSelectedLayers(
+        selectedLayersSettings: List<LayerSettings>,
+        filter: LayerType
+    ) {
         (savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
             ?: mutableListOf<LayerSettings>()).run {
             this.removeAll { it.getType() == filter }
