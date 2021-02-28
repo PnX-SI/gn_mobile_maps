@@ -249,7 +249,7 @@ open class MapFragment : Fragment(),
                     setOnClickListener {
                         LayerSettingsDialogFragment.newInstance(
                             vm.getLayerSettings(),
-                            savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                            savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
                                 ?: emptyList()
                         )
                             .also {
@@ -263,7 +263,7 @@ open class MapFragment : Fragment(),
                 }
             }
 
-            val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+            val activeLayers = savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
                 ?: emptyList<LayerSettings>()
 
             vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
@@ -398,9 +398,10 @@ open class MapFragment : Fragment(),
                 }
 
                 override fun onZoom(event: ZoomEvent?): Boolean {
-                    val selectedVectorsLayers =
-                        vm.getSelectedLayers { it.getType() == LayerType.VECTOR }
+                    val selectedLayers =
+                        vm.getSelectedLayers()
                             .map {
+                                if (it.isOnline()) return@map it
                                 val zoomLevel = event?.zoomLevel ?: return@map it
 
                                 it.properties.active = it.properties.minZoomLevel.toDouble()
@@ -414,14 +415,11 @@ open class MapFragment : Fragment(),
                                 it
                             }
 
-                    updateSelectedLayers(
-                        selectedVectorsLayers,
-                        LayerType.VECTOR
-                    )
+                    updateSelectedLayers(selectedLayers)
 
                     getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
                         (overlay as FeatureCollectionOverlay).isEnabled =
-                            selectedVectorsLayers.find { it.label == overlay.name }?.properties?.active
+                            selectedLayers.find { it.label == overlay.name }?.properties?.active
                                 ?: true
                     }
 
@@ -441,10 +439,7 @@ open class MapFragment : Fragment(),
 
                     mapView.invalidate()
 
-                    updateSelectedLayers(
-                        vm.getSelectedLayers(),
-                        LayerType.TILES
-                    )
+                    updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.TILES }
                 })
             vm.vectorOverlays.removeObservers(activity)
             vm.vectorOverlays.observe(
@@ -468,11 +463,10 @@ open class MapFragment : Fragment(),
 
                         mapView.invalidate()
 
-                        updateSelectedLayers(
-                            vm.getSelectedLayers(),
-                            LayerType.VECTOR
-                        )
+                        updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.VECTOR }
+
                         delay(100)
+
                         onVectorLayersChangedListener(it)
                     }
                 })
@@ -490,14 +484,14 @@ open class MapFragment : Fragment(),
 
     private fun updateSelectedLayers(
         selectedLayersSettings: List<LayerSettings>,
-        filter: LayerType
+        filter: (layerSettings: LayerSettings) -> Boolean = { true }
     ) {
-        (savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+        (savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
             ?: mutableListOf<LayerSettings>()).run {
-            this.removeAll { it.getType() == filter }
-            addAll(selectedLayersSettings.filter { it.getType() == filter })
+            this.removeAll(filter)
+            addAll(selectedLayersSettings.filter(filter))
             savedState.putParcelableArrayList(
-                KEY_ACTIVE_LAYERS,
+                KEY_SELECTED_LAYERS,
                 ArrayList(this.distinct())
             )
         }
@@ -508,7 +502,7 @@ open class MapFragment : Fragment(),
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
 
-        private const val KEY_ACTIVE_LAYERS = "active_layers"
+        private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
         private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
             "layer_settings_dialog_fragment"
