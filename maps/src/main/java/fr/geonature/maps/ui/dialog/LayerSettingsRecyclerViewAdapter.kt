@@ -256,16 +256,12 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
             with(switch) {
                 visibility = View.VISIBLE
-                isChecked = selectedItems.contains(item)
-                setOnClickListener {
-                    selectedItems.removeAll { it.isOnline() }
+                isChecked = selectedItems.any { it.isOnline() && it.properties.active }
 
-                    if (switch.isChecked) {
-                        items.firstOrNull { it.first.isOnline() }
-                            ?.also {
-                                selectedItems.add(it.first)
-                            }
-                    }
+                setOnClickListener {
+                    selectedItems.asSequence()
+                        .filter { it.isOnline() }
+                        .forEach { it.properties.active = isChecked }
 
                     listener.onSelectedLayersSettings(selectedItems)
 
@@ -318,6 +314,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
             with(itemView) {
                 tag = item
+                isEnabled = item.properties.active
                 setOnClickListener(onClickListener)
             }
         }

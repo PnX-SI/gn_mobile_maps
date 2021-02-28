@@ -179,11 +179,6 @@ class MapSettingsReaderTest {
                         "nantes.wkt",
                         "nantes.wkt",
                         LayerPropertiesSettings(
-                            minZoomLevel = 0,
-                            maxZoomLevel = 0,
-                            tileSizePixels = 0,
-                            tileMimeType = null,
-                            attribution = null,
                             style = LayerStyleSettings()
                         )
                     )

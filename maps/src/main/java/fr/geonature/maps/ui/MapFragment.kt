@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -38,6 +39,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -245,7 +249,7 @@ open class MapFragment : Fragment(),
                     setOnClickListener {
                         LayerSettingsDialogFragment.newInstance(
                             vm.getLayerSettings(),
-                            savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+                            savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
                                 ?: emptyList()
                         )
                             .also {
@@ -259,7 +263,7 @@ open class MapFragment : Fragment(),
                 }
             }
 
-            val activeLayers = savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+            val activeLayers = savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
                 ?: emptyList<LayerSettings>()
 
             vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
@@ -381,56 +385,91 @@ open class MapFragment : Fragment(),
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
-        activity?.run {
-            layerSettingsViewModel?.also { vm ->
-                vm.tileProvider.removeObservers(this)
-                vm.tileProvider.observe(
-                    this,
-                    {
-                        if (it == null) {
-                            mapView.tileProvider?.detach()
-                        } else {
-                            mapView.tileProvider = it
+        activity?.also {
+            configureLayers(it)
+        }
+    }
+
+    private fun configureLayers(activity: FragmentActivity) {
+        layerSettingsViewModel?.also { vm ->
+            mapView.addMapListener(object : MapListener {
+                override fun onScroll(event: ScrollEvent?): Boolean {
+                    return true
+                }
+
+                override fun onZoom(event: ZoomEvent?): Boolean {
+                    val selectedLayers =
+                        vm.getSelectedLayers()
+                            .map {
+                                if (it.isOnline()) return@map it
+                                val zoomLevel = event?.zoomLevel ?: return@map it
+
+                                it.properties.active = it.properties.minZoomLevel.toDouble()
+                                    .coerceAtLeast(0.0)
+                                    .rangeTo(
+                                        it.properties.maxZoomLevel.toDouble()
+                                            .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE
+                                    )
+                                    .contains(zoomLevel)
+
+                                it
+                            }
+
+                    updateSelectedLayers(selectedLayers)
+
+                    getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
+                        (overlay as FeatureCollectionOverlay).isEnabled =
+                            selectedLayers.find { it.label == overlay.name }?.properties?.active
+                                ?: true
+                    }
+
+                    return true
+                }
+            })
+
+            vm.tileProvider.removeObservers(activity)
+            vm.tileProvider.observe(
+                activity,
+                {
+                    if (it == null) {
+                        mapView.tileProvider?.detach()
+                    } else {
+                        mapView.tileProvider = it
+                    }
+
+                    mapView.invalidate()
+
+                    updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.TILES }
+                })
+            vm.vectorOverlays.removeObservers(activity)
+            vm.vectorOverlays.observe(
+                activity,
+                {
+                    GlobalScope.launch(Main) {
+                        mapView.overlays.asSequence()
+                            .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                            .forEach {
+                                mapView.overlays.remove(it)
+                            }
+                        val markerOverlaysFirstIndex =
+                            mapView.overlays.indexOfFirst { it is Marker }
+                                .coerceAtLeast(0)
+                        it.forEach {
+                            mapView.overlays.add(
+                                markerOverlaysFirstIndex,
+                                it
+                            )
                         }
 
                         mapView.invalidate()
 
-                        updateActiveLayers(
-                            vm.getActiveLayers(),
-                            LayerType.TILES
-                        )
-                    })
-                vm.vectorOverlays.removeObservers(this)
-                vm.vectorOverlays.observe(
-                    this,
-                    {
-                        GlobalScope.launch(Main) {
-                            mapView.overlays.asSequence()
-                                .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
-                                .forEach {
-                                    mapView.overlays.remove(it)
-                                }
-                            val markerOverlaysFirstIndex =
-                                mapView.overlays.indexOfFirst { it is Marker }
-                                    .coerceAtLeast(0)
-                            it.forEach {
-                                mapView.overlays.add(
-                                    markerOverlaysFirstIndex,
-                                    it
-                                )
-                            }
+                        updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.VECTOR }
 
-                            mapView.invalidate()
+                        delay(100)
 
-                            updateActiveLayers(
-                                vm.getActiveLayers(),
-                                LayerType.VECTOR
-                            )
-                            delay(100)
-                            onVectorLayersChangedListener(it)
-                        }
-                    })
-            }
+                        onVectorLayersChangedListener(it)
+                    }
+                })
         }
     }
 
@@ -443,13 +482,16 @@ open class MapFragment : Fragment(),
             .show()
     }
 
-    private fun updateActiveLayers(selectedLayersSettings: List<LayerSettings>, filter: LayerType) {
-        (savedState.getParcelableArrayList(KEY_ACTIVE_LAYERS)
+    private fun updateSelectedLayers(
+        selectedLayersSettings: List<LayerSettings>,
+        filter: (layerSettings: LayerSettings) -> Boolean = { true }
+    ) {
+        (savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
             ?: mutableListOf<LayerSettings>()).run {
-            this.removeAll { it.getType() == filter }
-            addAll(selectedLayersSettings.filter { it.getType() == filter })
+            this.removeAll(filter)
+            addAll(selectedLayersSettings.filter(filter))
             savedState.putParcelableArrayList(
-                KEY_ACTIVE_LAYERS,
+                KEY_SELECTED_LAYERS,
                 ArrayList(this.distinct())
             )
         }
@@ -460,7 +502,7 @@ open class MapFragment : Fragment(),
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
 
-        private const val KEY_ACTIVE_LAYERS = "active_layers"
+        private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
         private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
             "layer_settings_dialog_fragment"

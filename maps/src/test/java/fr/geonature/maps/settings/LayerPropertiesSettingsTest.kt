@@ -42,6 +42,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 2,
                 19,
                 512,
@@ -108,6 +109,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 7,
                 8,
                 256,
@@ -154,6 +156,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 2,
                 19,
                 512,
@@ -168,16 +171,14 @@ class LayerPropertiesSettingsTest {
     @Test
     fun testBuilderWithMinMaxLevels() {
         assertEquals(
-            LayerPropertiesSettings(
-                0,
-                0
-            ),
+            LayerPropertiesSettings(),
             LayerPropertiesSettings.Builder.newInstance()
                 .build()
         )
 
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 0,
                 19
             ),
@@ -189,6 +190,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 8,
                 9
             ),
@@ -200,6 +202,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 19,
                 19
             ),
@@ -211,6 +214,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
+                true,
                 7,
                 19
             ),
@@ -224,6 +228,7 @@ class LayerPropertiesSettingsTest {
     fun testParcelable() {
         // given a layer properties settings
         val layerPropertiesSettings = LayerPropertiesSettings(
+            true,
             2,
             19,
             512,

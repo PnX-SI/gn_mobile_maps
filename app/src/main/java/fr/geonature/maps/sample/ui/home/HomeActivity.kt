@@ -15,7 +15,6 @@ import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.io.MapSettingsReader
-import fr.geonature.maps.ui.MapFragment
 import java.io.InputStreamReader
 
 /**

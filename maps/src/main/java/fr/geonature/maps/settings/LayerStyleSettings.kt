@@ -13,13 +13,13 @@ import androidx.core.graphics.ColorUtils
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class LayerStyleSettings(
-    val stroke: Boolean = true,
+    val stroke: Boolean = Builder.newInstance().stroke,
     @ColorInt
-    val color: Int = Color.DKGRAY,
-    val weight: Int = 8,
-    val fill: Boolean = false,
+    val color: Int = Builder.newInstance().color,
+    val weight: Int = Builder.newInstance().weight,
+    val fill: Boolean = Builder.newInstance().fill,
     @ColorInt
-    val fillColor: Int = Color.TRANSPARENT
+    val fillColor: Int = Builder.newInstance().fillColor
 ) : Parcelable {
 
     private constructor(builder: Builder) : this(

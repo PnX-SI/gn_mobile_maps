@@ -26,7 +26,6 @@ import org.osmdroid.tileprovider.modules.MapTileSqlCacheProvider
 import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.modules.SqlTileWriter
-import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
@@ -43,7 +42,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     AndroidViewModel(application) {
 
     private val layers: MutableList<LayerSettings> = mutableListOf()
-    private val activeLayers: MutableList<LayerSettings> = mutableListOf()
+    private val selectedLayers: MutableList<LayerSettings> = mutableListOf()
 
     private val _tileProvider = MutableLiveData<MapTileProviderBase>()
     val tileProvider: LiveData<MapTileProviderBase> = _tileProvider
@@ -60,21 +59,10 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     ) {
         with(layers) {
             clear()
-            addAll((if (useDefaultOnlineTileSource) mutableListOf<OnlineTileSourceBase>(TileSourceFactory.DEFAULT_TILE_SOURCE) else emptyList()).map {
-                LayerSettings.Builder()
-                    .label(it.name())
-                    .source(it.baseUrl)
-                    .properties(
-                        LayerPropertiesSettings.Builder.newInstance()
-                            .minZoomLevel(0)
-                            .maxZoomLevel(19)
-                            .tileSizePixels(256)
-                            .tileMimeType("image/png")
-                            .attribution(it.copyrightNotice)
-                            .build()
-                    )
-                    .build()
-            } + layersSettings)
+            addAll(
+                (if (useDefaultOnlineTileSource) mutableListOf(buildDefaultOnlineLayer()) else emptyList())
+                    + layersSettings
+            )
         }
     }
 
@@ -109,15 +97,18 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             rootPath =
                 if (rootPath.canRead()) rootPath else getExternalStorageDirectory(getApplication())
 
-            activeLayers.clear()
+            selectedLayers.clear()
+            selectedLayers.addAll(selectedLayersSettings.filter { !it.properties.active })
+
+            val activeLayerSettings = selectedLayersSettings.filter { it.properties.active }
 
             val tileProvider = buildTileProvider(
                 rootPath,
-                selectedLayersSettings
+                activeLayerSettings
             )
             val vectorOverlays = buildVectorOverlays(
                 rootPath,
-                selectedLayersSettings
+                activeLayerSettings
             )
 
             _tileProvider.postValue(tileProvider)
@@ -126,14 +117,14 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     }
 
     /**
-     * Gets active layers (i.e. visible on the map).
+     * Gets selected layers.
      */
-    fun getActiveLayers(filter: (layerSettings: LayerSettings) -> Boolean = DEFAULT_LAYER_SETTINGS_FILTER): List<LayerSettings> {
+    fun getSelectedLayers(filter: (layerSettings: LayerSettings) -> Boolean = DEFAULT_LAYER_SETTINGS_FILTER): List<LayerSettings> {
         if (filter === DEFAULT_LAYER_SETTINGS_FILTER) {
-            return activeLayers
+            return selectedLayers
         }
 
-        return activeLayers.filter(filter)
+        return selectedLayers.filter(filter)
     }
 
     private suspend fun buildTileProvider(
@@ -169,19 +160,17 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 canRead
             }
             .onEach {
-                activeLayers.add(it.first)
+                selectedLayers.add(it.first)
             }
             .map { it.second }
             .toList()
 
-        val onlineTileSource = layersSettings.find { it.isOnline() && it.properties != null }
+        val onlineTileSource = layersSettings.find { it.isOnline() }
             ?.let {
-                activeLayers.add(
+                selectedLayers.add(
                     0,
                     it
                 )
-
-                it.properties!!
 
                 XYTileSource(
                     it.label,
@@ -284,17 +273,36 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 isLoaded
             }
             .onEach {
-                activeLayers.add(it.first)
+                selectedLayers.add(it.first)
             }
             .map {
                 FeatureCollectionOverlay().apply {
+                    name = it.first.label
                     setFeatures(
                         it.second,
-                        it.first.properties?.style ?: LayerStyleSettings()
+                        it.first.properties.style ?: LayerStyleSettings()
                     )
                 }
             }
             .toList()
+    }
+
+    private fun buildDefaultOnlineLayer(): LayerSettings {
+        return TileSourceFactory.DEFAULT_TILE_SOURCE.let {
+            LayerSettings.Builder()
+                .label("OSM")
+                .source(it.baseUrl)
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .minZoomLevel(0)
+                        .maxZoomLevel(19)
+                        .tileSizePixels(256)
+                        .tileMimeType("image/png")
+                        .attribution(it.copyrightNotice)
+                        .build()
+                )
+                .build()
+        }
     }
 
     companion object {
