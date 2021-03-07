@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.settings.MapSettings
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 
 /**
  * A fragment representing a list of [MenuItem].
@@ -50,7 +51,7 @@ class HomeListFragment : Fragment() {
                 )
             }
         }
-        
+
         loadMenuItems()
 
         return view
@@ -74,6 +75,10 @@ class HomeListFragment : Fragment() {
                     MapSettings.Builder.newInstance()
                         .minZoomLevel(3.0)
                         .zoom(6.0)
+                        .addLayer(
+                            "OSM",
+                            TileSourceFactory.MAPNIK.baseUrl
+                        )
                         .build()
                 ),
                 MenuItem(getString(R.string.home_menu_entry_from_storage))

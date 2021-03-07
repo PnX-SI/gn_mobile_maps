@@ -4,7 +4,7 @@
     <string name="activity_map_title">Carte</string>
     <string name="activity_preferences_title">Paramètres</string>
 
-    <string name="home_menu_entry_default">Configuration par défaut</string>
+    <string name="home_menu_entry_default">Configuration par défaut avec la couche OSM</string>
     <string name="home_menu_entry_from_storage">Depuis la mémoire interne</string>
 
     <string name="map_settings_loaded_from">From \'%1$s\'</string>

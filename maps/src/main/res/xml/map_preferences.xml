@@ -5,8 +5,8 @@
     <PreferenceCategory android:title="@string/preference_category_map">
 
         <SwitchPreference
-            android:key="@string/preference_category_map_use_default_online_source_key"
-            android:title="@string/preference_category_map_use_default_online_source" />
+            android:key="@string/preference_category_map_use_online_layers_key"
+            android:title="@string/preference_category_map_use_online_layers" />
         <SwitchPreference
             android:key="@string/preference_category_map_show_scale_key"
             android:title="@string/preference_category_map_show_scale" />

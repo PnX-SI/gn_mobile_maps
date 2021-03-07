@@ -60,7 +60,7 @@ data class LayerSettings(
     }
 
     fun isOnline(): Boolean {
-        return Builder.isOnline(source)
+        return getType() == LayerType.TILES && Builder.isOnline(source)
     }
 
     class Builder {

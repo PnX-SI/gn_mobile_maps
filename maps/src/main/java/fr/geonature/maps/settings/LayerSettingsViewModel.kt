@@ -26,7 +26,6 @@ import org.osmdroid.tileprovider.modules.MapTileSqlCacheProvider
 import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.modules.SqlTileWriter
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
 import org.osmdroid.views.overlay.Overlay
@@ -53,16 +52,16 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     /**
      * Sets available layers.
      */
-    fun setLayersSettings(
-        layersSettings: List<LayerSettings>,
-        useDefaultOnlineTileSource: Boolean = true
-    ) {
+    fun setLayersSettings(layersSettings: List<LayerSettings>, useOnlineLayers: Boolean = true) {
         with(layers) {
             clear()
-            addAll(
-                (if (useDefaultOnlineTileSource) mutableListOf(buildDefaultOnlineLayer()) else emptyList())
-                    + layersSettings
-            )
+            addAll(layersSettings.map {
+                if (it.isOnline()) {
+                    it.properties.active = useOnlineLayers
+                }
+
+                it
+            })
         }
     }
 
@@ -285,24 +284,6 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 }
             }
             .toList()
-    }
-
-    private fun buildDefaultOnlineLayer(): LayerSettings {
-        return TileSourceFactory.DEFAULT_TILE_SOURCE.let {
-            LayerSettings.Builder()
-                .label("OSM")
-                .source(it.baseUrl)
-                .properties(
-                    LayerPropertiesSettings.Builder.newInstance()
-                        .minZoomLevel(0)
-                        .maxZoomLevel(19)
-                        .tileSizePixels(256)
-                        .tileMimeType("image/png")
-                        .attribution(it.copyrightNotice)
-                        .build()
-                )
-                .build()
-        }
     }
 
     companion object {

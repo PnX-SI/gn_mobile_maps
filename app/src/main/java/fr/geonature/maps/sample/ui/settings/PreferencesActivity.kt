@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import fr.geonature.maps.settings.MapSettings
 
 /**
  * Global settings.
@@ -21,11 +22,13 @@ class PreferencesActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        val mapSettings: MapSettings? = intent.getParcelableExtra(EXTRA_MAP_SETTINGS)
+
         // Display the fragment as the main content.
         supportFragmentManager.beginTransaction()
             .replace(
                 android.R.id.content,
-                PreferencesFragment.newInstance()
+                PreferencesFragment.newInstance(mapSettings)
             )
             .commit()
     }
@@ -47,11 +50,18 @@ class PreferencesActivity : AppCompatActivity() {
 
     companion object {
 
-        fun newIntent(context: Context): Intent {
+        private const val EXTRA_MAP_SETTINGS = "extra_map_settings"
+
+        fun newIntent(context: Context, mapSettings: MapSettings? = null): Intent {
             return Intent(
                 context,
                 PreferencesActivity::class.java
-            )
+            ).apply {
+                putExtra(
+                    EXTRA_MAP_SETTINGS,
+                    mapSettings
+                )
+            }
         }
     }
 }

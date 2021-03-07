@@ -1,19 +1,14 @@
 package fr.geonature.maps.sample.ui.home
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.menu.MenuBuilder
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
-import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.io.MapSettingsReader
 import java.io.InputStreamReader
 
@@ -98,31 +93,7 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
         }
     }
 
-    @SuppressLint("RestrictedApi")
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(
-            R.menu.settings,
-            menu
-        )
-
-        if (menu is MenuBuilder) {
-            menu.setOptionalIconsVisible(true)
-        }
-
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menu_settings -> {
-                startActivity(PreferencesActivity.newIntent(this))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onSelectedMenuItem(menuItem: fr.geonature.maps.sample.ui.home.MenuItem) {
+    override fun onSelectedMenuItem(menuItem: MenuItem) {
         if (menuItem.mapSettings == null) {
             mapSettingsResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)

@@ -29,11 +29,14 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.getSelectedLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setSelectedLayers
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setUseOnlineLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
-import fr.geonature.maps.util.MapSettingsPreferencesUtils.useDefaultOnlineSource
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -227,7 +230,10 @@ open class MapFragment : Fragment(),
 
         // update map settings according to preferences
         return mapSettingsBuilder
-            .useDefaultOnlineTileSource(mapSettingsBuilder.layersSettings.isEmpty() || useDefaultOnlineSource(context))
+            .useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
+                context,
+                mapSettingsBuilder.useOnlineLayers
+            ))
             .showCompass(showCompass(context))
             .showScale(showScale(context))
             .showZoom(showZoom(context))
@@ -238,7 +244,7 @@ open class MapFragment : Fragment(),
         layerSettingsViewModel?.also { vm ->
             vm.setLayersSettings(
                 mapSettings.layersSettings,
-                mapSettings.useDefaultOnlineTileSource
+                mapSettings.useOnlineLayers
             )
 
             if (vm.getLayerSettings()
@@ -263,10 +269,15 @@ open class MapFragment : Fragment(),
                 }
             }
 
-            val activeLayers = savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
-                ?: emptyList<LayerSettings>()
+            val selectedLayers = savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
+                ?: context?.let {
+                    getSelectedLayers(
+                        it,
+                        mapSettings
+                    )
+                } ?: emptyList()
 
-            vm.load(if (activeLayers.isEmpty()) vm.getLayerSettings() else activeLayers)
+            vm.load(if (selectedLayers.isEmpty()) vm.getLayerSettings() else selectedLayers)
         }
     }
 
@@ -440,6 +451,15 @@ open class MapFragment : Fragment(),
                     mapView.invalidate()
 
                     updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.TILES }
+                    setUseOnlineLayers(
+                        activity,
+                        vm.getSelectedLayers { layer -> layer.isOnline() && layer.properties.active }
+                            .isNotEmpty()
+                    )
+                    setSelectedLayers(
+                        activity,
+                        vm.getSelectedLayers()
+                    )
                 })
             vm.vectorOverlays.removeObservers(activity)
             vm.vectorOverlays.observe(
@@ -464,6 +484,10 @@ open class MapFragment : Fragment(),
                         mapView.invalidate()
 
                         updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.VECTOR }
+                        setSelectedLayers(
+                            activity,
+                            vm.getSelectedLayers()
+                        )
 
                         delay(100)
 
