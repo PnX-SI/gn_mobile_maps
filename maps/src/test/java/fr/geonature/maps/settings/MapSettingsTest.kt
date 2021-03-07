@@ -151,6 +151,67 @@ class MapSettingsTest {
     }
 
     @Test
+    fun testGetOnlineLayers() {
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721
+        )
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811
+        )
+
+        // given map settings instance from its builder
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
+            .showScale(false)
+            .showAttribution(false)
+            .showCompass(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .addLayer(
+                "OSM",
+                "https://a.tile.openstreetmap.org"
+            )
+            .addLayer(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+            .addLayer(
+                "nantes.wkt",
+                "nantes.wkt"
+            )
+            .build()
+
+        // then
+        assertNotNull(mapSettings)
+        assertArrayEquals(
+            arrayOf(
+                LayerSettings(
+                    "OSM",
+                    "https://a.tile.openstreetmap.org"
+                )
+            ),
+            mapSettings.getOnlineLayers()
+                .toTypedArray()
+        )
+    }
+
+    @Test
     fun testGetTilesLayers() {
         val nwGeoPoint = GeoPoint(
             47.253369,

@@ -14,7 +14,7 @@ import org.osmdroid.util.GeoPoint
 data class MapSettings(
     val layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
-    val useDefaultOnlineTileSource: Boolean = Builder.newInstance().useDefaultOnlineTileSource,
+    val useOnlineLayers: Boolean = Builder.newInstance().useOnlineLayers,
     val showAttribution: Boolean = Builder.newInstance().showAttribution,
     val showCompass: Boolean = Builder.newInstance().showCompass,
     val showScale: Boolean = Builder.newInstance().showScale,
@@ -30,7 +30,7 @@ data class MapSettings(
     private constructor(builder: Builder) : this(
         builder.layersSettings,
         builder.baseTilesPath,
-        builder.useDefaultOnlineTileSource,
+        builder.useOnlineLayers,
         builder.showAttribution,
         builder.showCompass,
         builder.showScale,
@@ -76,7 +76,7 @@ data class MapSettings(
             it.writeString(baseTilesPath)
             ParcelCompat.writeBoolean(
                 dest,
-                useDefaultOnlineTileSource
+                useOnlineLayers
             )
             ParcelCompat.writeBoolean(
                 dest,
@@ -118,7 +118,7 @@ data class MapSettings(
 
         if (layersSettings != other.layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
-        if (useDefaultOnlineTileSource != other.useDefaultOnlineTileSource) return false
+        if (useOnlineLayers != other.useOnlineLayers) return false
         if (showAttribution != other.showAttribution) return false
         if (showCompass != other.showCompass) return false
         if (showScale != other.showScale) return false
@@ -145,7 +145,7 @@ data class MapSettings(
     override fun hashCode(): Int {
         var result = layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
-        result = 31 * result + useDefaultOnlineTileSource.hashCode()
+        result = 31 * result + useOnlineLayers.hashCode()
         result = 31 * result + showAttribution.hashCode()
         result = 31 * result + showCompass.hashCode()
         result = 31 * result + showScale.hashCode()
@@ -158,6 +158,10 @@ data class MapSettings(
         result = 31 * result + (center?.hashCode() ?: 0)
 
         return result
+    }
+
+    fun getOnlineLayers(): List<LayerSettings> {
+        return layersSettings.filter { it.getType() == LayerType.TILES && it.isOnline() }
     }
 
     fun getTilesLayers(): List<LayerSettings> {
@@ -176,9 +180,9 @@ data class MapSettings(
             private set
 
         /**
-         * Whether to use the default online tiles source (default: `true`, default tiles source: *OSM*).
+         * Whether to use online layers (default: `true`).
          */
-        var useDefaultOnlineTileSource: Boolean = true
+        var useOnlineLayers: Boolean = true
             private set
 
         /**
@@ -226,10 +230,10 @@ data class MapSettings(
         fun from(mapSettings: MapSettings?) =
             apply {
                 if (mapSettings == null) return@apply
-                
+
                 this.layersSettings.addAll(mapSettings.layersSettings)
                 this.baseTilesPath = mapSettings.baseTilesPath
-                this.useDefaultOnlineTileSource = mapSettings.useDefaultOnlineTileSource
+                this.useOnlineLayers = mapSettings.useOnlineLayers
                 this.showAttribution = mapSettings.showAttribution
                 this.showCompass = mapSettings.showCompass
                 this.showScale = mapSettings.showScale
@@ -245,8 +249,8 @@ data class MapSettings(
         fun baseTilesPath(baseTilesPath: String) =
             apply { this.baseTilesPath = baseTilesPath }
 
-        fun useDefaultOnlineTileSource(useDefaultOnlineTileSource: Boolean) =
-            apply { this.useDefaultOnlineTileSource = useDefaultOnlineTileSource }
+        fun useOnlineLayers(useOnlineLayers: Boolean) =
+            apply { this.useOnlineLayers = useOnlineLayers }
 
         fun showAttribution(showAttribution: Boolean) =
             apply { this.showAttribution = showAttribution }

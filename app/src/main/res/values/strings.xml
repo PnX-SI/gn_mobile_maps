@@ -6,7 +6,7 @@
     <string name="activity_map_title">Maps</string>
     <string name="activity_preferences_title">Settings</string>
 
-    <string name="home_menu_entry_default">Default map settings</string>
+    <string name="home_menu_entry_default">Default map settings with OSM online layer added</string>
     <string name="home_menu_entry_from_storage">Select map settings from storage</string>
 
     <string name="map_settings_loaded_from">From \'%1$s\'</string>

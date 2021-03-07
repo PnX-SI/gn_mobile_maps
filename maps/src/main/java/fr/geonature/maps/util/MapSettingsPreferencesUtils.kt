@@ -6,6 +6,7 @@ import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
 import fr.geonature.maps.R
+import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
 
 /**
@@ -14,6 +15,8 @@ import fr.geonature.maps.settings.MapSettings
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 object MapSettingsPreferencesUtils {
+
+    private val KEY_SELECTED_LAYERS = "key_selected_layers"
 
     /**
      * Sets default preferences settings values from [MapSettings].
@@ -29,48 +32,118 @@ object MapSettingsPreferencesUtils {
     ) {
         mutableMapOf(
             Pair(
-                context.getString(R.string.preference_category_map_use_default_online_source_key),
-                mapSettings.useDefaultOnlineTileSource
+                context.getString(R.string.preference_category_map_use_online_layers_key),
+                Pair(
+                    mapSettings.useOnlineLayers,
+                    mapSettings.getOnlineLayers()
+                        .isNotEmpty()
+                )
             ),
             Pair(
                 context.getString(R.string.preference_category_map_show_compass_key),
-                mapSettings.showCompass
+                Pair(
+                    mapSettings.showCompass,
+                    true
+                )
             ),
             Pair(
                 context.getString(R.string.preference_category_map_show_scale_key),
-                mapSettings.showScale
+                Pair(
+                    mapSettings.showScale,
+                    true
+                )
             ),
             Pair(
                 context.getString(R.string.preference_category_map_show_zoom_key),
-                mapSettings.showZoom
+                Pair(
+                    mapSettings.showZoom,
+                    true
+                )
             ),
         ).forEach {
             if (!getDefaultSharedPreferences(context).contains(it.key)) {
                 getDefaultSharedPreferences(context).edit()
                     .putBoolean(
                         it.key,
-                        it.value
+                        it.value.first
                     )
                     .apply()
             }
 
-            preferenceScreen?.findPreference<SwitchPreference>(it.key)?.isChecked = it.value
+            preferenceScreen?.findPreference<SwitchPreference>(it.key)
+                ?.apply {
+                    isChecked = getDefaultSharedPreferences(context).getBoolean(
+                        it.key,
+                        it.value.first
+                    )
+                    isEnabled = it.value.second
+                }
         }
     }
 
     /**
-     * Whether to use the default online tiles source (default: [MapSettings.Builder.useDefaultOnlineTileSource]).
+     * Whether to use online layers (default: [MapSettings.Builder.useOnlineLayers]).
      *
      * @param context the current context
      *
-     * @return `true` if the default online tiles source can be used
+     * @return `true` if online layers can be used
      */
-    fun useDefaultOnlineSource(context: Context): Boolean {
+    fun useOnlineLayers(
+        context: Context,
+        defaultValue: Boolean = MapSettings.Builder.newInstance().useOnlineLayers
+    ): Boolean {
         return getDefaultSharedPreferences(context)
             .getBoolean(
-                context.getString(R.string.preference_category_map_use_default_online_source_key),
-                MapSettings.Builder.newInstance().useDefaultOnlineTileSource
+                context.getString(R.string.preference_category_map_use_online_layers_key),
+                defaultValue
             )
+    }
+
+    /**
+     * Updates 'use online layers' preference.
+     *
+     * @param context the current context
+     */
+    fun setUseOnlineLayers(
+        context: Context,
+        useOnlineLayer: Boolean
+    ) {
+        getDefaultSharedPreferences(context).edit()
+            .putBoolean(
+                context.getString(R.string.preference_category_map_use_online_layers_key),
+                useOnlineLayer
+            )
+            .apply()
+    }
+
+    /**
+     * Returns the current selected layers.
+     *
+     * @return a list of selected [LayerSettings] or an empty list if no selection was made.
+     */
+    fun getSelectedLayers(context: Context, mapSettings: MapSettings): List<LayerSettings> {
+        return getDefaultSharedPreferences(context).getStringSet(
+            KEY_SELECTED_LAYERS,
+            emptySet()
+        )
+            ?.asSequence()
+            ?.map { mapSettings.layersSettings.firstOrNull { layerSettings -> layerSettings.label == it } }
+            ?.filterNotNull()
+            ?.toList() ?: emptyList()
+    }
+
+    /**
+     * Updates selected layers preference.
+     */
+    fun setSelectedLayers(context: Context, selectedLayers: List<LayerSettings>) {
+        getDefaultSharedPreferences(context).edit()
+            .putStringSet(
+                KEY_SELECTED_LAYERS,
+                selectedLayers.asSequence()
+                    .map { it.label }
+                    .toSet()
+            )
+            .apply()
     }
 
     /**

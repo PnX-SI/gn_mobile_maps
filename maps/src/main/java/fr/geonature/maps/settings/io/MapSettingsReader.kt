@@ -80,7 +80,7 @@ class MapSettingsReader {
 
             when (reader.nextName()) {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
-                "use_default_online_tile_source" -> builder.useDefaultOnlineTileSource(reader.nextBoolean())
+                "use_default_online_tile_source" -> builder.useOnlineLayers(reader.nextBoolean())
                 "show_attribution" -> builder.showAttribution(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "show_scale" -> builder.showScale(reader.nextBoolean())

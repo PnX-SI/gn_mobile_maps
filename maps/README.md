@@ -26,6 +26,10 @@ Example:
   "min_zoom_editing": 10.0,
   "layers": [
     {
+      "label": "OSM",
+      "source": "https://a.tile.openstreetmap.org"
+    },
+    {
       "label": "Nantes (Base)",
       "source": "nantes.mbtiles"
     },
