@@ -4,7 +4,7 @@
     <string name="compass_north">N</string>
 
     <string name="alert_dialog_layers_title">Couches géographiques</string>
-    <string name="alert_dialog_layers_cancel">Fermer</string>
+    <string name="alert_dialog_layers_close">Fermer</string>
     <string name="alert_dialog_layers_type_tiles_online">Fonds en ligne</string>
     <string name="alert_dialog_layers_type_tiles">Fonds embarquées</string>
     <string name="alert_dialog_layers_type_vector">Couches vectorielles</string>
@@ -16,7 +16,6 @@
     <string name="action_poi_deleted">Marqueur supprimé</string>
 
     <string name="snackbar_permissions_not_granted">Les permissions n\'ont pas été accordées</string>
-    <string name="snackbar_permissions_granted">Les permissions ont été accordées</string>
     <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>
     <string name="snackbar_layers_undefined">Aucun fond de défini</string>
     <string name="snackbar_base_path_undefined">Impossible de charger les couches depuis \'%1$s\'</string>

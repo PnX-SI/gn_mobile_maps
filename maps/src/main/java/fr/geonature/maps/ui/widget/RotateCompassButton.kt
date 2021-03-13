@@ -45,6 +45,7 @@ class RotateCompassButton(
     fun setMapView(mapView: MapView) {
         this.mapView = mapView
 
+        mapView.removeMapListener(this)
         mapView.addMapListener(this)
         setOnClickListener {
 

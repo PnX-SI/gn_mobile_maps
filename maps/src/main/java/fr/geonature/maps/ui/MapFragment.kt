@@ -20,7 +20,6 @@ import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerSettingsViewModel
-import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
@@ -29,10 +28,7 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
-import fr.geonature.maps.util.MapSettingsPreferencesUtils.getSelectedLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
-import fr.geonature.maps.util.MapSettingsPreferencesUtils.setSelectedLayers
-import fr.geonature.maps.util.MapSettingsPreferencesUtils.setUseOnlineLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
@@ -78,7 +74,6 @@ open class MapFragment : Fragment(),
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
-    private lateinit var savedState: Bundle
     private lateinit var requestWriteExternalStoragePermissionLauncher: ActivityResultLauncher<String>
     private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<String>
 
@@ -88,7 +83,6 @@ open class MapFragment : Fragment(),
         val context = context ?: return
 
         mapSettings = getMapSettings(context)
-        savedState = savedInstanceState ?: Bundle()
 
         layerSettingsViewModel = activity?.run {
             ViewModelProvider(this,
@@ -105,8 +99,6 @@ open class MapFragment : Fragment(),
                 ActivityResultContracts.RequestPermission()
             ) {
                 if (it) {
-                    showSnackbar(getString(R.string.snackbar_permissions_granted))
-
                     // then load map configuration from preferences
                     Configuration.getInstance()
                         .apply {
@@ -166,10 +158,6 @@ open class MapFragment : Fragment(),
         requestWriteExternalStoragePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(savedState.apply { putAll(outState) })
-    }
-
     override fun onDetach() {
         super.onDetach()
 
@@ -181,6 +169,20 @@ open class MapFragment : Fragment(),
 
         mapView.onResume()
         myLocationFab.onResume()
+
+        context?.also { context ->
+            showCompass(context).also {
+                rotateCompassFab.setMapView(mapView)
+                rotateCompassFab.visibility = if (it) View.VISIBLE else View.GONE
+            }
+            configureScaleBarOverlay(showScale(context))
+            showZoom(context).also {
+                zoomFab.setMapView(mapView)
+                zoomFab.visibility = if (it) View.VISIBLE else View.GONE
+            }
+        }
+
+        loadLayersSettings()
     }
 
     override fun onPause() {
@@ -242,42 +244,7 @@ open class MapFragment : Fragment(),
 
     private fun loadLayersSettings() {
         layerSettingsViewModel?.also { vm ->
-            vm.setLayersSettings(
-                mapSettings.layersSettings,
-                mapSettings.useOnlineLayers
-            )
-
-            if (vm.getLayerSettings()
-                    .isNotEmpty()
-            ) {
-                // configure and show layers selector
-                with(layersFab) {
-                    setOnClickListener {
-                        LayerSettingsDialogFragment.newInstance(
-                            vm.getLayerSettings(),
-                            savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
-                                ?: emptyList()
-                        )
-                            .also {
-                                it.show(
-                                    childFragmentManager,
-                                    LAYER_SETTINGS_DIALOG_FRAGMENT
-                                )
-                            }
-                    }
-                    show()
-                }
-            }
-
-            val selectedLayers = savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
-                ?: context?.let {
-                    getSelectedLayers(
-                        it,
-                        mapSettings
-                    )
-                } ?: emptyList()
-
-            vm.load(if (selectedLayers.isEmpty()) vm.getLayerSettings() else selectedLayers)
+            vm.load(vm.getSelectedLayers(mapSettings))
         }
     }
 
@@ -309,13 +276,7 @@ open class MapFragment : Fragment(),
         }
 
         // configure and display scale bar
-        if (mapSettings.showScale) {
-            val scaleBarOverlay = ScaleBarOverlay(mapView)
-            scaleBarOverlay.setCentred(false)
-            scaleBarOverlay.setAlignBottom(true)
-            scaleBarOverlay.setAlignRight(false)
-            mapView.overlays.add(scaleBarOverlay)
-        }
+        configureScaleBarOverlay()
 
         // configure and display zoom control
         if (mapSettings.showZoom) {
@@ -396,8 +357,46 @@ open class MapFragment : Fragment(),
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
+        configureLayersSelector()
+
         activity?.also {
             configureLayers(it)
+        }
+    }
+
+    private fun configureScaleBarOverlay(enabled: Boolean = mapSettings.showScale) {
+        val scaleBarOverlay = mapView.overlays.firstOrNull { it is ScaleBarOverlay }
+            ?: ScaleBarOverlay(mapView).apply {
+                setCentred(false)
+                setAlignBottom(true)
+                setAlignRight(false)
+            }
+                .also {
+                    mapView.overlays.add(it)
+                }
+
+        scaleBarOverlay.isEnabled = enabled
+    }
+
+    private fun configureLayersSelector() {
+        layerSettingsViewModel?.also { vm ->
+            val layerSettings = mapSettings.layersSettings.takeIf { it.isNotEmpty() } ?: return@also
+
+            with(layersFab) {
+                setOnClickListener {
+                    LayerSettingsDialogFragment.newInstance(
+                        layerSettings,
+                        vm.getSelectedLayers(mapSettings)
+                    )
+                        .also { dialogFragment ->
+                            dialogFragment.show(
+                                childFragmentManager,
+                                LAYER_SETTINGS_DIALOG_FRAGMENT
+                            )
+                        }
+                }
+                show()
+            }
         }
     }
 
@@ -409,29 +408,14 @@ open class MapFragment : Fragment(),
                 }
 
                 override fun onZoom(event: ZoomEvent?): Boolean {
+                    val zoomLevel = event?.zoomLevel ?: return true
+
                     val selectedLayers =
-                        vm.getSelectedLayers()
-                            .map {
-                                if (it.isOnline()) return@map it
-                                val zoomLevel = event?.zoomLevel ?: return@map it
-
-                                it.properties.active = it.properties.minZoomLevel.toDouble()
-                                    .coerceAtLeast(0.0)
-                                    .rangeTo(
-                                        it.properties.maxZoomLevel.toDouble()
-                                            .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE
-                                    )
-                                    .contains(zoomLevel)
-
-                                it
-                            }
-
-                    updateSelectedLayers(selectedLayers)
+                        vm.getActiveLayersOnZoomLevel(zoomLevel)
 
                     getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
                         (overlay as FeatureCollectionOverlay).isEnabled =
-                            selectedLayers.find { it.label == overlay.name }?.properties?.active
-                                ?: true
+                            selectedLayers.any { it.label == overlay.name }
                     }
 
                     return true
@@ -449,17 +433,6 @@ open class MapFragment : Fragment(),
                     }
 
                     mapView.invalidate()
-
-                    updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.TILES }
-                    setUseOnlineLayers(
-                        activity,
-                        vm.getSelectedLayers { layer -> layer.isOnline() && layer.properties.active }
-                            .isNotEmpty()
-                    )
-                    setSelectedLayers(
-                        activity,
-                        vm.getSelectedLayers()
-                    )
                 })
             vm.vectorOverlays.removeObservers(activity)
             vm.vectorOverlays.observe(
@@ -483,12 +456,6 @@ open class MapFragment : Fragment(),
 
                         mapView.invalidate()
 
-                        updateSelectedLayers(vm.getSelectedLayers()) { layerSettings -> layerSettings.getType() == LayerType.VECTOR }
-                        setSelectedLayers(
-                            activity,
-                            vm.getSelectedLayers()
-                        )
-
                         delay(100)
 
                         onVectorLayersChangedListener(it)
@@ -506,27 +473,10 @@ open class MapFragment : Fragment(),
             .show()
     }
 
-    private fun updateSelectedLayers(
-        selectedLayersSettings: List<LayerSettings>,
-        filter: (layerSettings: LayerSettings) -> Boolean = { true }
-    ) {
-        (savedState.getParcelableArrayList(KEY_SELECTED_LAYERS)
-            ?: mutableListOf<LayerSettings>()).run {
-            this.removeAll(filter)
-            addAll(selectedLayersSettings.filter(filter))
-            savedState.putParcelableArrayList(
-                KEY_SELECTED_LAYERS,
-                ArrayList(this.distinct())
-            )
-        }
-    }
-
     companion object {
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
-
-        private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
         private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
             "layer_settings_dialog_fragment"

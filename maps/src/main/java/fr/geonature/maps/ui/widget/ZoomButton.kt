@@ -60,6 +60,7 @@ class ZoomButton(
     }
 
     fun setMapView(mapView: MapView) {
+        mapView.removeMapListener(this)
         mapView.addMapListener(this)
 
         zoomInButton.setOnClickListener {
