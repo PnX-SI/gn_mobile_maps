@@ -10,7 +10,7 @@ import androidx.core.os.ParcelCompat
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class LayerPropertiesSettings(
-    var active: Boolean = Builder.newInstance().active,
+    val active: Boolean = Builder.newInstance().active,
     val minZoomLevel: Int = Builder.newInstance().minZoomLevel,
     val maxZoomLevel: Int = Builder.newInstance().maxZoomLevel,
     val tileSizePixels: Int = Builder.newInstance().tileSizePixels,

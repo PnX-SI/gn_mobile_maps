@@ -10,8 +10,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.sample.R
+import fr.geonature.maps.settings.LayerPropertiesSettings
+import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 
 /**
  * A fragment representing a list of [MenuItem].
@@ -76,8 +77,21 @@ class HomeListFragment : Fragment() {
                         .minZoomLevel(3.0)
                         .zoom(6.0)
                         .addLayer(
-                            "OSM",
-                            TileSourceFactory.MAPNIK.baseUrl
+                            LayerSettings.Builder.newInstance()
+                                .label("OSM")
+                                .source("https://maps.wikimedia.org/osm-intl")
+                                .properties(
+                                    LayerPropertiesSettings.Builder.newInstance()
+                                        .attribution("© OSM contributors")
+                                        .build()
+                                )
+                                .build()
+                        )
+                        .addLayer(
+                            LayerSettings.Builder.newInstance()
+                                .label("OTM")
+                                .source("https://a.tile.opentopomap.org")
+                                .build()
                         )
                         .build()
                 ),

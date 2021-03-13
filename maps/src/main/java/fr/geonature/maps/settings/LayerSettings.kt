@@ -49,8 +49,9 @@ data class LayerSettings(
             this == other -> 0
             this.getType() != other.getType() -> this.getType().ordinal - other.getType().ordinal
             this.getType() == other.getType() && this.isOnline() != other.isOnline() -> if (this.isOnline()) -1 else 1
-            this.getType() == other.getType() && this.label != other.label -> this.label.compareTo(other.label)
-            this.getType() == other.getType() -> this.source.compareTo(other.source)
+            this.getType() == other.getType() && this.source != other.source -> this.source.compareTo(other.source)
+            this.getType() == other.getType() && this.source == other.source && this.label != other.label -> this.label.compareTo(other.label)
+            this.getType() == other.getType() && this.source == other.source && this.label == other.label -> this.properties.active.compareTo(other.properties.active)
             else -> -1
         }
     }
@@ -79,7 +80,7 @@ data class LayerSettings(
 
         fun source(source: String) =
             apply {
-                this.source = source
+                this.source = if (isOnline(source)) source.removeSuffix("/") else source
                 properties(this.properties)
             }
 

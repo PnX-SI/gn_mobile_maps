@@ -11,6 +11,10 @@ import androidx.lifecycle.viewModelScope
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.jts.geojson.io.WKTReader
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.getSelectedLayers
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setSelectedLayers
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.setUseOnlineLayers
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.FileUtils.getFile
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +26,7 @@ import org.osmdroid.tileprovider.modules.ArchiveFileFactory
 import org.osmdroid.tileprovider.modules.MapTileApproximater
 import org.osmdroid.tileprovider.modules.MapTileDownloader
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider
+import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase
 import org.osmdroid.tileprovider.modules.MapTileSqlCacheProvider
 import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
@@ -37,10 +42,25 @@ import java.io.FileReader
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
-class LayerSettingsViewModel(application: Application, private val baseTilesPath: String? = null) :
+class LayerSettingsViewModel(application: Application, baseTilesPath: String? = null) :
     AndroidViewModel(application) {
 
-    private val layers: MutableList<LayerSettings> = mutableListOf()
+    private val rootPath: File =
+        (if (baseTilesPath?.startsWith("/") == true) File(baseTilesPath) else getFile(
+            getExternalStorageDirectory(getApplication()),
+            baseTilesPath ?: ""
+        ))
+            .let {
+                if (!it.canRead()) {
+                    Log.w(
+                        TAG,
+                        "Cannot access to '$it'..."
+                    )
+                }
+
+                if (it.canRead()) it else getExternalStorageDirectory(getApplication())
+            }
+
     private val selectedLayers: MutableList<LayerSettings> = mutableListOf()
 
     private val _tileProvider = MutableLiveData<MapTileProviderBase>()
@@ -50,56 +70,38 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     val vectorOverlays: LiveData<List<Overlay>> = _vectorOverlays
 
     /**
-     * Sets available layers.
-     */
-    fun setLayersSettings(layersSettings: List<LayerSettings>, useOnlineLayers: Boolean = true) {
-        with(layers) {
-            clear()
-            addAll(layersSettings.map {
-                if (it.isOnline()) {
-                    it.properties.active = useOnlineLayers
-                }
-
-                it
-            })
-        }
-    }
-
-    /**
-     * Gets available layers.
-     */
-    fun getLayerSettings(): List<LayerSettings> {
-        return this.layers
-    }
-
-    /**
      * Load and show selected layers on the map.
      */
     fun load(selectedLayersSettings: List<LayerSettings>) {
+        if (selectedLayersSettings.sorted() == selectedLayers.sorted()) {
+            Log.d(
+                TAG,
+                "selected layers already loaded"
+            )
+
+            return
+        }
+
+        Log.i(
+            TAG,
+            "loading selected layers (${
+                selectedLayersSettings.joinToString(",") { "'${it.source}' (active: ${it.properties.active})" }
+            }) ... "
+        )
+
         viewModelScope.launch {
-            var rootPath = if (baseTilesPath?.startsWith("/") == true) {
-                File(baseTilesPath)
-            } else {
-                getFile(
-                    getExternalStorageDirectory(getApplication()),
-                    baseTilesPath ?: ""
-                )
+            // only one online layer can be selected at a time
+            val validLayersSettings =
+                listOfNotNull(selectedLayersSettings.firstOrNull { it.isOnline() }) + selectedLayersSettings.filter { !it.isOnline() }
+
+            // add first all inactive layers
+            with(selectedLayers) {
+                clear()
+                addAll(validLayersSettings.filter { !it.properties.active })
             }
 
-            if (!rootPath.canRead()) {
-                Log.w(
-                    TAG,
-                    "Cannot access to '$rootPath'..."
-                )
-            }
-
-            rootPath =
-                if (rootPath.canRead()) rootPath else getExternalStorageDirectory(getApplication())
-
-            selectedLayers.clear()
-            selectedLayers.addAll(selectedLayersSettings.filter { !it.properties.active })
-
-            val activeLayerSettings = selectedLayersSettings.filter { it.properties.active }
+            // load only active layers from selection
+            val activeLayerSettings = validLayersSettings.filter { it.properties.active }
 
             val tileProvider = buildTileProvider(
                 rootPath,
@@ -110,6 +112,16 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 activeLayerSettings
             )
 
+            // save current selection
+            setUseOnlineLayers(
+                getApplication(),
+                selectedLayers.any { layer -> layer.isOnline() && layer.properties.active }
+            )
+            setSelectedLayers(
+                getApplication(),
+                selectedLayers
+            )
+
             _tileProvider.postValue(tileProvider)
             _vectorOverlays.postValue(vectorOverlays)
         }
@@ -118,12 +130,43 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
     /**
      * Gets selected layers.
      */
-    fun getSelectedLayers(filter: (layerSettings: LayerSettings) -> Boolean = DEFAULT_LAYER_SETTINGS_FILTER): List<LayerSettings> {
+    fun getSelectedLayers(
+        mapSettings: MapSettings,
+        filter: (layerSettings: LayerSettings) -> Boolean = DEFAULT_LAYER_SETTINGS_FILTER
+    ): List<LayerSettings> {
+        val useOnlineLayers = useOnlineLayers(getApplication())
+
+        val selectedLayers = (selectedLayers.takeIf { it.isNotEmpty() } ?: getSelectedLayers(
+            getApplication(),
+            mapSettings
+        ).takeIf { it.isNotEmpty() } ?: mapSettings.layersSettings.filter { layerSettings ->
+            (layerSettings.isOnline() && useOnlineLayers) || !layerSettings.isOnline()
+        }).map { layerSettings ->
+            if (layerSettings.isOnline()) {
+                layerSettings.copy(properties = layerSettings.properties.copy(active = useOnlineLayers))
+            } else {
+                layerSettings.copy()
+            }
+        }
+
         if (filter === DEFAULT_LAYER_SETTINGS_FILTER) {
             return selectedLayers
         }
 
         return selectedLayers.filter(filter)
+    }
+
+    fun getActiveLayersOnZoomLevel(zoomLevel: Double): List<LayerSettings> {
+        return selectedLayers.filter {
+            it.properties.active &&
+                it.properties.minZoomLevel.toDouble()
+                    .coerceAtLeast(0.0)
+                    .rangeTo(
+                        it.properties.maxZoomLevel.toDouble()
+                            .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE
+                    )
+                    .contains(zoomLevel)
+        }
     }
 
     private suspend fun buildTileProvider(
@@ -138,7 +181,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             .map {
                 Log.i(
                     TAG,
-                    "Loading local tiles layer '${it.label}'..."
+                    "loading local tiles layer '${it.source}'..."
                 )
 
                 Pair(it,
@@ -152,14 +195,14 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 if (!canRead) {
                     Log.w(
                         TAG,
-                        "Cannot access to '${it.second}'..."
+                        "cannot access to '${it.second}'..."
                     )
                 }
 
                 canRead
             }
             .onEach {
-                selectedLayers.add(it.first)
+                selectedLayers.add(it.first.copy())
             }
             .map { it.second }
             .toList()
@@ -168,7 +211,12 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             ?.let {
                 selectedLayers.add(
                     0,
-                    it
+                    it.copy()
+                )
+
+                Log.i(
+                    TAG,
+                    "loading online layer '${it.source}'..."
                 )
 
                 XYTileSource(
@@ -177,7 +225,10 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                     it.properties.maxZoomLevel,
                     it.properties.tileSizePixels,
                     ".${it.properties.tileMimeType?.substringAfter("image/")}",
-                    arrayOf(it.source),
+                    arrayOf(
+                        it.source.removeSuffix("/")
+                            .plus("/")
+                    ),
                     it.properties.attribution
                 )
             } ?: return@withContext if (offlineTileSources.isEmpty()) null else OfflineTileProvider(
@@ -210,12 +261,13 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
         MapTileProviderArray(
             onlineTileSource,
             registerReceiver,
-            arrayOf(
-                cacheProvider,
-                offlineTileProvider,
-                approximationProvider,
-                onlineTileProvider,
-            )
+            (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(cacheProvider)
+            else emptyArray()) +
+                arrayOf(
+                    offlineTileProvider,
+                    approximationProvider,
+                    onlineTileProvider,
+                )
         )
     }
 
@@ -228,7 +280,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             .map {
                 Log.i(
                     TAG,
-                    "Loading vector layer '${it.label}'..."
+                    "loading vector layer '${it.source}'..."
                 )
 
                 Pair(
@@ -260,12 +312,12 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 if (isLoaded) {
                     Log.i(
                         TAG,
-                        "Vector layer '${it.first.label}' loaded"
+                        "vector layer '${it.first.label}' loaded"
                     )
                 } else {
                     Log.w(
                         TAG,
-                        "Failed to load vector layer '${it.first.label}'"
+                        "failed to load vector layer '${it.first.label}'"
                     )
                 }
 

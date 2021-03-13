@@ -95,7 +95,7 @@ class LayerSettingsDialogFragment : DialogFragment() {
             .setView(view)
             .setTitle(R.string.alert_dialog_layers_title)
             .setNegativeButton(
-                R.string.alert_dialog_layers_cancel,
+                R.string.alert_dialog_layers_close,
                 null
             )
             .create()

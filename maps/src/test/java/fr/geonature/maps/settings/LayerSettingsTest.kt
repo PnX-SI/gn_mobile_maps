@@ -3,6 +3,7 @@ package fr.geonature.maps.settings
 import android.os.Parcel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -206,6 +207,27 @@ class LayerSettingsTest {
                 )
                 .build().properties.active
         )
+
+        assertNotEquals(
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.mbtiles")
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .active()
+                        .build()
+                )
+                .build(),
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .source("nantes.mbtiles")
+                .properties(
+                    LayerPropertiesSettings.Builder.newInstance()
+                        .active(false)
+                        .build()
+                )
+                .build()
+        )
     }
 
     @Test
@@ -301,10 +323,62 @@ class LayerSettingsTest {
         assertTrue(
             LayerSettings(
                 "Nantes",
+                "nantes.mbtiles",
+                LayerPropertiesSettings(active = false)
+            ) < LayerSettings(
+                "Nantes",
+                "nantes.mbtiles",
+                LayerPropertiesSettings(active = true)
+            )
+        )
+        assertTrue(
+            LayerSettings(
+                "Nantes",
                 "nantes.mbtiles"
             ) < LayerSettings(
                 "Nantes",
                 "nantes.unknown"
+            )
+        )
+
+        assertEquals(
+            listOf(
+                LayerSettings.Builder.newInstance()
+                    .label("Nantes")
+                    .source("nantes.mbtiles")
+                    .properties(
+                        LayerPropertiesSettings.Builder.newInstance()
+                            .active(false)
+                            .build()
+                    )
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("OSM")
+                    .source("https://a.tile.openstreetmap.org")
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("Nantes (WKT)")
+                    .source("nantes.wkt")
+                    .build()
+            ).sorted(),
+            listOf(
+                LayerSettings.Builder.newInstance()
+                    .label("OSM")
+                    .source("https://a.tile.openstreetmap.org")
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("Nantes")
+                    .source("nantes.mbtiles")
+                    .properties(
+                        LayerPropertiesSettings.Builder.newInstance()
+                            .active(false)
+                            .build()
+                    )
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("Nantes (WKT)")
+                    .source("nantes.wkt")
+                    .build()
             )
         )
     }

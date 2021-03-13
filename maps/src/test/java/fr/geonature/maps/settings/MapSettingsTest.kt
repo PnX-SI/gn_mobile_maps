@@ -185,7 +185,7 @@ class MapSettingsTest {
             )
             .addLayer(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                "https://a.tile.openstreetmap.org/"
             )
             .addLayer(
                 "Nantes",
@@ -202,8 +202,15 @@ class MapSettingsTest {
         assertArrayEquals(
             arrayOf(
                 LayerSettings(
-                    "OSM",
-                    "https://a.tile.openstreetmap.org"
+                    label = "OSM",
+                    source = "https://a.tile.openstreetmap.org",
+                    properties = LayerPropertiesSettings(
+                        active = true,
+                        minZoomLevel = 0,
+                        maxZoomLevel = 19,
+                        tileSizePixels = 256,
+                        tileMimeType = "image/png"
+                    )
                 )
             ),
             mapSettings.getOnlineLayers()

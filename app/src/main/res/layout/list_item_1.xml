@@ -13,4 +13,4 @@
     android:paddingEnd="?attr/listPreferredItemPaddingEnd"
     android:singleLine="true"
     android:textAppearance="?attr/textAppearanceListItem"
-    tools:text="@tools:sample/lorem" />
+    tools:text="@tools:sample/lorem/random" />

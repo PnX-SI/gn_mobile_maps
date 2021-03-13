@@ -229,7 +229,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
     fun setSelectedLayers(selectedLayersSettings: List<LayerSettings>) {
         this.selectedItems.clear()
-        this.selectedItems.addAll(selectedLayersSettings)
+        this.selectedItems.addAll(selectedLayersSettings.toList())
 
         notifyDataSetChanged()
     }
@@ -261,7 +261,22 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 setOnClickListener {
                     selectedItems.asSequence()
                         .filter { it.isOnline() }
-                        .forEach { it.properties.active = isChecked }
+                        .forEachIndexed { index, layerSettings ->
+                            selectedItems[index] =
+                                layerSettings.copy(properties = layerSettings.properties.copy(active = isChecked))
+                        }
+
+                    // no selected online layer found, select and activate the first online layer from all layers
+                    if (selectedItems.none { it.isOnline() }) {
+                        items.firstOrNull { it.first.isOnline() }
+                            ?.first
+                            ?.also {
+                                selectedItems.add(
+                                    0,
+                                    it.copy(properties = it.properties.copy(active = true))
+                                )
+                            }
+                    }
 
                     listener.onSelectedLayersSettings(selectedItems)
 
@@ -314,7 +329,9 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
             with(itemView) {
                 tag = item
-                isEnabled = item.properties.active
+                isEnabled =
+                    if (item.isOnline()) selectedItems.any { it.isOnline() && it.properties.active }
+                    else item.properties.active
                 setOnClickListener(onClickListener)
             }
         }
