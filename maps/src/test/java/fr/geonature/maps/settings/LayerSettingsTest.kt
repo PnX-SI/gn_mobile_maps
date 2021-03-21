@@ -359,12 +359,20 @@ class LayerSettingsTest {
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")
                     .source("nantes.wkt")
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("OTM")
+                    .source("https://a.tile.opentopomap.org")
                     .build()
             ).sorted(),
             listOf(
                 LayerSettings.Builder.newInstance()
                     .label("OSM")
                     .source("https://a.tile.openstreetmap.org")
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("OTM")
+                    .source("https://a.tile.opentopomap.org")
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes")

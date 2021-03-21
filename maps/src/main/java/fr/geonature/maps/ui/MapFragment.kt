@@ -439,18 +439,25 @@ open class MapFragment : Fragment(),
                 activity,
                 {
                     GlobalScope.launch(Main) {
+                        val selectedLayers =
+                            vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+
                         mapView.overlays.asSequence()
                             .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
                             .forEach {
                                 mapView.overlays.remove(it)
                             }
+
                         val markerOverlaysFirstIndex =
                             mapView.overlays.indexOfFirst { it is Marker }
                                 .coerceAtLeast(0)
-                        it.forEach {
+                        it.forEach { overlay ->
                             mapView.overlays.add(
                                 markerOverlaysFirstIndex,
-                                it
+                                (overlay as FeatureCollectionOverlay).apply {
+                                    isEnabled =
+                                        selectedLayers.any { selectedLayer -> selectedLayer.label == name }
+                                }
                             )
                         }
 

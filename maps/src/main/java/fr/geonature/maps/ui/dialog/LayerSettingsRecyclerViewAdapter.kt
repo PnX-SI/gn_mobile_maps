@@ -118,9 +118,9 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Sets layers.
      */
     fun setItems(newItems: List<LayerSettings>) {
+        val sortedItems = newItems.sorted()
         val newItemsWithViewType =
-            newItems.asSequence()
-                .sorted()
+            sortedItems.asSequence()
                 .mapIndexed { index, layerSettings ->
                     when {
                         // first item
@@ -135,7 +135,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                             )
                         )
                         // same type but one of them refer to an online source
-                        newItems[index - 1].getType() == layerSettings.getType() && newItems[index - 1].isOnline() != layerSettings.isOnline() -> mutableListOf(
+                        sortedItems[index - 1].getType() == layerSettings.getType() && sortedItems[index - 1].isOnline() != layerSettings.isOnline() -> mutableListOf(
                             Pair(
                                 layerSettings,
                                 if (layerSettings.isOnline()) ViewType.HEADER_LAYER_ONLINE else ViewType.HEADER_LAYER
@@ -146,7 +146,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                             )
                         )
                         // different type
-                        newItems[index - 1].getType() != layerSettings.getType() -> mutableListOf(
+                        sortedItems[index - 1].getType() != layerSettings.getType() -> mutableListOf(
                             Pair(
                                 layerSettings,
                                 if (layerSettings.isOnline()) ViewType.HEADER_LAYER_ONLINE else ViewType.HEADER_LAYER
@@ -157,7 +157,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                             )
                         )
                         // same type
-                        newItems[index - 1].getType() == layerSettings.getType() -> mutableListOf(
+                        sortedItems[index - 1].getType() == layerSettings.getType() -> mutableListOf(
                             Pair(
                                 layerSettings,
                                 ViewType.LAYER
@@ -203,7 +203,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             }
 
             override fun getNewListSize(): Int {
-                return newItems.size
+                return sortedItems.size
             }
 
             override fun areItemsTheSame(
@@ -229,7 +229,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
     fun setSelectedLayers(selectedLayersSettings: List<LayerSettings>) {
         this.selectedItems.clear()
-        this.selectedItems.addAll(selectedLayersSettings.toList())
+        this.selectedItems.addAll(selectedLayersSettings)
 
         notifyDataSetChanged()
     }

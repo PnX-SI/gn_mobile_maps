@@ -151,6 +151,98 @@ class MapSettingsTest {
     }
 
     @Test
+    fun testLayers() {
+        val nwGeoPoint = GeoPoint(
+            47.253369,
+            -1.605721
+        )
+        val seGeoPoint = GeoPoint(
+            47.173845,
+            -1.482811
+        )
+
+        // given map settings instance from its builder
+        val mapSettings = MapSettings.Builder.newInstance()
+            .baseTilesPath("/mnt/sdcard")
+            .showScale(false)
+            .showAttribution(false)
+            .showCompass(false)
+            .zoom(8.0)
+            .minZoomLevel(7.0)
+            .maxZoomLevel(12.0)
+            .minZoomEditing(10.0)
+            .maxBounds(
+                arrayListOf(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .center(
+                GeoPoint.fromCenterBetween(
+                    nwGeoPoint,
+                    seGeoPoint
+                )
+            )
+            .addLayer(
+                "nantes.wkt",
+                "nantes.wkt"
+            )
+            .addLayer(
+                "Nantes",
+                "nantes.mbtiles"
+            )
+            .addLayer(
+                "OTM",
+                "https://a.tile.opentopomap.org"
+            )
+            .addLayer(
+                "OSM",
+                "https://a.tile.openstreetmap.org/"
+            )
+            .build()
+
+        // then
+        assertArrayEquals(
+            arrayOf(
+                LayerSettings(
+                    label = "OSM",
+                    source = "https://a.tile.openstreetmap.org",
+                    properties = LayerPropertiesSettings(
+                        active = true,
+                        minZoomLevel = 0,
+                        maxZoomLevel = 19,
+                        tileSizePixels = 256,
+                        tileMimeType = "image/png"
+                    )
+                ),
+                LayerSettings(
+                    label = "OTM",
+                    source = "https://a.tile.opentopomap.org",
+                    properties = LayerPropertiesSettings(
+                        active = true,
+                        minZoomLevel = 0,
+                        maxZoomLevel = 19,
+                        tileSizePixels = 256,
+                        tileMimeType = "image/png"
+                    )
+                ),
+                LayerSettings(
+                    "Nantes",
+                    "nantes.mbtiles"
+                ),
+                LayerSettings(
+                    "nantes.wkt",
+                    "nantes.wkt",
+                    LayerPropertiesSettings(
+                        style = LayerStyleSettings()
+                    )
+                ),
+            ),
+            mapSettings.layersSettings.toTypedArray()
+        )
+    }
+
+    @Test
     fun testGetOnlineLayers() {
         val nwGeoPoint = GeoPoint(
             47.253369,
@@ -198,7 +290,6 @@ class MapSettingsTest {
             .build()
 
         // then
-        assertNotNull(mapSettings)
         assertArrayEquals(
             arrayOf(
                 LayerSettings(
@@ -262,7 +353,6 @@ class MapSettingsTest {
             .build()
 
         // then
-        assertNotNull(mapSettings)
         assertArrayEquals(
             arrayOf(
                 LayerSettings(
@@ -327,7 +417,6 @@ class MapSettingsTest {
             .build()
 
         // then
-        assertNotNull(mapSettings)
         assertArrayEquals(
             arrayOf(
                 LayerSettings(

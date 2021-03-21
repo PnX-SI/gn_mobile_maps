@@ -12,7 +12,7 @@ import org.osmdroid.util.GeoPoint
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 data class MapSettings(
-    val layersSettings: List<LayerSettings>,
+    private val _layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
     val useOnlineLayers: Boolean = Builder.newInstance().useOnlineLayers,
     val showAttribution: Boolean = Builder.newInstance().showAttribution,
@@ -59,7 +59,7 @@ data class MapSettings(
         source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint?
     ) {
         source.readTypedList(
-            layersSettings,
+            _layersSettings,
             LayerSettings.CREATOR
         )
     }
@@ -106,7 +106,7 @@ data class MapSettings(
                 center,
                 0
             )
-            it.writeTypedList(layersSettings)
+            it.writeTypedList(_layersSettings)
         }
     }
 
@@ -116,7 +116,7 @@ data class MapSettings(
 
         other as MapSettings
 
-        if (layersSettings != other.layersSettings) return false
+        if (_layersSettings != other._layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
         if (useOnlineLayers != other.useOnlineLayers) return false
         if (showAttribution != other.showAttribution) return false
@@ -143,7 +143,7 @@ data class MapSettings(
     }
 
     override fun hashCode(): Int {
-        var result = layersSettings.hashCode()
+        var result = _layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
         result = 31 * result + useOnlineLayers.hashCode()
         result = 31 * result + showAttribution.hashCode()
@@ -160,16 +160,18 @@ data class MapSettings(
         return result
     }
 
+    val layersSettings: List<LayerSettings> = _layersSettings.sorted()
+
     fun getOnlineLayers(): List<LayerSettings> {
-        return layersSettings.filter { it.getType() == LayerType.TILES && it.isOnline() }
+        return _layersSettings.filter { it.getType() == LayerType.TILES && it.isOnline() }
     }
 
     fun getTilesLayers(): List<LayerSettings> {
-        return layersSettings.filter { it.getType() == LayerType.TILES }
+        return _layersSettings.filter { it.getType() == LayerType.TILES }
     }
 
     fun getVectorLayers(): List<LayerSettings> {
-        return layersSettings.filter { it.getType() == LayerType.VECTOR }
+        return _layersSettings.filter { it.getType() == LayerType.VECTOR }
     }
 
     class Builder {
@@ -231,7 +233,7 @@ data class MapSettings(
             apply {
                 if (mapSettings == null) return@apply
 
-                this.layersSettings.addAll(mapSettings.layersSettings)
+                this.layersSettings.addAll(mapSettings._layersSettings)
                 this.baseTilesPath = mapSettings.baseTilesPath
                 this.useOnlineLayers = mapSettings.useOnlineLayers
                 this.showAttribution = mapSettings.showAttribution
