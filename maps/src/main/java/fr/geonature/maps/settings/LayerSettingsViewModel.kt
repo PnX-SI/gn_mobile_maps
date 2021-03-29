@@ -54,11 +54,16 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                 if (!it.canRead()) {
                     Log.w(
                         TAG,
-                        "Cannot access to '$it'..."
+                        "cannot access to '$it'..."
                     )
                 }
 
                 if (it.canRead()) it else getExternalStorageDirectory(getApplication())
+            }.also {
+                Log.i(
+                    TAG,
+                    "root path: $it"
+                )
             }
 
     private val selectedLayers: MutableList<LayerSettings> = mutableListOf()

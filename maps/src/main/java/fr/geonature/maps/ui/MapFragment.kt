@@ -74,7 +74,7 @@ open class MapFragment : Fragment(),
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
-    private lateinit var requestWriteExternalStoragePermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var requestReadExternalStoragePermissionLauncher: ActivityResultLauncher<String>
     private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,7 +94,7 @@ open class MapFragment : Fragment(),
                 }).get(LayerSettingsViewModel::class.java)
         }
 
-        requestWriteExternalStoragePermissionLauncher =
+        requestReadExternalStoragePermissionLauncher =
             registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) {
@@ -155,7 +155,7 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        requestWriteExternalStoragePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        requestReadExternalStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
 
     override fun onDetach() {
