@@ -59,14 +59,15 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                 }
 
                 if (it.canRead()) it else getExternalStorageDirectory(getApplication())
-            }.also {
+            }
+            .also {
                 Log.i(
                     TAG,
                     "root path: $it"
                 )
             }
 
-    private val selectedLayers: MutableList<LayerSettings> = mutableListOf()
+    private val selectedLayers: MutableMap<String, LayerSettings> = mutableMapOf()
 
     private val _tileProvider = MutableLiveData<MapTileProviderBase>()
     val tileProvider: LiveData<MapTileProviderBase> = _tileProvider
@@ -78,7 +79,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
      * Load and show selected layers on the map.
      */
     fun load(selectedLayersSettings: List<LayerSettings>) {
-        if (selectedLayersSettings.sorted() == selectedLayers.sorted()) {
+        if (selectedLayersSettings.sorted() == selectedLayers.values.sorted()) {
             Log.d(
                 TAG,
                 "selected layers already loaded"
@@ -102,7 +103,13 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             // add first all inactive layers
             with(selectedLayers) {
                 clear()
-                addAll(validLayersSettings.filter { !it.properties.active })
+                putAll(validLayersSettings.filter { !it.properties.active }
+                    .map {
+                        Pair(
+                            it.source,
+                            it
+                        )
+                    })
             }
 
             // load only active layers from selection
@@ -120,11 +127,11 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             // save current selection
             setUseOnlineLayers(
                 getApplication(),
-                selectedLayers.any { layer -> layer.isOnline() && layer.properties.active }
+                selectedLayers.values.any { layer -> layer.isOnline() && layer.properties.active }
             )
             setSelectedLayers(
                 getApplication(),
-                selectedLayers
+                selectedLayers.values.toList()
             )
 
             _tileProvider.postValue(tileProvider)
@@ -141,7 +148,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
     ): List<LayerSettings> {
         val useOnlineLayers = useOnlineLayers(getApplication())
 
-        val selectedLayers = (selectedLayers.takeIf { it.isNotEmpty() } ?: getSelectedLayers(
+        val selectedLayers = (selectedLayers.values.takeIf { it.isNotEmpty() } ?: getSelectedLayers(
             getApplication(),
             mapSettings
         ).takeIf { it.isNotEmpty() } ?: mapSettings.layersSettings.filter { layerSettings ->
@@ -162,7 +169,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
     }
 
     fun getActiveLayersOnZoomLevel(zoomLevel: Double): List<LayerSettings> {
-        return selectedLayers.filter {
+        return selectedLayers.values.filter {
             it.properties.active &&
                 it.properties.minZoomLevel.toDouble()
                     .coerceAtLeast(0.0)
@@ -186,42 +193,46 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             .map {
                 Log.i(
                     TAG,
-                    "loading local tiles layer '${it.source}'..."
+                    "loading local tiles layer '${it.label}'..."
                 )
 
                 Pair(it,
                     rootPath.walkTopDown()
                         .firstOrNull { f -> f.isFile && f.name == it.source })
             }
-            .filter { it.second != null }
+            .onEach {
+                selectedLayers[it.first.source] =
+                    it.first.copy(properties = it.first.properties.copy(active = it.second != null))
+            }
             .filter {
-                val canRead = it.second!!.canRead()
+                val canRead = it.second?.canRead() == true
 
                 if (!canRead) {
                     Log.w(
                         TAG,
-                        "cannot access to '${it.second}'..."
+                        "cannot read local tiles layer '${it.first.label}'${if (it.second == null) "" else " (${it.second})"}..."
                     )
                 }
 
                 canRead
             }
-            .onEach {
-                selectedLayers.add(it.first.copy())
+            .map {
+                Log.i(
+                    TAG,
+                    "local tiles layer '${it.first.label}' loaded"
+                )
+
+                it.second!!
             }
-            .map { it.second }
             .toList()
 
         val onlineTileSource = layersSettings.find { it.isOnline() }
             ?.let {
-                selectedLayers.add(
-                    0,
-                    it.copy()
-                )
+                selectedLayers[it.source] = it.copy()
 
                 Log.i(
                     TAG,
-                    "loading online layer '${it.source}'..."
+                    "loading online layer '${it.label}' (${it.source})..."
                 )
 
                 XYTileSource(
@@ -285,7 +296,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             .map {
                 Log.i(
                     TAG,
-                    "loading vector layer '${it.source}'..."
+                    "loading vector layer '${it.label}'..."
                 )
 
                 Pair(
@@ -294,48 +305,79 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                         .firstOrNull { f -> f.isFile && f.name == it.source && f.canRead() }
                 )
             }
-            .filter { it.second != null }
+            .onEach {
+                selectedLayers[it.first.source] =
+                    it.first.copy(properties = it.first.properties.copy(active = it.second != null))
+            }
+            .filter {
+                if (it.second == null) {
+                    Log.w(
+                        TAG,
+                        "cannot read vector layer '${it.first.label}'..."
+                    )
+                }
+
+                it.second != null
+            }
             .map {
                 when (it.second?.extension) {
                     "geojson", "json" -> Pair(
                         it.first,
-                        GeoJsonReader().read(FileReader(it.second))
+                        runCatching { GeoJsonReader().read(FileReader(it.second)) }.getOrNull()
                     )
                     "wkt" -> Pair(
                         it.first,
-                        WKTReader().readFeatures(FileReader(it.second))
+                        runCatching { WKTReader().readFeatures(FileReader(it.second)) }.getOrNull()
                     )
-                    else -> Pair(
-                        it.first,
-                        emptyList()
-                    )
+                    else -> {
+                        Log.w(
+                            TAG,
+                            "unsupported vector layer '${it.first.label}' (${it.first.source})..."
+                        )
+
+                        Pair(
+                            it.first,
+                            null
+                        )
+                    }
                 }
             }
+            .onEach {
+                selectedLayers[it.first.source] =
+                    it.first.copy(properties = it.first.properties.copy(active = !it.second.isNullOrEmpty()))
+            }
             .filter {
-                val isLoaded = it.second.isNotEmpty()
-
-                if (isLoaded) {
-                    Log.i(
-                        TAG,
-                        "vector layer '${it.first.label}' loaded"
-                    )
-                } else {
+                if (it.second == null) {
                     Log.w(
                         TAG,
-                        "failed to load vector layer '${it.first.label}'"
+                        "cannot read vector layer '${it.first.label}'..."
+                    )
+                }
+
+                it.second != null
+            }
+            .filter {
+                val isLoaded = it.second!!.isNotEmpty()
+
+                if (!isLoaded) {
+                    Log.w(
+                        TAG,
+                        "empty vector layer '${it.first.label}'"
                     )
                 }
 
                 isLoaded
             }
-            .onEach {
-                selectedLayers.add(it.first)
-            }
             .map {
+                Log.i(
+                    TAG,
+                    "vector layer '${it.first.label}' loaded"
+                )
+
                 FeatureCollectionOverlay().apply {
                     name = it.first.label
                     setFeatures(
-                        it.second,
+                        it.second!!,
                         it.first.properties.style ?: LayerStyleSettings()
                     )
                 }
