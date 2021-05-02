@@ -79,15 +79,6 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
      * Load and show selected layers on the map.
      */
     fun load(selectedLayersSettings: List<LayerSettings>) {
-        if (selectedLayersSettings.sorted() == selectedLayers.values.sorted()) {
-            Log.d(
-                TAG,
-                "selected layers already loaded"
-            )
-
-            return
-        }
-
         Log.i(
             TAG,
             "loading selected layers (${

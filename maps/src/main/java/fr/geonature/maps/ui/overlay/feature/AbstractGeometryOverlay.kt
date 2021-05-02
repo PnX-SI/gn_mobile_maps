@@ -51,9 +51,11 @@ abstract class AbstractGeometryOverlay<G : Geometry, O : Overlay>(internal var b
             pProjection
         )
 
-        backendOverlay.draw(
-            pCanvas,
-            pProjection
-        )
+        if (isEnabled) {
+            backendOverlay.draw(
+                pCanvas,
+                pProjection
+            )
+        }
     }
 }

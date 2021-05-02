@@ -426,6 +426,10 @@ open class MapFragment : Fragment(),
             vm.tileProvider.observe(
                 activity,
                 {
+                    if (!isResumed) {
+                        return@observe
+                    }
+
                     if (it == null) {
                         mapView.tileProvider?.detach()
                     } else {
@@ -439,6 +443,10 @@ open class MapFragment : Fragment(),
                 activity,
                 {
                     GlobalScope.launch(Main) {
+                        if (!isResumed) {
+                            return@launch
+                        }
+
                         val selectedLayers =
                             vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
 
