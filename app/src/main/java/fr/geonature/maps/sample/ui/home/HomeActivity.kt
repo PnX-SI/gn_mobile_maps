@@ -15,6 +15,7 @@ import java.io.InputStreamReader
 /**
  * Home screen Activity.
  *
+ * @author S. Grimault
  * @see HomeListFragment
  */
 class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentListener {

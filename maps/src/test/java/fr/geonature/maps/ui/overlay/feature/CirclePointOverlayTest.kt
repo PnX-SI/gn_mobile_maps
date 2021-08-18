@@ -41,12 +41,12 @@ class CirclePointOverlayTest {
         // then
         assertEquals(
             fromPoint(point).longitude,
-            BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.points).centerLongitude,
+            BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.actualPoints).centerLongitude,
             0.00001
         )
         assertEquals(
             fromPoint(point).latitude,
-            BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.points).centerLatitude,
+            BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.actualPoints).centerLatitude,
             0.00001
         )
         assertEquals(

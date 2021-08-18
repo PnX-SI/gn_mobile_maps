@@ -15,8 +15,9 @@ import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
 
 /**
- * Home screen Activity.
+ * Map Activity.
  *
+ * @author S. Grimault
  * @see MapFragment
  */
 class MapActivity : AppCompatActivity() {

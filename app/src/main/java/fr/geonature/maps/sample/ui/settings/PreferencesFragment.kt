@@ -10,7 +10,7 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils
 /**
  * Global settings.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class PreferencesFragment : PreferenceFragmentCompat() {
 
