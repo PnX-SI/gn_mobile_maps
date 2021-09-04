@@ -13,7 +13,7 @@ import java.util.Date
 /**
  * Helper about application settings through [Preference].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 object PreferencesUtils {
 

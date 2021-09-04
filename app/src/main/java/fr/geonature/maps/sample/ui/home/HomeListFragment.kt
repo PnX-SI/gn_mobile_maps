@@ -16,6 +16,8 @@ import fr.geonature.maps.settings.MapSettings
 
 /**
  * A fragment representing a list of [MenuItem].
+ *
+ * @author S. Grimault
  */
 class HomeListFragment : Fragment() {
 

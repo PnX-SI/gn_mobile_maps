@@ -1,5 +1,6 @@
 package fr.geonature.maps.sample.ui.home
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
@@ -9,6 +10,8 @@ import fr.geonature.maps.sample.R
 
 /**
  * [RecyclerView.Adapter] that can display a menu entry.
+ *
+ * @author S. Grimault
  */
 class MenuItemRecyclerViewAdapter(private val listener: OnMenuItemRecyclerViewAdapterListener) :
     RecyclerView.Adapter<MenuItemRecyclerViewAdapter.MenuItemViewHolder>() {
@@ -28,6 +31,7 @@ class MenuItemRecyclerViewAdapter(private val listener: OnMenuItemRecyclerViewAd
     /**
      * Sets new menu items.
      */
+    @SuppressLint("NotifyDataSetChanged")
     fun setItems(newItems: List<MenuItem>) {
         if (this.items.isEmpty()) {
             this.items.addAll(newItems)

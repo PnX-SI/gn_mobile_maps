@@ -1,6 +1,10 @@
 package fr.geonature.maps.sample.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.util.PreferencesUtils.updatePreferences
@@ -10,7 +14,7 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils
 /**
  * Global settings.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class PreferencesFragment : PreferenceFragmentCompat() {
 
@@ -19,6 +23,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
         setDefaultPreferences(arguments?.getParcelable(ARG_MAP_SETTINGS))
         updatePreferences(preferenceScreen)
+        configurePermissions()
     }
 
     override fun onCreatePreferences(
@@ -26,7 +31,9 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         rootKey: String?
     ) {
         addPreferencesFromResource(fr.geonature.maps.R.xml.map_preferences)
-        addPreferencesFromResource(R.xml.preferences)
+        addPreferencesFromResource(R.xml.preferences_permissions)
+        addPreferencesFromResource(R.xml.preferences_storage)
+        addPreferencesFromResource(R.xml.preferences_about)
     }
 
     private fun setDefaultPreferences(appSettings: MapSettings?) {
@@ -34,9 +41,32 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
         MapSettingsPreferencesUtils.setDefaultPreferences(
             context,
-            MapSettings.Builder.newInstance().from(appSettings).build(),
+            MapSettings.Builder.newInstance()
+                .from(appSettings)
+                .build(),
             preferenceScreen
         )
+    }
+
+    private fun configurePermissions() {
+        preferenceScreen
+            .findPreference<Preference>(getString(R.string.preference_category_permissions_configure_key))
+            ?.apply {
+                onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                    startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts(
+                                "package",
+                                it.context.packageName,
+                                null
+                            )
+                        )
+                    )
+
+                    true
+                }
+            }
     }
 
     companion object {

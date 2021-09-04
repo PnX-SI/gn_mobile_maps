@@ -16,7 +16,7 @@ import fr.geonature.maps.settings.MapSettings
  */
 object MapSettingsPreferencesUtils {
 
-    private val KEY_SELECTED_LAYERS = "key_selected_layers"
+    private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
     /**
      * Sets default preferences settings values from [MapSettings].

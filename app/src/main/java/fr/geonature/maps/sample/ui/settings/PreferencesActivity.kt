@@ -11,9 +11,8 @@ import fr.geonature.maps.settings.MapSettings
 /**
  * Global settings.
  *
+ * @author S. Grimault
  * @see PreferencesFragment
- *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 class PreferencesActivity : AppCompatActivity() {
 

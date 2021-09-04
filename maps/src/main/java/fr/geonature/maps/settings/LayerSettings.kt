@@ -75,6 +75,14 @@ data class LayerSettings(
         internal var properties: LayerPropertiesSettings? = null
             private set
 
+        fun from(layerSettings: LayerSettings?) = apply {
+            if (layerSettings == null) return@apply
+
+            label(layerSettings.label)
+            source(layerSettings.source)
+            properties(layerSettings.properties)
+        }
+
         fun label(label: String) =
             apply { this.label = label }
 

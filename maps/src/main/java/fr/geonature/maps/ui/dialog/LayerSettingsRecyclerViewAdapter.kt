@@ -22,8 +22,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
     RecyclerView.Adapter<LayerSettingsRecyclerViewAdapter.AbstractViewHolder>() {
 
     private val items = mutableListOf<Pair<LayerSettings, ViewType>>()
-    private val selectedItems = mutableListOf<LayerSettings>()
-    private val onClickListener: View.OnClickListener
+    private val selectedItems = mutableMapOf<String, LayerSettings>()
 
     init {
         this.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
@@ -69,29 +68,6 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 listener.showEmptyTextView(itemCount == 0)
             }
         })
-
-        onClickListener = View.OnClickListener { v ->
-            val checkbox: CheckBox = v.findViewById(android.R.id.checkbox)
-
-            val layerSettings = v.tag as LayerSettings
-            val isAlreadySelected = selectedItems.contains(layerSettings)
-
-            if (isAlreadySelected) {
-                selectedItems.remove(layerSettings)
-                checkbox.isChecked = false
-            } else {
-                if (layerSettings.isOnline()) {
-                    selectedItems.removeAll { it.isOnline() }
-                }
-
-                selectedItems.add(layerSettings)
-                checkbox.isChecked = true
-            }
-
-            notifyDataSetChanged()
-
-            listener.onSelectedLayersSettings(selectedItems)
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractViewHolder {
@@ -229,7 +205,12 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
     fun setSelectedLayers(selectedLayersSettings: List<LayerSettings>) {
         this.selectedItems.clear()
-        this.selectedItems.addAll(selectedLayersSettings)
+        this.selectedItems.putAll(selectedLayersSettings.map {
+            Pair(
+                it.source,
+                it
+            )
+        })
 
         notifyDataSetChanged()
     }
@@ -250,38 +231,28 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         private val icon: ImageView = itemView.findViewById(android.R.id.icon)
         private val switch: SwitchCompat = itemView.findViewById(android.R.id.toggle)
 
+        init {
+            switch.setOnClickListener { view ->
+                (selectedItems.values + items.filter { it.first.isOnline() }
+                    .map { it.first }).firstOrNull { it.isOnline() }
+                    ?.also {
+                        selectedItems[it.source] =
+                            it.copy(properties = it.properties.copy(active = (view as SwitchCompat).isChecked))
+                    }
+
+                listener.onSelectedLayersSettings(selectedItems.values.toList())
+
+                notifyDataSetChanged()
+            }
+        }
+
         override fun bind(item: LayerSettings) {
             title.setText(R.string.alert_dialog_layers_type_tiles_online)
             icon.setImageResource(R.drawable.ic_layer_online)
 
             with(switch) {
                 visibility = View.VISIBLE
-                isChecked = selectedItems.any { it.isOnline() && it.properties.active }
-
-                setOnClickListener {
-                    selectedItems.asSequence()
-                        .filter { it.isOnline() }
-                        .forEachIndexed { index, layerSettings ->
-                            selectedItems[index] =
-                                layerSettings.copy(properties = layerSettings.properties.copy(active = isChecked))
-                        }
-
-                    // no selected online layer found, select and activate the first online layer from all layers
-                    if (selectedItems.none { it.isOnline() }) {
-                        items.firstOrNull { it.first.isOnline() }
-                            ?.first
-                            ?.also {
-                                selectedItems.add(
-                                    0,
-                                    it.copy(properties = it.properties.copy(active = true))
-                                )
-                            }
-                    }
-
-                    listener.onSelectedLayersSettings(selectedItems)
-
-                    notifyDataSetChanged()
-                }
+                isChecked = selectedItems.values.any { it.isOnline() && it.properties.active }
             }
         }
     }
@@ -323,16 +294,45 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         private val title: TextView = itemView.findViewById(android.R.id.title)
         private val checkBox: CheckBox = itemView.findViewById(android.R.id.checkbox)
 
+        init {
+            itemView.setOnClickListener { view ->
+                val checkbox: CheckBox = view.findViewById(android.R.id.checkbox)
+
+                val layerSettings = view.tag as LayerSettings
+                val isAlreadySelected =
+                    selectedItems.values.any { it.source == layerSettings.source }
+
+                if (isAlreadySelected) {
+                    selectedItems.remove(layerSettings.source)
+                    checkbox.isChecked = false
+                } else {
+                    if (layerSettings.isOnline()) {
+                        selectedItems.values
+                            .filter { it.isOnline() }
+                            .forEach {
+                                selectedItems.remove(it.source)
+                            }
+                    }
+
+                    selectedItems[layerSettings.source] = layerSettings
+                    checkbox.isChecked = true
+                }
+
+                notifyDataSetChanged()
+
+                listener.onSelectedLayersSettings(selectedItems.values.toList())
+            }
+        }
+
         override fun bind(item: LayerSettings) {
             title.text = item.label
-            checkBox.isChecked = selectedItems.contains(item)
+            checkBox.isChecked = selectedItems.values.any { it.source == item.source }
 
             with(itemView) {
                 tag = item
                 isEnabled =
-                    if (item.isOnline()) selectedItems.any { it.isOnline() && it.properties.active }
-                    else item.properties.active
-                setOnClickListener(onClickListener)
+                    if (item.isOnline()) selectedItems.values.any { it.isOnline() && it.properties.active }
+                    else selectedItems.values.none { it.source == item.source && !it.properties.active }
             }
         }
     }

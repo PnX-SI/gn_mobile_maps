@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="preference_category_permissions">Permissions</string>
+    <string name="preference_category_permissions_configure">Gérer les permissions</string>
     <string name="preference_category_storage">Mémoire</string>
     <string name="preference_category_storage_internal">Mémoire interne</string>
     <string name="preference_category_storage_external">Mémoire externe</string>

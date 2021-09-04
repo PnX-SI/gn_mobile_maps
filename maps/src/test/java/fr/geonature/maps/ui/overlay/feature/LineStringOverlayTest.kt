@@ -46,7 +46,7 @@ class LineStringOverlayTest {
         // then
         assertEquals(
             2,
-            lineStringOverlay.backendOverlay.points.size
+            lineStringOverlay.backendOverlay.actualPoints.size
         )
         assertEquals(
             LayerStyleSettings().color,

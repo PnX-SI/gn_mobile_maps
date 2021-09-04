@@ -82,9 +82,11 @@ class FeatureOverlay : OverlayWithIW() {
             pProjection
         )
 
-        backendOverlay?.draw(
-            pCanvas,
-            pProjection
-        )
+        if (isEnabled) {
+            backendOverlay?.draw(
+                pCanvas,
+                pProjection
+            )
+        }
     }
 }

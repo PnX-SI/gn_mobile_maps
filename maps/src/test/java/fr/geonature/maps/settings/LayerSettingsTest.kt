@@ -102,6 +102,54 @@ class LayerSettingsTest {
         )
     }
 
+    @Test
+    fun testFromExistingLayerSettings() {
+        // given a layer settings instance
+        val layerSettings = LayerSettings(
+            "OSM",
+            "https://a.tile.openstreetmap.org",
+            LayerPropertiesSettings(
+                minZoomLevel = 0,
+                maxZoomLevel = 19,
+                tileSizePixels = 256,
+                tileMimeType = "image/png",
+                attribution = null,
+                style = null
+            )
+        )
+
+        // then
+        assertEquals(
+            layerSettings,
+            LayerSettings.Builder.newInstance()
+                .from(layerSettings)
+                .build()
+        )
+
+        // when applying new properties
+        val fromExistingLayerSettings = LayerSettings.Builder.newInstance()
+            .from(layerSettings)
+            .source("nantes.wkt")
+            .build()
+
+        // then
+        assertEquals(
+            LayerSettings(
+                "OSM",
+                "nantes.wkt",
+                LayerPropertiesSettings(
+                    minZoomLevel = 0,
+                    maxZoomLevel = 19,
+                    tileSizePixels = 256,
+                    tileMimeType = "image/png",
+                    attribution = null,
+                    style = LayerStyleSettings()
+                )
+            ),
+            fromExistingLayerSettings
+        )
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun testBuilderWithUndefinedLayerSourceLabel() {
         LayerSettings.Builder.newInstance()

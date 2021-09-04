@@ -60,7 +60,7 @@ class PolygonOverlayTest {
         // then
         assertEquals(
             5,
-            polygonOverlay.backendOverlay.points.size
+            polygonOverlay.backendOverlay.actualPoints.size
         )
         assertTrue(polygonOverlay.backendOverlay.holes.isEmpty())
         assertEquals(
@@ -136,7 +136,7 @@ class PolygonOverlayTest {
         // then
         assertEquals(
             5,
-            polygonOverlay.backendOverlay.points.size
+            polygonOverlay.backendOverlay.actualPoints.size
         )
         assertEquals(
             1,
