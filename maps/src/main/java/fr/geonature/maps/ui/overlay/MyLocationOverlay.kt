@@ -38,7 +38,7 @@ class MyLocationOverlay(
     init {
         myLocationProvider = GpsMyLocationProvider(mapView.context).apply {
             locationUpdateMinDistance = 2F // 2 meters
-            locationUpdateMinTime = 10 * 1000 // 10s
+            locationUpdateMinTime = (10 * 1000).toLong() // 10s
         }
 
         compassOrientationProvider = CompassOrientationProvider(mapView.context)
