@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
 import fr.geonature.maps.settings.io.MapSettingsReader
+import fr.geonature.mountpoint.util.FileUtils
 import java.io.InputStreamReader
 
 /**
@@ -33,6 +34,15 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                 )
                 .commit()
         }
+
+        val osmdroidFile = FileUtils.getFile(
+            FileUtils.getExternalStorageDirectory(application),
+            "osmdroid"
+        )
+        Log.d(
+            TAG,
+            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${if (osmdroidFile.canRead()) "r" else ""}${if (osmdroidFile.canWrite()) "w" else ""}${if (osmdroidFile.canExecute()) "x" else ""})"
+        )
 
         mapSettingsResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
             when (result.resultCode) {

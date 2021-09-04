@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="preference_category_permissions">Permissions</string>
+    <string name="preference_category_permissions_configure">Manage permissions</string>
+    <string name="preference_category_permissions_configure_key" translatable="false">permissions</string>
     <string name="preference_category_storage">Storage</string>
     <string name="preference_category_storage_key" translatable="false">storage</string>
     <string name="preference_category_storage_internal">Internal storage</string>

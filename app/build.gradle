@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 version = "0.2.9"
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId "fr.geonature.maps.sample"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode updateVersionCode(module.name)
         versionName version
         buildConfigField "String", "BUILD_DATE", "\"" + new Date().getTime() + "\""
@@ -23,6 +23,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix ".${defaultConfig.versionCode}-DEV"
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

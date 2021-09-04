@@ -2,17 +2,17 @@ package fr.geonature.maps.ui
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
@@ -28,6 +28,8 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.CheckPermissionLifecycleObserver
+import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
@@ -66,6 +68,12 @@ open class MapFragment : Fragment(),
 
     private var layerSettingsViewModel: LayerSettingsViewModel? = null
 
+    private var manageExternalStoragePermissionLifecycleObserver: ManageExternalStoragePermissionLifecycleObserver? =
+        null
+    private var readExternalStoragePermissionLifecycleObserver: CheckPermissionLifecycleObserver? =
+        null
+    private var locationPermissionLifecycleObserver: CheckPermissionLifecycleObserver? = null
+
     private lateinit var container: View
     private lateinit var mapView: MapView
     private lateinit var editFeatureFab: EditFeatureButton
@@ -74,8 +82,6 @@ open class MapFragment : Fragment(),
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
-    private lateinit var requestReadExternalStoragePermissionLauncher: ActivityResultLauncher<String>
-    private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,45 +90,22 @@ open class MapFragment : Fragment(),
 
         mapSettings = getMapSettings(context)
 
-        layerSettingsViewModel = activity?.run {
-            ViewModelProvider(this,
-                LayerSettingsViewModel.Factory {
-                    LayerSettingsViewModel(
-                        this.application,
-                        mapSettings.baseTilesPath
-                    )
-                }).get(LayerSettingsViewModel::class.java)
+        activity?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                manageExternalStoragePermissionLifecycleObserver =
+                    ManageExternalStoragePermissionLifecycleObserver(this)
+            } else {
+                readExternalStoragePermissionLifecycleObserver = CheckPermissionLifecycleObserver(
+                    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            }
+
+            locationPermissionLifecycleObserver = CheckPermissionLifecycleObserver(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
         }
-
-        requestReadExternalStoragePermissionLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) {
-                if (it) {
-                    // then load map configuration from preferences
-                    Configuration.getInstance()
-                        .apply {
-                            load(
-                                context,
-                                PreferenceManager.getDefaultSharedPreferences(context)
-                            )
-                        }
-
-                    configureMapView()
-                    loadLayersSettings()
-                } else {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                }
-            }
-        requestLocationPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-                if (!it) {
-                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                    return@registerForActivityResult
-                }
-
-                myLocationFab.requestLocation()
-            }
     }
 
     override fun onCreateView(
@@ -155,7 +138,40 @@ open class MapFragment : Fragment(),
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
 
-        requestReadExternalStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+        // check permissions and configure MapView
+        activity?.also {
+            lifecycleScope.launch {
+                val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    manageExternalStoragePermissionLifecycleObserver?.invoke()
+                } else {
+                    readExternalStoragePermissionLifecycleObserver?.invoke(it)
+                } ?: false
+
+                if (!granted) {
+                    showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                }
+
+                layerSettingsViewModel = ViewModelProvider(it,
+                    LayerSettingsViewModel.Factory {
+                        LayerSettingsViewModel(
+                            it.application,
+                            mapSettings.baseTilesPath
+                        )
+                    }).get(LayerSettingsViewModel::class.java)
+
+                // then load map configuration from preferences
+                Configuration.getInstance()
+                    .apply {
+                        load(
+                            context,
+                            PreferenceManager.getDefaultSharedPreferences(context)
+                        )
+                    }
+
+                configureMapView()
+                loadLayersSettings()
+            }
+        }
     }
 
     override fun onDetach() {
@@ -333,7 +349,18 @@ open class MapFragment : Fragment(),
             }
 
             override fun checkPermissions(permission: String) {
-                requestLocationPermissionLauncher.launch(permission)
+                lifecycleScope.launch {
+                    context?.also {
+                        val granted = locationPermissionLifecycleObserver?.invoke(it) ?: false
+
+                        if (!granted) {
+                            showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                            return@also
+                        }
+
+                        myLocationFab.requestLocation()
+                    }
+                }
             }
         })
 
