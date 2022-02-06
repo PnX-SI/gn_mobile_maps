@@ -69,8 +69,8 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
 
     private val selectedLayers: MutableMap<String, LayerSettings> = mutableMapOf()
 
-    private val _tileProvider = MutableLiveData<MapTileProviderBase>()
-    val tileProvider: LiveData<MapTileProviderBase> = _tileProvider
+    private val _tileProvider = MutableLiveData<MapTileProviderBase?>()
+    val tileProvider: LiveData<MapTileProviderBase?> = _tileProvider
 
     private val _vectorOverlays = MutableLiveData<List<Overlay>>()
     val vectorOverlays: LiveData<List<Overlay>> = _vectorOverlays
@@ -389,7 +389,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
      * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
      */
     class Factory(val creator: () -> LayerSettingsViewModel) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST") return creator() as T
         }
     }

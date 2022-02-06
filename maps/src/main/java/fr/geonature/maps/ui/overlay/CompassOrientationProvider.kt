@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
 import fr.geonature.maps.util.LowPassSensorValuesFilter.lowPass
 import org.osmdroid.views.overlay.compass.IOrientationConsumer
 import org.osmdroid.views.overlay.compass.IOrientationProvider
@@ -33,25 +34,48 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
         if (event == null) return
 
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-            System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
+            System.arraycopy(
+                event.values,
+                0,
+                accelerometerReading,
+                0,
+                accelerometerReading.size
+            )
         } else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-            System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
+            System.arraycopy(
+                event.values,
+                0,
+                magnetometerReading,
+                0,
+                magnetometerReading.size
+            )
         }
 
         // update rotation matrix, which is needed to update orientation angles
         SensorManager.getRotationMatrix(
-            rotationMatrix, null, accelerometerReading, magnetometerReading
+            rotationMatrix,
+            null,
+            accelerometerReading,
+            magnetometerReading
         )
 
-        SensorManager.getOrientation(rotationMatrix, orientationAngles)
+        SensorManager.getOrientation(
+            rotationMatrix,
+            orientationAngles
+        )
 
-        val newOrientation = Math.toDegrees(orientationAngles[0].toDouble()).toFloat()
+        val newOrientation = Math.toDegrees(orientationAngles[0].toDouble())
+            .toFloat()
 
         orientation = lowPass(
-            arrayOf(newOrientation).toFloatArray(), arrayOf(orientation).toFloatArray()
+            arrayOf(newOrientation).toFloatArray(),
+            arrayOf(orientation).toFloatArray()
         )[0]
 
-        orientationConsumer?.onOrientationChanged(orientation, this)
+        orientationConsumer?.onOrientationChanged(
+            orientation,
+            this
+        )
     }
 
     override fun startOrientationProvider(orientationConsumer: IOrientationConsumer?): Boolean {
@@ -73,6 +97,11 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
             SensorManager.SENSOR_DELAY_NORMAL
         ) ?: false
 
+        Log.i(
+            TAG,
+            "accelerometer sensor listener registered: $accelerometerSensorListenerRegistered, magnetic field sensor registered: $magneticFieldSensorRegistered"
+        )
+
         return accelerometerSensorListenerRegistered && magneticFieldSensorRegistered
     }
 
@@ -87,5 +116,9 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
     override fun destroy() {
         stopOrientationProvider()
         sensorManager = null
+    }
+
+    companion object {
+        private val TAG = CompassOrientationProvider::class.java.name
     }
 }

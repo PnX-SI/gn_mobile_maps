@@ -35,8 +35,8 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
@@ -157,14 +157,14 @@ open class MapFragment : Fragment(),
                             it.application,
                             mapSettings.baseTilesPath
                         )
-                    }).get(LayerSettingsViewModel::class.java)
+                    })[LayerSettingsViewModel::class.java]
 
                 // then load map configuration from preferences
                 Configuration.getInstance()
                     .apply {
                         load(
-                            context,
-                            PreferenceManager.getDefaultSharedPreferences(context)
+                            it,
+                            PreferenceManager.getDefaultSharedPreferences(it)
                         )
                     }
 
@@ -451,58 +451,58 @@ open class MapFragment : Fragment(),
 
             vm.tileProvider.removeObservers(activity)
             vm.tileProvider.observe(
-                activity,
-                {
+                activity
+            ) {
+                if (!isResumed) {
+                    return@observe
+                }
+
+                if (it == null) {
+                    mapView.tileProvider?.detach()
+                } else {
+                    mapView.tileProvider = it
+                }
+
+                mapView.invalidate()
+            }
+            vm.vectorOverlays.removeObservers(activity)
+            vm.vectorOverlays.observe(
+                activity
+            ) {
+                CoroutineScope(Main).launch {
                     if (!isResumed) {
-                        return@observe
+                        return@launch
                     }
 
-                    if (it == null) {
-                        mapView.tileProvider?.detach()
-                    } else {
-                        mapView.tileProvider = it
+                    val selectedLayers =
+                        vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+
+                    mapView.overlays.asSequence()
+                        .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                        .forEach {
+                            mapView.overlays.remove(it)
+                        }
+
+                    val markerOverlaysFirstIndex =
+                        mapView.overlays.indexOfFirst { it is Marker }
+                            .coerceAtLeast(0)
+                    it.forEach { overlay ->
+                        mapView.overlays.add(
+                            markerOverlaysFirstIndex,
+                            (overlay as FeatureCollectionOverlay).apply {
+                                isEnabled =
+                                    selectedLayers.any { selectedLayer -> selectedLayer.label == name }
+                            }
+                        )
                     }
 
                     mapView.invalidate()
-                })
-            vm.vectorOverlays.removeObservers(activity)
-            vm.vectorOverlays.observe(
-                activity,
-                {
-                    GlobalScope.launch(Main) {
-                        if (!isResumed) {
-                            return@launch
-                        }
 
-                        val selectedLayers =
-                            vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+                    delay(100)
 
-                        mapView.overlays.asSequence()
-                            .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
-                            .forEach {
-                                mapView.overlays.remove(it)
-                            }
-
-                        val markerOverlaysFirstIndex =
-                            mapView.overlays.indexOfFirst { it is Marker }
-                                .coerceAtLeast(0)
-                        it.forEach { overlay ->
-                            mapView.overlays.add(
-                                markerOverlaysFirstIndex,
-                                (overlay as FeatureCollectionOverlay).apply {
-                                    isEnabled =
-                                        selectedLayers.any { selectedLayer -> selectedLayer.label == name }
-                                }
-                            )
-                        }
-
-                        mapView.invalidate()
-
-                        delay(100)
-
-                        onVectorLayersChangedListener(it)
-                    }
-                })
+                    onVectorLayersChangedListener(it)
+                }
+            }
         }
     }
 
