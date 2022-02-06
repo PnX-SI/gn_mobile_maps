@@ -12,8 +12,8 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/gn_mobile_core/mountpoint" />
             <option value="$PROJECT_DIR$/maps" />
+            <option value="$PROJECT_DIR$/mountpoint" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
