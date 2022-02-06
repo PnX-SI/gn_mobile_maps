@@ -5,7 +5,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
+import android.util.Log
 import fr.geonature.maps.R
+import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.util.DrawableUtils
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -33,6 +35,7 @@ class MyLocationOverlay(
     private var myLocationListener: MyLocationListener? = null
     private val compassBitmap: Bitmap?
     private var location: Location? = null
+    private var compassOrientationProviderEnabled = false
     private var compassOrientation = 0f
 
     init {
@@ -79,6 +82,7 @@ class MyLocationOverlay(
         disableMyLocation()
         myLocationProvider.stopLocationProvider()
         myLocationProvider.destroy()
+        compassOrientationProvider.destroy()
 
         super.onDetach(mapView)
     }
@@ -87,6 +91,11 @@ class MyLocationOverlay(
         location: Location?,
         source: IMyLocationProvider?
     ) {
+        Log.i(
+            TAG,
+            "onLocationChanged: $location"
+        )
+
         if (location == null) return
 
         val isLocationInsideMaxBounds = maxBounds?.contains(GeoPoint(location)) ?: true
@@ -127,10 +136,14 @@ class MyLocationOverlay(
     fun enableMyLocation(): Boolean {
         if (isEnabled) return true
 
-        isEnabled =
-            myLocationProvider.startLocationProvider(this) && compassOrientationProvider.startOrientationProvider(
-                this
-            )
+        isEnabled = myLocationProvider.startLocationProvider(this)
+        compassOrientationProviderEnabled = compassOrientationProvider.startOrientationProvider(this)
+
+        Log.i(
+            TAG,
+            "enableMyLocation: $isEnabled"
+        )
+
         onLocationChanged(
             myLocationProvider.lastKnownLocation,
             myLocationProvider
@@ -143,6 +156,7 @@ class MyLocationOverlay(
         myLocationProvider.stopLocationProvider()
         compassOrientationProvider.stopOrientationProvider()
         isEnabled = false
+        compassOrientationProviderEnabled = false
     }
 
     private fun drawMyLocation(
@@ -247,25 +261,31 @@ class MyLocationOverlay(
         )
 
         // draw compass orientation
-        val compassPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        compassPaint.color = Color.BLUE
-        compassPaint.alpha = 128
+        if (compassOrientationProviderEnabled) {
+            val compassPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            compassPaint.color = Color.BLUE
+            compassPaint.alpha = 128
 
-        canvas.rotate(
-            compassOrientation,
-            x,
-            y
-        )
-
-        compassBitmap?.also {
-            canvas.drawBitmap(
-                it,
-                x - compassBitmap.width / 2,
-                y - compassBitmap.height + 8,
-                compassPaint
+            canvas.rotate(
+                compassOrientation,
+                x,
+                y
             )
-        }
 
-        canvas.restore()
+            compassBitmap?.also {
+                canvas.drawBitmap(
+                    it,
+                    x - compassBitmap.width / 2,
+                    y - compassBitmap.height + 8,
+                    compassPaint
+                )
+            }
+
+            canvas.restore()
+        }
+    }
+
+    companion object {
+        private val TAG = MyLocationOverlay::class.java.name
     }
 }

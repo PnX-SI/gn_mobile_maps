@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.util.ThemeUtils
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
@@ -67,7 +67,7 @@ class RotateCompassButton(
                 0f
             )
 
-            GlobalScope.launch(Dispatchers.Main) {
+            CoroutineScope(Dispatchers.Main).launch {
                 delay(
                     Configuration.getInstance()
                         .animationSpeedDefault.toLong() * 2
@@ -99,7 +99,7 @@ class RotateCompassButton(
 
         updateImageDrawable(event.source.mapOrientation)
 
-        GlobalScope.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             delay(
                 Configuration.getInstance()
                     .animationSpeedDefault.toLong()
@@ -128,7 +128,7 @@ class RotateCompassButton(
             context,
             R.drawable.ic_compass
         ) ?: return
-        
+
         drawable.setTint(ThemeUtils.getAccentColor(context))
 
         val bitmap = Bitmap.createBitmap(
