@@ -1,8 +1,6 @@
 package fr.geonature.maps.ui
 
-import android.Manifest
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,8 +26,6 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
-import fr.geonature.maps.util.CheckPermissionLifecycleObserver
-import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
@@ -58,7 +54,7 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
  *
  * Use the [MapFragment.newInstance] factory method to create an instance of this fragment.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 open class MapFragment : Fragment(),
     LayerSettingsDialogFragment.OnLayerSettingsDialogFragmentListener {
@@ -67,12 +63,7 @@ open class MapFragment : Fragment(),
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
 
     private var layerSettingsViewModel: LayerSettingsViewModel? = null
-
-    private var manageExternalStoragePermissionLifecycleObserver: ManageExternalStoragePermissionLifecycleObserver? =
-        null
-    private var readExternalStoragePermissionLifecycleObserver: CheckPermissionLifecycleObserver? =
-        null
-    private var locationPermissionLifecycleObserver: CheckPermissionLifecycleObserver? = null
+    private var listener: OnMapFragmentPermissionsListener? = null
 
     private lateinit var container: View
     private lateinit var mapView: MapView
@@ -89,23 +80,6 @@ open class MapFragment : Fragment(),
         val context = context ?: return
 
         mapSettings = getMapSettings(context)
-
-        activity?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                manageExternalStoragePermissionLifecycleObserver =
-                    ManageExternalStoragePermissionLifecycleObserver(this)
-            } else {
-                readExternalStoragePermissionLifecycleObserver = CheckPermissionLifecycleObserver(
-                    this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                )
-            }
-
-            locationPermissionLifecycleObserver = CheckPermissionLifecycleObserver(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        }
     }
 
     override fun onCreateView(
@@ -141,11 +115,7 @@ open class MapFragment : Fragment(),
         // check permissions and configure MapView
         activity?.also {
             lifecycleScope.launch {
-                val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    manageExternalStoragePermissionLifecycleObserver?.invoke()
-                } else {
-                    readExternalStoragePermissionLifecycleObserver?.invoke(it)
-                } ?: false
+                val granted = listener?.onStoragePermissionsGranted() ?: false
 
                 if (!granted) {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
@@ -172,6 +142,16 @@ open class MapFragment : Fragment(),
                 loadLayersSettings()
             }
         }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        if (context !is OnMapFragmentPermissionsListener) {
+            throw RuntimeException("$context must implement OnMapFragmentPermissionsListener")
+        }
+
+        listener = context
     }
 
     override fun onDetach() {
@@ -350,16 +330,14 @@ open class MapFragment : Fragment(),
 
             override fun checkPermissions(permission: String) {
                 lifecycleScope.launch {
-                    context?.also {
-                        val granted = locationPermissionLifecycleObserver?.invoke(it) ?: false
+                    val granted = listener?.onLocationPermissionGranted() ?: false
 
-                        if (!granted) {
-                            showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                            return@also
-                        }
-
-                        myLocationFab.requestLocation()
+                    if (!granted) {
+                        showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                        return@launch
                     }
+
+                    myLocationFab.requestLocation()
                 }
             }
         })
@@ -513,6 +491,22 @@ open class MapFragment : Fragment(),
             LENGTH_LONG
         )
             .show()
+    }
+
+    /**
+     * Callback used by [MapFragment].
+     */
+    interface OnMapFragmentPermissionsListener {
+
+        /**
+         * Whether storage access permissions were granted.
+         */
+        suspend fun onStoragePermissionsGranted(): Boolean
+
+        /**
+         * Whether location permission was granted.
+         */
+        suspend fun onLocationPermissionGranted(): Boolean
     }
 
     companion object {

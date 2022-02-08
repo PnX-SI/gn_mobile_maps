@@ -3,7 +3,7 @@ plugins {
     id 'kotlin-android'
 }
 
-version = "0.6.1"
+version = "0.6.2"
 
 android {
     compileSdkVersion 31
