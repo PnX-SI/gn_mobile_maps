@@ -42,7 +42,8 @@
             android:visibility="invisible"
             app:backgroundTint="@android:color/background_light"
             app:elevation="@dimen/fab_elevation"
-            app:fabSize="mini" />
+            app:fabSize="mini"
+            app:tint="@null" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_layers"
@@ -58,7 +59,8 @@
             android:visibility="invisible"
             app:backgroundTint="@android:color/background_light"
             app:elevation="@dimen/fab_elevation"
-            app:fabSize="mini" />
+            app:fabSize="mini"
+            app:tint="@android:color/primary_text_light" />
 
     </LinearLayout>
 
@@ -78,8 +80,9 @@
             android:layout_marginBottom="@dimen/fab_margin"
             android:clickable="true"
             android:focusable="true"
-            app:backgroundTint="@android:color/white"
-            app:elevation="@dimen/fab_elevation" />
+            app:backgroundTint="@android:color/background_light"
+            app:elevation="@dimen/fab_elevation"
+            app:tint="@android:color/primary_text_light" />
 
         <fr.geonature.maps.ui.widget.EditFeatureButton
             android:id="@+id/fab_poi"
@@ -89,8 +92,9 @@
             android:layout_marginBottom="@dimen/fab_margin"
             android:clickable="true"
             android:focusable="true"
-            android:tint="@android:color/white"
-            app:elevation="@dimen/fab_elevation" />
+            app:backgroundTint="?attr/colorAccent"
+            app:elevation="@dimen/fab_elevation"
+            app:tint="@android:color/background_light" />
 
     </LinearLayout>
 
