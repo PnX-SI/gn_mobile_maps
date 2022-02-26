@@ -58,7 +58,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                 if (it.canRead()) it else getExternalStorageDirectory(getApplication())
             }
             .also {
-                Logger.info { "root path: $it" }
+                Logger.info { "root path: '$it'" }
             }
 
     private val selectedLayers: MutableMap<String, LayerSettings> = mutableMapOf()
@@ -74,9 +74,9 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
      */
     fun load(selectedLayersSettings: List<LayerSettings>) {
         Logger.info {
-            "loading selected layers (${
-                selectedLayersSettings.joinToString(",") { "'${it.source}' (active: ${it.properties.active})" }
-            })... "
+            "loading selected layers:\n${
+                selectedLayersSettings.joinToString("\n") { "\t'${it.source}' (active: ${it.properties.active})" }
+            }"
         }
 
         viewModelScope.launch {
@@ -175,7 +175,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             .filter { it.getType() == LayerType.TILES }
             .filter { !it.isOnline() }
             .map {
-                Logger.info { "loading local tiles layer '${it.label}'..." }
+                Logger.info { "loading local tiles layer '${it.source}'..." }
 
                 Pair(it,
                     rootPath.walkTopDown()
@@ -189,13 +189,13 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                 val canRead = it.second?.canRead() == true
 
                 if (!canRead) {
-                    Logger.warn { "cannot read local tiles layer '${it.first.label}'${if (it.second == null) "" else " (${it.second})"}..." }
+                    Logger.warn { "cannot read local tiles layer '${it.first.source}'${if (it.second == null) "" else " (${it.second})"}..." }
                 }
 
                 canRead
             }
             .map {
-                Logger.info { "local tiles layer '${it.first.label}' loaded" }
+                Logger.info { "local tiles layer '${it.first.source}' loaded" }
 
                 it.second!!
             }
@@ -205,7 +205,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             ?.let {
                 selectedLayers[it.source] = it.copy()
 
-                Logger.info { "loading online layer '${it.label}' (${it.source})..." }
+                Logger.info { "loading online layer '${it.source}'..." }
 
                 XYTileSource(
                     it.label,
@@ -266,7 +266,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
         layersSettings.asSequence()
             .filter { it.getType() == LayerType.VECTOR }
             .map {
-                Logger.info { "loading vector layer '${it.label}'..." }
+                Logger.info { "loading vector layer '${it.source}'..." }
 
                 Pair(
                     it,
@@ -280,7 +280,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             }
             .filter {
                 if (it.second == null) {
-                    Logger.warn { "cannot read vector layer '${it.first.label}'..." }
+                    Logger.warn { "cannot read vector layer '${it.first.source}'..." }
                 }
 
                 it.second != null
@@ -296,7 +296,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                         runCatching { WKTReader().readFeatures(FileReader(it.second)) }.getOrNull()
                     )
                     else -> {
-                        Logger.warn { "unsupported vector layer '${it.first.label}' (${it.first.source})..." }
+                        Logger.warn { "unsupported vector layer '${it.first.source}'" }
 
                         Pair(
                             it.first,
@@ -311,7 +311,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             }
             .filter {
                 if (it.second == null) {
-                    Logger.warn { "cannot read vector layer '${it.first.label}'..." }
+                    Logger.warn { "cannot read vector layer '${it.first.source}'" }
                 }
 
                 it.second != null
@@ -320,13 +320,13 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
                 val isLoaded = it.second!!.isNotEmpty()
 
                 if (!isLoaded) {
-                    Logger.warn { "empty vector layer '${it.first.label}'" }
+                    Logger.warn { "empty vector layer '${it.first.source}'" }
                 }
 
                 isLoaded
             }
             .map {
-                Logger.info { "vector layer '${it.first.label}' loaded" }
+                Logger.info { "vector layer '${it.first.source}' loaded" }
 
                 FeatureCollectionOverlay().apply {
                     name = it.first.label
