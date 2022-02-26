@@ -3,12 +3,12 @@ package fr.geonature.maps.settings.io
 import android.util.JsonReader
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
-import android.util.Log
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import org.osmdroid.util.GeoPoint
+import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.io.Reader
 
@@ -34,10 +34,7 @@ class MapSettingsReader {
         try {
             return read(json.reader())
         } catch (ioe: Exception) {
-            Log.w(
-                TAG,
-                ioe
-            )
+            Logger.warn(ioe)
         }
 
         return null
@@ -189,10 +186,7 @@ class MapSettingsReader {
         return try {
             builder.build()
         } catch (iae: IllegalArgumentException) {
-            Log.w(
-                TAG,
-                iae
-            )
+            Logger.warn(iae)
 
             null
         }
@@ -265,10 +259,5 @@ class MapSettingsReader {
             }
             else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
-    }
-
-    companion object {
-
-        private val TAG = MapSettingsReader::class.java.name
     }
 }

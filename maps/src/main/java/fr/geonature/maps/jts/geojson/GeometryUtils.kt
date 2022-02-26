@@ -1,8 +1,5 @@
 package fr.geonature.maps.jts.geojson
 
-import android.util.Log
-import kotlin.math.abs
-import kotlin.math.sin
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.CoordinateSequence
 import org.locationtech.jts.geom.Geometry
@@ -13,6 +10,9 @@ import org.locationtech.jts.geom.Polygon
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.constants.GeoConstants.RADIUS_EARTH_METERS
 import org.osmdroid.views.util.constants.MathConstants.DEG2RAD
+import org.tinylog.kotlin.Logger
+import kotlin.math.abs
+import kotlin.math.sin
 
 /**
  * Helper class about [Geometry] instances.
@@ -20,8 +20,6 @@ import org.osmdroid.views.util.constants.MathConstants.DEG2RAD
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
 object GeometryUtils {
-
-    private val TAG = GeometryUtils::class.java.name
 
     /**
      * Creates a GeoPoint from Point.
@@ -53,7 +51,8 @@ object GeometryUtils {
      * @return list of GeoPoint
      */
     fun fromCoordinateSequence(coordinateSequence: CoordinateSequence): List<GeoPoint> {
-        return coordinateSequence.toCoordinateArray().map { fromCoordinate(it) }
+        return coordinateSequence.toCoordinateArray()
+            .map { fromCoordinate(it) }
     }
 
     /**
@@ -112,10 +111,7 @@ object GeometryUtils {
                         fromGeometry,
                         (toGeometry as Polygon).exteriorRing
                     )
-                    else -> Log.w(
-                        TAG,
-                        "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'"
-                    )
+                    else -> Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
                 }
             }
             "LineString", "LinearRing" -> when (toGeometry.geometryType) {
@@ -139,10 +135,7 @@ object GeometryUtils {
                     fromGeometry,
                     (toGeometry as Polygon).exteriorRing
                 )
-                else -> Log.w(
-                    TAG,
-                    "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'"
-                )
+                else -> Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
             }
             "Polygon" -> when (toGeometry.geometryType) {
                 "Point" -> distance = distanceTo(
@@ -157,15 +150,10 @@ object GeometryUtils {
                     (toGeometry as Polygon).exteriorRing,
                     (fromGeometry as Polygon).exteriorRing
                 )
-                else -> Log.w(
-                    TAG,
-                    "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'"
-                )
+                else ->
+                    Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
             }
-            else -> Log.w(
-                TAG,
-                "distanceTo: geometry " + fromGeometry.geometryType + " not implemented"
-            )
+            else -> Logger.warn { "distanceTo: geometry " + fromGeometry.geometryType + " not implemented" }
         }
 
         return distance
@@ -202,10 +190,7 @@ object GeometryUtils {
                     )
                 }
             }
-            else -> Log.w(
-                TAG,
-                "getGeodesicLength: no implementation found for geometry '" + geometry.geometryType + "'"
-            )
+            else -> Logger.warn { "getGeodesicLength: no implementation found for geometry '" + geometry.geometryType + "'" }
         }
 
         return length

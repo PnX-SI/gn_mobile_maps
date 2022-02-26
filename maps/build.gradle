@@ -3,7 +3,7 @@ plugins {
     id 'kotlin-android'
 }
 
-version = "0.6.3"
+version = "0.6.4"
 
 android {
     compileSdkVersion 31
@@ -26,9 +26,6 @@ android {
     }
 
     buildTypes {
-        debug {
-            versionNameSuffix ".${defaultConfig.versionCode}-DEV"
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -57,6 +54,11 @@ dependencies {
     api 'org.locationtech.jts:jts-core:1.17.1'
     api 'org.osmdroid:osmdroid-android:6.1.11'
 
+    // Logging
+    implementation 'org.tinylog:tinylog-api-kotlin:2.4.1'
+    runtimeOnly 'org.tinylog:tinylog-impl:2.4.1'
+
+    // Testing dependencies
     testImplementation 'androidx.test:core:1.4.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:4.2.0'

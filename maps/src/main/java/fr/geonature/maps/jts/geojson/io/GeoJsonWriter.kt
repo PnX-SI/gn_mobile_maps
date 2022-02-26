@@ -2,7 +2,6 @@ package fr.geonature.maps.jts.geojson.io
 
 import android.os.Bundle
 import android.util.JsonWriter
-import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
@@ -15,6 +14,7 @@ import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
+import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.io.StringWriter
 import java.io.Writer
@@ -52,10 +52,7 @@ class GeoJsonWriter {
                 feature
             )
         } catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe
-            )
+            Logger.warn(ioe)
 
             return null
         }
@@ -107,10 +104,7 @@ class GeoJsonWriter {
                 featureCollection
             )
         } catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe
-            )
+            Logger.warn(ioe)
 
             return null
         }
@@ -367,10 +361,8 @@ class GeoJsonWriter {
             val geometry = geometryCollection.getGeometryN(i)
 
             if (geometry.geometryType.isNullOrBlank()) {
-                Log.w(
-                    TAG,
-                    "invalid geometry type"
-                )
+                Logger.warn { "invalid geometry type" }
+
                 continue
             }
 
@@ -483,9 +475,5 @@ class GeoJsonWriter {
         }
 
         writer.endObject()
-    }
-
-    companion object {
-        private val TAG = GeoJsonWriter::class.java.name
     }
 }

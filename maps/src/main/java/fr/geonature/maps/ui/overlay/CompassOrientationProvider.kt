@@ -5,10 +5,10 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.util.Log
 import fr.geonature.maps.util.LowPassSensorValuesFilter.lowPass
 import org.osmdroid.views.overlay.compass.IOrientationConsumer
 import org.osmdroid.views.overlay.compass.IOrientationProvider
+import org.tinylog.kotlin.Logger
 
 /**
  * Compute compass orientation from hardware sensors.
@@ -97,10 +97,7 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
             SensorManager.SENSOR_DELAY_NORMAL
         ) ?: false
 
-        Log.i(
-            TAG,
-            "accelerometer sensor listener registered: $accelerometerSensorListenerRegistered, magnetic field sensor registered: $magneticFieldSensorRegistered"
-        )
+        Logger.debug { "accelerometer sensor listener registered: $accelerometerSensorListenerRegistered, magnetic field sensor registered: $magneticFieldSensorRegistered" }
 
         return accelerometerSensorListenerRegistered && magneticFieldSensorRegistered
     }
@@ -116,9 +113,5 @@ class CompassOrientationProvider(context: Context) : SensorEventListener, IOrien
     override fun destroy() {
         stopOrientationProvider()
         sensorManager = null
-    }
-
-    companion object {
-        private val TAG = CompassOrientationProvider::class.java.name
     }
 }
