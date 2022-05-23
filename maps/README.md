@@ -70,6 +70,17 @@ Example:
 | `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.                              |
 | `layers[]`                       | &#9744; | Define layers to display on the map.                                                         |
 
+#### Base path
+
+- If `base_path` is not set, uses the external storage root path (if defined) or the internal
+  storage root path as fallback to perform a deep scan to find all configured layers
+- If `base_path` is an absolute path, tries to resolve the root path of the layers from this path
+- If `base_path` is a relative path, tries to resolve the root path of the layers from external
+  storage (if defined) matching this relative path or from internal storage matching this relative
+  path as fallback
+- If a configured layer was not found from `base_path`, tries to find it by performing a deep scan
+  from external storage root path (if defined) or from internal storage root path as fallback
+
 #### Layer description
 
 | Parameter    | Type   | Description                                                                                               |
@@ -81,7 +92,8 @@ Example:
 **Supported sources:**
 
 - Online tiles source (URLs)
-- Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`, `.wkt` for vector layer
+- Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`,
+  `.wkt` for vector layer
 
 ##### Layer properties
 
@@ -96,7 +108,8 @@ Example:
 
 ##### Layer style
 
-Layer style is only available to vector layers (e.g. WKT or GeoJSON layers). Available parameters are as follow:
+Layer style is only available to vector layers (e.g. WKT or GeoJSON layers). Available parameters
+are as follow:
 
 | Parameter     | Type    | Default value | Description                                                                                                    |
 | ------------- | ------- | ------------- | -------------------------------------------------------------------------------------------------------------- |

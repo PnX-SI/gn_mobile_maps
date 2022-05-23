@@ -114,20 +114,20 @@ open class MapFragment : Fragment(),
 
         // check permissions and configure MapView
         activity?.also {
+            layerSettingsViewModel = ViewModelProvider(it,
+                LayerSettingsViewModel.Factory {
+                    LayerSettingsViewModel(
+                        it.application,
+                        mapSettings.baseTilesPath
+                    )
+                })[LayerSettingsViewModel::class.java]
+
             lifecycleScope.launch {
                 val granted = listener?.onStoragePermissionsGranted() ?: false
 
                 if (!granted) {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
-
-                layerSettingsViewModel = ViewModelProvider(it,
-                    LayerSettingsViewModel.Factory {
-                        LayerSettingsViewModel(
-                            it.application,
-                            mapSettings.baseTilesPath
-                        )
-                    })[LayerSettingsViewModel::class.java]
 
                 // then load map configuration from preferences
                 Configuration.getInstance()
@@ -139,7 +139,6 @@ open class MapFragment : Fragment(),
                     }
 
                 configureMapView()
-                loadLayersSettings()
             }
         }
     }

@@ -16,7 +16,13 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.setUseOnlineLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.FileUtils.getFile
+import fr.geonature.mountpoint.util.MountPointUtils.getInternalStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.tileprovider.MapTileProviderArray
@@ -40,27 +46,12 @@ import java.io.FileReader
 /**
  * [LayerSettings] view model.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
-class LayerSettingsViewModel(application: Application, baseTilesPath: String? = null) :
+class LayerSettingsViewModel(application: Application, private val baseTilesPath: String? = null) :
     AndroidViewModel(application) {
 
-    private val rootPath: File =
-        (if (baseTilesPath?.startsWith("/") == true) File(baseTilesPath) else getFile(
-            getExternalStorageDirectory(getApplication()),
-            baseTilesPath ?: ""
-        ))
-            .let {
-                if (!it.canRead()) {
-                    Logger.warn { "cannot access to '$it'..." }
-                }
-
-                if (it.canRead()) it else getExternalStorageDirectory(getApplication())
-            }
-            .also {
-                Logger.info { "root path: '$it'" }
-            }
-
+    private var rootPath: File? = null
     private val selectedLayers: MutableMap<String, LayerSettings> = mutableMapOf()
 
     private val _tileProvider = MutableLiveData<MapTileProviderBase?>()
@@ -80,6 +71,8 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
         }
 
         viewModelScope.launch {
+            resolveRootPath()
+
             // only one online layer can be selected at a time
             val validLayersSettings =
                 listOfNotNull(selectedLayersSettings.firstOrNull { it.isOnline() }) + selectedLayersSettings.filter { !it.isOnline() }
@@ -99,14 +92,8 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
             // load only active layers from selection
             val activeLayerSettings = validLayersSettings.filter { it.properties.active }
 
-            val tileProvider = buildTileProvider(
-                rootPath,
-                activeLayerSettings
-            )
-            val vectorOverlays = buildVectorOverlays(
-                rootPath,
-                activeLayerSettings
-            )
+            val tileProvider = buildTileProvider(activeLayerSettings)
+            val vectorOverlays = buildVectorOverlays(activeLayerSettings)
 
             // save current selection
             setUseOnlineLayers(
@@ -165,179 +152,272 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
         }
     }
 
-    private suspend fun buildTileProvider(
-        rootPath: File,
-        layersSettings: List<LayerSettings>
-    ): MapTileProviderBase? = withContext(Dispatchers.IO) {
-        val registerReceiver = SimpleRegisterReceiver(getApplication())
+    private suspend fun buildTileProvider(layersSettings: List<LayerSettings>): MapTileProviderBase? =
+        withContext(Dispatchers.IO) {
+            val registerReceiver = SimpleRegisterReceiver(getApplication())
 
-        val offlineTileSources = layersSettings.asSequence()
-            .filter { it.getType() == LayerType.TILES }
-            .filter { !it.isOnline() }
-            .map {
-                Logger.info { "loading local tiles layer '${it.source}'..." }
+            val offlineTileSources = layersSettings.asFlow()
+                .filter { it.getType() == LayerType.TILES }
+                .filter { !it.isOnline() }
+                .map {
+                    Logger.info { "loading local tiles layer '${it.source}'..." }
 
-                Pair(it,
-                    rootPath.walkTopDown()
-                        .firstOrNull { f -> f.isFile && f.name == it.source })
-            }
-            .onEach {
-                selectedLayers[it.first.source] =
-                    it.first.copy(properties = it.first.properties.copy(active = it.second != null))
-            }
-            .filter {
-                val canRead = it.second?.canRead() == true
-
-                if (!canRead) {
-                    Logger.warn { "cannot read local tiles layer '${it.first.source}'${if (it.second == null) "" else " (${it.second})"}..." }
+                    Pair(
+                        it,
+                        resolveLayerSettingsPath(it)
+                    )
                 }
+                .onEach {
+                    selectedLayers[it.first.source] =
+                        it.first.copy(properties = it.first.properties.copy(active = it.second != null))
+                }
+                .filter {
+                    val canRead = it.second?.canRead() == true
 
-                canRead
-            }
-            .map {
-                Logger.info { "local tiles layer '${it.first.source}' loaded" }
+                    if (!canRead) {
+                        Logger.warn { "cannot read local tiles layer '${it.first.source}'${if (it.second == null) "" else " (${it.second})"}..." }
+                    }
 
-                it.second!!
-            }
-            .toList()
+                    canRead
+                }
+                .map {
+                    Logger.info { "local tiles layer '${it.first.source}' loaded" }
 
-        val onlineTileSource = layersSettings.find { it.isOnline() }
-            ?.let {
-                selectedLayers[it.source] = it.copy()
+                    it.second!!
+                }
+                .toList()
 
-                Logger.info { "loading online layer '${it.source}'..." }
+            val onlineTileSource = layersSettings.find { it.isOnline() }
+                ?.let {
+                    selectedLayers[it.source] = it.copy()
 
-                XYTileSource(
-                    it.label,
-                    it.properties.minZoomLevel,
-                    it.properties.maxZoomLevel,
-                    it.properties.tileSizePixels,
-                    ".${it.properties.tileMimeType?.substringAfter("image/")}",
+                    Logger.info { "loading online layer '${it.source}'..." }
+
+                    XYTileSource(
+                        it.label,
+                        it.properties.minZoomLevel,
+                        it.properties.maxZoomLevel,
+                        it.properties.tileSizePixels,
+                        ".${it.properties.tileMimeType?.substringAfter("image/")}",
+                        arrayOf(
+                            it.source.removeSuffix("/")
+                                .plus("/")
+                        ),
+                        it.properties.attribution
+                    )
+                }
+                ?: return@withContext if (offlineTileSources.isEmpty()) null else OfflineTileProvider(
+                    registerReceiver,
+                    offlineTileSources.toTypedArray()
+                )
+
+            val cacheProvider = MapTileSqlCacheProvider(
+                registerReceiver,
+                onlineTileSource
+            )
+
+            val offlineTileProvider = MapTileFileArchiveProvider(
+                registerReceiver,
+                onlineTileSource,
+                offlineTileSources.map { ArchiveFileFactory.getArchiveFile(it) }
+                    .toTypedArray()
+            )
+
+            val approximationProvider = MapTileApproximater()
+            approximationProvider.addProvider(cacheProvider)
+            approximationProvider.addProvider(offlineTileProvider)
+
+            val onlineTileProvider = MapTileDownloader(
+                onlineTileSource,
+                SqlTileWriter(),
+                NetworkAvailabliltyCheck(getApplication())
+            )
+
+            MapTileProviderArray(
+                onlineTileSource,
+                registerReceiver,
+                (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(cacheProvider)
+                else emptyArray()) +
                     arrayOf(
-                        it.source.removeSuffix("/")
-                            .plus("/")
-                    ),
-                    it.properties.attribution
-                )
-            } ?: return@withContext if (offlineTileSources.isEmpty()) null else OfflineTileProvider(
-            registerReceiver,
-            offlineTileSources.toTypedArray()
-        )
+                        offlineTileProvider,
+                        approximationProvider,
+                        onlineTileProvider,
+                    )
+            )
+        }
 
-        val cacheProvider = MapTileSqlCacheProvider(
-            registerReceiver,
-            onlineTileSource
-        )
+    private suspend fun buildVectorOverlays(layersSettings: List<LayerSettings>): List<Overlay> =
+        withContext(Dispatchers.IO) {
+            layersSettings.asFlow()
+                .filter { it.getType() == LayerType.VECTOR }
+                .map {
+                    Logger.info { "loading vector layer '${it.source}'..." }
 
-        val offlineTileProvider = MapTileFileArchiveProvider(
-            registerReceiver,
-            onlineTileSource,
-            offlineTileSources.map { ArchiveFileFactory.getArchiveFile(it) }
-                .toTypedArray()
-        )
-
-        val approximationProvider = MapTileApproximater()
-        approximationProvider.addProvider(cacheProvider)
-        approximationProvider.addProvider(offlineTileProvider)
-
-        val onlineTileProvider = MapTileDownloader(
-            onlineTileSource,
-            SqlTileWriter(),
-            NetworkAvailabliltyCheck(getApplication())
-        )
-
-        MapTileProviderArray(
-            onlineTileSource,
-            registerReceiver,
-            (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(cacheProvider)
-            else emptyArray()) +
-                arrayOf(
-                    offlineTileProvider,
-                    approximationProvider,
-                    onlineTileProvider,
-                )
-        )
-    }
-
-    private suspend fun buildVectorOverlays(
-        rootPath: File,
-        layersSettings: List<LayerSettings>
-    ): List<Overlay> = withContext(Dispatchers.IO) {
-        layersSettings.asSequence()
-            .filter { it.getType() == LayerType.VECTOR }
-            .map {
-                Logger.info { "loading vector layer '${it.source}'..." }
-
-                Pair(
-                    it,
-                    rootPath.walkTopDown()
-                        .firstOrNull { f -> f.isFile && f.name == it.source && f.canRead() }
-                )
-            }
-            .onEach {
-                selectedLayers[it.first.source] =
-                    it.first.copy(properties = it.first.properties.copy(active = it.second != null))
-            }
-            .filter {
-                if (it.second == null) {
-                    Logger.warn { "cannot read vector layer '${it.first.source}'..." }
+                    Pair(
+                        it,
+                        resolveLayerSettingsPath(it)
+                    )
                 }
+                .onEach {
+                    selectedLayers[it.first.source] =
+                        it.first.copy(properties = it.first.properties.copy(active = it.second != null))
+                }
+                .filter {
+                    if (it.second == null) {
+                        Logger.warn { "cannot read vector layer '${it.first.source}'..." }
+                    }
 
-                it.second != null
-            }
-            .map {
-                when (it.second?.extension) {
-                    "geojson", "json" -> Pair(
-                        it.first,
-                        runCatching { GeoJsonReader().read(FileReader(it.second)) }.getOrNull()
-                    )
-                    "wkt" -> Pair(
-                        it.first,
-                        runCatching { WKTReader().readFeatures(FileReader(it.second)) }.getOrNull()
-                    )
-                    else -> {
-                        Logger.warn { "unsupported vector layer '${it.first.source}'" }
-
-                        Pair(
+                    it.second != null
+                }
+                .map {
+                    when (it.second?.extension) {
+                        "geojson", "json" -> Pair(
                             it.first,
-                            null
+                            runCatching { GeoJsonReader().read(FileReader(it.second)) }.getOrNull()
+                        )
+                        "wkt" -> Pair(
+                            it.first,
+                            runCatching { WKTReader().readFeatures(FileReader(it.second)) }.getOrNull()
+                        )
+                        else -> {
+                            Logger.warn { "unsupported vector layer '${it.first.source}'" }
+
+                            Pair(
+                                it.first,
+                                null
+                            )
+                        }
+                    }
+                }
+                .onEach {
+                    selectedLayers[it.first.source] =
+                        it.first.copy(properties = it.first.properties.copy(active = !it.second.isNullOrEmpty()))
+                }
+                .filter {
+                    if (it.second == null) {
+                        Logger.warn { "cannot read vector layer '${it.first.source}'" }
+                    }
+
+                    it.second != null
+                }
+                .filter {
+                    val isLoaded = it.second!!.isNotEmpty()
+
+                    if (!isLoaded) {
+                        Logger.warn { "empty vector layer '${it.first.source}'" }
+                    }
+
+                    isLoaded
+                }
+                .map {
+                    Logger.info { "vector layer '${it.first.source}' loaded" }
+
+                    FeatureCollectionOverlay().apply {
+                        name = it.first.label
+                        setFeatures(
+                            it.second!!,
+                            it.first.properties.style ?: LayerStyleSettings()
                         )
                     }
                 }
-            }
-            .onEach {
-                selectedLayers[it.first.source] =
-                    it.first.copy(properties = it.first.properties.copy(active = !it.second.isNullOrEmpty()))
-            }
-            .filter {
-                if (it.second == null) {
-                    Logger.warn { "cannot read vector layer '${it.first.source}'" }
+                .toList()
+        }
+
+    private suspend fun resolveRootPath(): File = withContext(Dispatchers.IO) {
+        rootPath ?: (baseTilesPath?.split(File.separator)
+            ?.filter { it.isNotBlank() } ?: emptyList()).let { segments ->
+            if (segments.isEmpty()) {
+                getExternalStorageDirectory(getApplication()).let {
+                    if (it.exists() && it.canRead()) it
+                    else getInternalStorage(getApplication()).mountPath
                 }
-
-                it.second != null
             }
-            .filter {
-                val isLoaded = it.second!!.isNotEmpty()
-
-                if (!isLoaded) {
-                    Logger.warn { "empty vector layer '${it.first.source}'" }
-                }
-
-                isLoaded
-            }
-            .map {
-                Logger.info { "vector layer '${it.first.source}' loaded" }
-
-                FeatureCollectionOverlay().apply {
-                    name = it.first.label
-                    setFeatures(
-                        it.second!!,
-                        it.first.properties.style ?: LayerStyleSettings()
+            // absolute path
+            else if (segments.isNotEmpty() && baseTilesPath?.startsWith(File.separator) == true) {
+                File(
+                    segments.joinToString(
+                        separator = File.separator,
+                        prefix = File.separator
                     )
+                )
+            }
+            // relative path
+            else {
+                // first: try to find tiles relative path from external storage
+                (getFile(getExternalStorageDirectory(getApplication()))
+                    .walkTopDown()
+                    .filter { it.isDirectory }
+                    .filter { segments.first() == it.name }
+                    .find {
+                        if (segments.size > 1) it.resolve(
+                            segments.drop(1)
+                                .joinToString(File.separator)
+                        )
+                            .let { relativeFile ->
+                                relativeFile.exists() && relativeFile.canRead()
+                            } else segments.first() == it.name
+                    }
+                // if not found, try to find tiles relative path from internal storage
+                    ?: getInternalStorage(getApplication()).mountPath
+                        .walkTopDown()
+                        .filter { it.isDirectory }
+                        .filter { segments.first() == it.name }
+                        .find {
+                            if (segments.size > 1) it.resolve(
+                                segments.drop(1)
+                                    .joinToString(File.separator)
+                            )
+                                .let { relativeFile ->
+                                    relativeFile.exists() && relativeFile.canRead()
+                                } else segments.first() == it.name
+                        })?.let {
+                    if (segments.size > 1) it.resolve(
+                        segments.drop(1)
+                            .joinToString(File.separator)
+                    ) else it
+                }
+                // use external storage as fallback
+                    ?: getFile(getExternalStorageDirectory(getApplication()))
+            }
+        }
+            .also {
+                rootPath = it
+
+                Logger.info {
+                    "root path: '$it'"
                 }
             }
-            .toList()
     }
+
+    private suspend fun resolveLayerSettingsPath(layerSettings: LayerSettings): File? =
+        withContext(Dispatchers.IO) {
+            if (layerSettings.isOnline()) {
+                return@withContext null
+            }
+
+            val rootPath = resolveRootPath()
+
+            rootPath.walkTopDown()
+                .firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
+                ?: getExternalStorageDirectory(getApplication())
+                    .also {
+                        Logger.warn {
+                            "no layer '${layerSettings.source}' found from root path: '$rootPath', try to perform a deep scan from ${if (it.absolutePath == getInternalStorage(getApplication()).mountPath.absolutePath) "internal" else "external"} storage '${it}'..."
+                        }
+                    }
+                    .walkTopDown()
+                    .firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
+                ?: getInternalStorage(getApplication()).mountPath.let {
+                    if (it.absolutePath == getExternalStorageDirectory(getApplication()).absolutePath) null else it
+                }
+                    ?.also {
+                        Logger.warn {
+                            "no layer '${layerSettings.source}' found from root path: '$rootPath', try to perform a deep scan from internal storage '${it}'..."
+                        }
+                    }
+                    ?.walkTopDown()
+                    ?.firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
+        }
 
     companion object {
         private val DEFAULT_LAYER_SETTINGS_FILTER: (layerSettings: LayerSettings) -> Boolean =
@@ -347,7 +427,7 @@ class LayerSettingsViewModel(application: Application, baseTilesPath: String? = 
     /**
      * Default Factory to use for [LayerSettingsViewModel].
      *
-     * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+     * @author S. Grimault
      */
     class Factory(val creator: () -> LayerSettingsViewModel) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
