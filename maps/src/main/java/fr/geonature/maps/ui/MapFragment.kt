@@ -26,6 +26,7 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.rotationGesture
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
@@ -175,6 +176,12 @@ open class MapFragment : Fragment(),
                 zoomFab.setMapView(mapView)
                 zoomFab.visibility = if (it) View.VISIBLE else View.GONE
             }
+            rotationGesture(context).also { isEnabled ->
+                (mapView.overlays.firstOrNull { it is RotationGestureOverlay }
+                    ?: RotationGestureOverlay(mapView).also {
+                        mapView.overlays.add(it)
+                    }).let { it.isEnabled = isEnabled }
+            }
         }
 
         loadLayersSettings()
@@ -234,6 +241,7 @@ open class MapFragment : Fragment(),
             .showCompass(showCompass(context))
             .showScale(showScale(context))
             .showZoom(showZoom(context))
+            .rotationGesture(rotationGesture(context))
             .build()
     }
 
@@ -252,9 +260,11 @@ open class MapFragment : Fragment(),
         mapView.setUseDataConnection(false)
 
         // configure and activate rotation gesture
-        val rotationGestureOverlay = RotationGestureOverlay(mapView)
-        rotationGestureOverlay.isEnabled = true
-        mapView.overlays.add(rotationGestureOverlay)
+        if (mapSettings.rotationGesture) {
+            val rotationGestureOverlay = RotationGestureOverlay(mapView)
+            rotationGestureOverlay.isEnabled = true
+            mapView.overlays.add(rotationGestureOverlay)
+        }
 
         // configure and display attribution notice for the current online source
         if (mapSettings.showAttribution) {

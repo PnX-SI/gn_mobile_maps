@@ -62,6 +62,7 @@ Example:
 | `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).                         |
 | `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                                             |
 | `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                                             |
+| `rotate`                         | &#9745; | Whether to activate rotation gesture (default: `false`).                                     |
 | `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box.                     |
 | `center`                         | &#9744; | Center automatically the map at given position at startup.                                   |
 | `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                                         |

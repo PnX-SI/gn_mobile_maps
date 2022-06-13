@@ -15,7 +15,7 @@ import java.io.Reader
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class MapSettingsReader {
 
@@ -82,6 +82,7 @@ class MapSettingsReader {
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_zoom" -> builder.showZoom(reader.nextBoolean())
+                "rotate" -> builder.rotationGesture(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
 

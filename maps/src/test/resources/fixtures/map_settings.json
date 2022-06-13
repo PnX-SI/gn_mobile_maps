@@ -4,6 +4,7 @@
   "show_attribution": false,
   "show_compass": false,
   "show_zoom": true,
+  "rotate": true,
   "max_bounds": [
     [
       47.253369,

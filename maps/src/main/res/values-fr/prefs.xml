@@ -6,5 +6,6 @@
     <string name="preference_category_map_show_compass">Afficher la boussole</string>
     <string name="preference_category_map_show_scale">Afficher l\'échelle</string>
     <string name="preference_category_map_show_zoom">Afficher le zoom</string>
+    <string name="preference_category_map_rotation">Activer la rotation de la carte</string>
 
 </resources>

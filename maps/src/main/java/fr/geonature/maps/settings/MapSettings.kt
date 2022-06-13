@@ -9,7 +9,7 @@ import org.osmdroid.util.GeoPoint
 /**
  * Default settings for map configuration.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 data class MapSettings(
     private val _layersSettings: List<LayerSettings>,
@@ -19,6 +19,7 @@ data class MapSettings(
     val showCompass: Boolean = Builder.newInstance().showCompass,
     val showScale: Boolean = Builder.newInstance().showScale,
     val showZoom: Boolean = Builder.newInstance().showZoom,
+    val rotationGesture: Boolean = Builder.newInstance().rotationGesture,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -35,6 +36,7 @@ data class MapSettings(
         builder.showCompass,
         builder.showScale,
         builder.showZoom,
+        builder.rotationGesture,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -46,6 +48,7 @@ data class MapSettings(
     private constructor(source: Parcel) : this(
         mutableListOf(),
         source.readString(),
+        ParcelCompat.readBoolean(source),
         ParcelCompat.readBoolean(source),
         ParcelCompat.readBoolean(source),
         ParcelCompat.readBoolean(source),
@@ -94,6 +97,10 @@ data class MapSettings(
                 dest,
                 showZoom
             )
+            ParcelCompat.writeBoolean(
+                dest,
+                rotationGesture
+            )
             it.writeDouble(zoom)
             it.writeDouble(minZoomLevel)
             it.writeDouble(maxZoomLevel)
@@ -123,6 +130,7 @@ data class MapSettings(
         if (showCompass != other.showCompass) return false
         if (showScale != other.showScale) return false
         if (showZoom != other.showZoom) return false
+        if (rotationGesture != other.rotationGesture) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
         if (maxZoomLevel != other.maxZoomLevel) return false
@@ -150,6 +158,7 @@ data class MapSettings(
         result = 31 * result + showCompass.hashCode()
         result = 31 * result + showScale.hashCode()
         result = 31 * result + showZoom.hashCode()
+        result = 31 * result + rotationGesture.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
         result = 31 * result + maxZoomLevel.hashCode()
@@ -211,6 +220,12 @@ data class MapSettings(
         var showZoom: Boolean = false
             private set
 
+        /**
+         * Whether to activate rotation gesture (default: `false`).
+         */
+        var rotationGesture: Boolean = false
+            private set
+
         internal var zoom: Double = 0.0
             private set
 
@@ -240,6 +255,7 @@ data class MapSettings(
                 this.showCompass = mapSettings.showCompass
                 this.showScale = mapSettings.showScale
                 this.showZoom = mapSettings.showZoom
+                this.rotationGesture = mapSettings.rotationGesture
                 this.zoom = mapSettings.zoom
                 this.minZoomLevel = mapSettings.minZoomLevel
                 this.maxZoomLevel = mapSettings.maxZoomLevel
@@ -265,6 +281,9 @@ data class MapSettings(
 
         fun showZoom(showZoom: Boolean) =
             apply { this.showZoom = showZoom }
+
+        fun rotationGesture(rotateGesture: Boolean) =
+            apply { this.rotationGesture = rotateGesture }
 
         fun zoom(zoom: Double) =
             apply { this.zoom = zoom }

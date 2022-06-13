@@ -31,6 +31,22 @@
         android:orientation="vertical"
         app:layout_dodgeInsetEdges="top">
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_layers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:layout_marginEnd="@dimen/fab_margin"
+            android:clickable="true"
+            android:contentDescription="@string/button_layers_hint"
+            android:focusable="true"
+            android:src="@drawable/ic_layers"
+            android:visibility="invisible"
+            app:backgroundTint="@android:color/background_light"
+            app:elevation="@dimen/fab_elevation"
+            app:fabSize="mini"
+            app:tint="@android:color/primary_text_light" />
+
         <fr.geonature.maps.ui.widget.RotateCompassButton
             android:id="@+id/fab_compass"
             android:layout_width="wrap_content"
@@ -44,23 +60,6 @@
             app:elevation="@dimen/fab_elevation"
             app:fabSize="mini"
             app:tint="@null" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_layers"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:layout_marginEnd="@dimen/fab_margin"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:clickable="true"
-            android:contentDescription="@string/button_layers_hint"
-            android:focusable="true"
-            android:src="@drawable/ic_layers"
-            android:visibility="invisible"
-            app:backgroundTint="@android:color/background_light"
-            app:elevation="@dimen/fab_elevation"
-            app:fabSize="mini"
-            app:tint="@android:color/primary_text_light" />
 
     </LinearLayout>
 

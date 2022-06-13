@@ -18,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [MapSettingsReader].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class MapSettingsReaderTest {
@@ -31,7 +31,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun testReadMapSettingsFromJsonString() {
+    fun `should read map settings from json string`() {
         // given a JSON settings
         val json = getFixture("map_settings.json")
 
@@ -71,6 +71,7 @@ class MapSettingsReaderTest {
                 showAttribution = false,
                 showCompass = false,
                 showZoom = true,
+                rotationGesture = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -97,7 +98,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun testReadMapSettingsWithInvalidProperties() {
+    fun `should read map settings from json string with invalid properties`() {
         // given a JSON settings with some invalid layers settings
         val json = getFixture("map_settings_with_invalid_properties.json")
 
@@ -133,6 +134,7 @@ class MapSettingsReaderTest {
                 showAttribution = true,
                 showCompass = false,
                 showZoom = true,
+                rotationGesture = false,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -159,7 +161,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun testReadMapSettingsFromJsonStringWithInvalidLayers() {
+    fun `should read map settings from json string with invalid layers`() {
         // given a JSON settings with some invalid layers settings
         val json = getFixture("map_settings_with_invalid_layers.json")
 
@@ -188,6 +190,7 @@ class MapSettingsReaderTest {
                 showAttribution = true,
                 showCompass = false,
                 showZoom = false,
+                rotationGesture = false,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -214,7 +217,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun testReadMapSettingsFromInvalidJsonString() {
+    fun `should read map settings from invalid json string`() {
         // when read an invalid JSON as MapSettings
         val mapSettings = mapSettingsReader.read("")
 
