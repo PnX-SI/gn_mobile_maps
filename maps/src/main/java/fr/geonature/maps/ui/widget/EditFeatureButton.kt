@@ -95,8 +95,13 @@ class EditFeatureButton(
 
     private val mapEventReceiver = object : MapEventsReceiver {
         override fun longPressHelper(p: GeoPoint?): Boolean {
-            // nothing to do...
-            return false
+            if (showSnackbarAboutAddingPoiAndInsufficientZoomLevel(p)) {
+                return false
+            }
+
+            addPoi(p)
+
+            return true
         }
 
         override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -124,7 +129,7 @@ class EditFeatureButton(
         if (!selectedPoi.isNullOrBlank()) return true
         if (pois.isNotEmpty() && listener?.getEditMode() == EditMode.SINGLE) return true
 
-        if (listener?.getMinZoomEditing() ?: 0.0 <= event?.zoomLevel ?: 0.0) {
+        if ((listener?.getMinZoomEditing() ?: 0.0) <= (event?.zoomLevel ?: 0.0)) {
             show()
         } else {
             hide()
@@ -305,7 +310,9 @@ class EditFeatureButton(
     private fun centerMapToMarker(marker: Marker) {
         val mapView = listener?.getMapView() ?: return
         val editZoom =
-            if (listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble <= mapView.zoomLevelDouble) mapView.zoomLevelDouble
+            if ((listener?.getMinZoomEditing()
+                    ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
+            ) mapView.zoomLevelDouble
             else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
 
         animateTo(
@@ -313,6 +320,25 @@ class EditFeatureButton(
             marker.position,
             editZoom
         )
+    }
+
+    private fun showSnackbarAboutAddingPoiAndInsufficientZoomLevel(geoPoint: GeoPoint?): Boolean {
+        val mapView = listener?.getMapView() ?: return false
+        if (geoPoint == null) return false
+
+        if ((listener?.getMinZoomEditing()
+                ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
+        ) {
+            return false
+        }
+
+        listener?.makeSnackbar(
+            R.string.snackbar_add_poi_zoom_min,
+            Snackbar.LENGTH_SHORT
+        )
+            ?.show()
+
+        return true
     }
 
     private fun showSnackbarAboutDeletedPoi(geoPoint: GeoPoint?) {
