@@ -27,7 +27,11 @@ import java.util.HashMap
 import java.util.UUID
 
 /**
- * Edit feature (POI) on the map.
+ * Edit feature (POI) on the map:
+ * - by a long pressing gesture on the map
+ * - by tapping the floating action button
+ *
+ * A [Snackbar] may be shown if the current zoom level doesn't meet the minimal editing zoom.
  *
  * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
  */
@@ -96,6 +100,10 @@ class EditFeatureButton(
     private val mapEventReceiver = object : MapEventsReceiver {
         override fun longPressHelper(p: GeoPoint?): Boolean {
             if (showSnackbarAboutAddingPoiAndInsufficientZoomLevel(p)) {
+                return false
+            }
+
+            if (listener?.getEditMode() == EditMode.SINGLE && pois.isNotEmpty()) {
                 return false
             }
 
