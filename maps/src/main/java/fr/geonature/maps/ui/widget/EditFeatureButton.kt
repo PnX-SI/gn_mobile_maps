@@ -23,17 +23,16 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import java.util.HashMap
 import java.util.UUID
 
 /**
  * Edit feature (POI) on the map:
  * - by a long pressing gesture on the map
- * - by tapping the floating action button
+ * - by tapping this floating action button
  *
  * A [Snackbar] may be shown if the current zoom level doesn't meet the minimal editing zoom.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class EditFeatureButton(
     context: Context,
@@ -103,8 +102,19 @@ class EditFeatureButton(
                 return false
             }
 
-            if (listener?.getEditMode() == EditMode.SINGLE && pois.isNotEmpty()) {
-                return false
+            if (listener?.getEditMode() == EditMode.SINGLE) {
+                val mapView = listener?.getMapView() ?: return false
+
+                with(pois) {
+                    forEach { poi ->
+                        findMarkerOverlay { it.id == poi.key }?.also {
+                            deselectMarker(it)
+                            it.remove(mapView)
+                            mapView.invalidate()
+                        }
+                    }
+                    clear()
+                }
             }
 
             addPoi(p)
@@ -251,6 +261,8 @@ class EditFeatureButton(
 
         mapView.overlays.add(poiMarker)
         mapView.invalidate()
+        centerMapToMarker(poiMarker)
+
         pois[poiMarker.id] = poiMarker.position
         listener?.onSelectedPOIs(getSelectedPOIs())
 
