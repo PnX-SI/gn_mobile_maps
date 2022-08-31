@@ -139,7 +139,7 @@ open class MapFragment : Fragment(),
                         )
                     }
 
-                configureMapView()
+                configureMapView(mapView)
             }
         }
     }
@@ -251,7 +251,7 @@ open class MapFragment : Fragment(),
         }
     }
 
-    private fun configureMapView() {
+    private fun configureMapView(mapView: MapView) {
         // disable default zoom controller
         mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         mapView.setMultiTouchControls(true)
@@ -290,66 +290,10 @@ open class MapFragment : Fragment(),
         }
 
         // configure edit POIs overlay
-        editFeatureFab.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
-            override fun getMapView(): MapView {
-                return mapView
-            }
-
-            override fun getEditMode(): EditFeatureButton.EditMode {
-                return arguments?.getSerializable(ARG_EDIT_MODE) as EditFeatureButton.EditMode
-            }
-
-            override fun getMinZoom(): Double {
-                return mapSettings.minZoomLevel
-            }
-
-            override fun getMinZoomEditing(): Double {
-                return mapSettings.minZoomEditing
-            }
-
-            override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
-                return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
-            }
-
-            override fun makeSnackbar(
-                resId: Int,
-                duration: Int
-            ): Snackbar {
-                return Snackbar.make(
-                    container,
-                    resId,
-                    duration
-                )
-            }
-
-            override fun onSelectedPOIs(pois: List<GeoPoint>) {
-                onSelectedPOIsListener(pois)
-            }
-        })
+        configureEditFeatureFab()
 
         // configure my location overlay
-        myLocationFab.setListener(object : MyLocationButton.OnMyLocationButtonListener {
-            override fun getMapView(): MapView {
-                return mapView
-            }
-
-            override fun getMaxBounds(): BoundingBox? {
-                return mapSettings.maxBounds
-            }
-
-            override fun checkPermissions(permission: String) {
-                lifecycleScope.launch {
-                    val granted = listener?.onLocationPermissionGranted() ?: false
-
-                    if (!granted) {
-                        showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                        return@launch
-                    }
-
-                    myLocationFab.requestLocation()
-                }
-            }
-        })
+        configureMyLocationFab()
 
         if (mapSettings.zoom > 0.0) {
             mapView.controller.setZoom(mapSettings.zoom)
@@ -390,6 +334,70 @@ open class MapFragment : Fragment(),
                 }
 
         scaleBarOverlay.isEnabled = enabled
+    }
+
+    private fun configureEditFeatureFab() {
+        editFeatureFab.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
+            override fun getMapView(): MapView {
+                return mapView
+            }
+
+            override fun getEditMode(): EditFeatureButton.EditMode {
+                return arguments?.getSerializable(ARG_EDIT_MODE) as EditFeatureButton.EditMode
+            }
+
+            override fun getMinZoom(): Double {
+                return mapSettings.minZoomLevel
+            }
+
+            override fun getMinZoomEditing(): Double {
+                return mapSettings.minZoomEditing
+            }
+
+            override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
+                return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
+            }
+
+            override fun makeSnackbar(
+                resId: Int,
+                duration: Int
+            ): Snackbar {
+                return Snackbar.make(
+                    container,
+                    resId,
+                    duration
+                )
+            }
+
+            override fun onSelectedPOIs(pois: List<GeoPoint>) {
+                onSelectedPOIsListener(pois)
+            }
+        })
+    }
+
+    private fun configureMyLocationFab() {
+        myLocationFab.setListener(object : MyLocationButton.OnMyLocationButtonListener {
+            override fun getMapView(): MapView {
+                return mapView
+            }
+
+            override fun getMaxBounds(): BoundingBox? {
+                return mapSettings.maxBounds
+            }
+
+            override fun checkPermissions(permission: String) {
+                lifecycleScope.launch {
+                    val granted = listener?.onLocationPermissionGranted() ?: false
+
+                    if (!granted) {
+                        showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                        return@launch
+                    }
+
+                    myLocationFab.requestLocation()
+                }
+            }
+        })
     }
 
     private fun configureLayersSelector() {

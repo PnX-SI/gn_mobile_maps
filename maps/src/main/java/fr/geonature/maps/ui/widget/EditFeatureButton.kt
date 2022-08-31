@@ -167,21 +167,28 @@ class EditFeatureButton(
         mapView.addMapListener(this)
     }
 
+    /**
+     * Returns the currently added POIs on the map.
+     */
     fun getSelectedPOIs(): List<GeoPoint> {
         return pois.values.toList()
     }
 
+    /**
+     * Sets POIs on the map.
+     * Clear previous selection.
+     */
     fun setSelectedPOIs(selectedPois: List<GeoPoint>) {
         val mapView = this.listener?.getMapView() ?: return
 
-        if (this.listener?.getEditMode() == EditMode.SINGLE && this.pois.isNotEmpty()) {
-            mapView.zoomToBoundingBox(
-                BoundingBox.fromGeoPoints(getSelectedPOIs()),
-                true
-            )
-
-            return
+        pois.forEach { poi ->
+            findMarkerOverlay { overlay -> overlay.id == poi.key }?.also {
+                deselectMarker(it)
+                it.remove(mapView)
+            }
         }
+        pois.clear()
+        mapView.invalidate()
 
         selectedPois.forEach {
             addPoi(it)
@@ -193,6 +200,9 @@ class EditFeatureButton(
         )
     }
 
+    /**
+     * Clear the currently selected POI.
+     */
     fun clearActiveSelection(): Marker? {
         return findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
     }
