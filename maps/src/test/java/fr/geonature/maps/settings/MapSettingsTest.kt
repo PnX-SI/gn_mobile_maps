@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
+import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -71,7 +72,7 @@ class MapSettingsTest {
                 arrayListOf(
                     LayerSettings(
                         "Nantes",
-                        "nantes.mbtiles"
+                        listOf("nantes.mbtiles")
                     )
                 ),
                 "/mnt/sdcard",
@@ -206,7 +207,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     label = "OSM",
-                    source = "https://a.tile.openstreetmap.org",
+                    source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -217,7 +218,7 @@ class MapSettingsTest {
                 ),
                 LayerSettings(
                     label = "OTM",
-                    source = "https://a.tile.opentopomap.org",
+                    source = listOf("https://a.tile.opentopomap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -227,13 +228,13 @@ class MapSettingsTest {
                     )
                 ),
                 LayerSettings(
-                    "Nantes",
-                    "nantes.mbtiles"
+                    label = "Nantes",
+                    source = listOf("nantes.mbtiles")
                 ),
                 LayerSettings(
-                    "nantes.wkt",
-                    "nantes.wkt",
-                    LayerPropertiesSettings(
+                    label = "nantes.wkt",
+                    source = listOf("nantes.wkt"),
+                    properties = LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
@@ -291,7 +292,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     label = "OSM",
-                    source = "https://a.tile.openstreetmap.org",
+                    source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -351,7 +352,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     "Nantes",
-                    "nantes.mbtiles"
+                    listOf("nantes.mbtiles")
                 )
             ),
             mapSettings.getTilesLayers()
@@ -412,21 +413,21 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     "nantes.wkt",
-                    "nantes.wkt",
+                    listOf("nantes.wkt"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
                 LayerSettings(
                     "nantes.json",
-                    "nantes.json",
+                    listOf("nantes.json"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
                 LayerSettings(
                     "nantes.geojson",
-                    "nantes.geojson",
+                    listOf("nantes.geojson"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
@@ -491,7 +492,7 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.createFromParcel(parcel)
+            parcelableCreator<MapSettings>().createFromParcel(parcel)
         )
     }
 }

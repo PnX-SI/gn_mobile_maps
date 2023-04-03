@@ -45,11 +45,11 @@ class MapSettingsReaderTest {
                 arrayListOf(
                     LayerSettings(
                         "Nantes (Base)",
-                        "nantes.mbtiles"
+                        listOf("nantes.mbtiles")
                     ),
                     LayerSettings(
                         "Nantes (Data)",
-                        "nantes.wkt",
+                        listOf("nantes.wkt"),
                         LayerPropertiesSettings(
                             style =
                             LayerStyleSettings.Builder.newInstance()
@@ -112,7 +112,7 @@ class MapSettingsReaderTest {
                 arrayListOf(
                     LayerSettings(
                         "Nantes (Data)",
-                        "nantes.wkt",
+                        listOf("nantes.wkt"),
                         LayerPropertiesSettings(
                             style =
                             LayerStyleSettings.Builder.newInstance()
@@ -175,11 +175,11 @@ class MapSettingsReaderTest {
                 arrayListOf(
                     LayerSettings(
                         "Nantes",
-                        "nantes.mbtiles"
+                        listOf("nantes.mbtiles")
                     ),
                     LayerSettings(
                         "nantes.wkt",
-                        "nantes.wkt",
+                        listOf("nantes.wkt"),
                         LayerPropertiesSettings(
                             style = LayerStyleSettings()
                         )

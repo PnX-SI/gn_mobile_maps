@@ -1,8 +1,10 @@
 package fr.geonature.maps.settings.io
 
 import android.util.JsonReader
+import android.util.JsonToken
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
+import android.util.JsonToken.STRING
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
@@ -176,7 +178,7 @@ class MapSettingsReader {
 
             when (reader.nextName()) {
                 "label" -> builder.label(reader.nextString())
-                "source" -> builder.source(reader.nextString())
+                "source" -> builder.sources(readLayerSettingsSource(reader))
                 "properties" -> builder.properties(readLayerPropertiesSettings(reader))
                 else -> reader.skipValue()
             }
@@ -190,6 +192,34 @@ class MapSettingsReader {
             Logger.warn(iae)
 
             null
+        }
+    }
+
+    private fun readLayerSettingsSource(reader: JsonReader): List<String> {
+        return when (reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                emptyList()
+            }
+            STRING -> {
+                listOf(reader.nextString())
+            }
+            JsonToken.BEGIN_ARRAY -> {
+                reader.beginArray()
+                val source = mutableListOf<String>()
+
+                while (reader.hasNext()) {
+                    source.add(reader.nextString())
+                }
+
+                reader.endArray()
+
+                source
+            }
+            else -> {
+                reader.skipValue()
+                emptyList()
+            }
         }
     }
 

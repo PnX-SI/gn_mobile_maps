@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.sample.R
-import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
 
@@ -25,7 +24,8 @@ class HomeListFragment : Fragment() {
     private var adapter: MenuItemRecyclerViewAdapter? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(
@@ -80,19 +80,42 @@ class HomeListFragment : Fragment() {
                         .zoom(6.0)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
+                                .label("IGN : plan v2")
+                                .addSource("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
+                                .build()
+                        )
+                        .addLayer(
+                            LayerSettings.Builder.newInstance()
+                                .label("IGN : ortho")
+                                .addSource("https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS")
+                                .build()
+                        )
+                        .addLayer(
+                            LayerSettings.Builder.newInstance()
+                                .label("IGN : cadastre")
+                                .addSource("https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS")
+                                .build()
+                        )
+                        .addLayer(
+                            LayerSettings.Builder.newInstance()
                                 .label("OSM")
-                                .source("https://maps.wikimedia.org/osm-intl")
-                                .properties(
-                                    LayerPropertiesSettings.Builder.newInstance()
-                                        .attribution("© OSM contributors")
-                                        .build()
-                                )
+                                .addSource("https://a.tile.openstreetmap.org")
+                                .addSource("https://b.tile.openstreetmap.org")
+                                .addSource("https://c.tile.openstreetmap.org")
                                 .build()
                         )
                         .addLayer(
                             LayerSettings.Builder.newInstance()
                                 .label("OTM")
-                                .source("https://a.tile.opentopomap.org")
+                                .addSource("https://a.tile.opentopomap.org")
+                                .addSource("https://b.tile.opentopomap.org")
+                                .addSource("https://c.tile.opentopomap.org")
+                                .build()
+                        )
+                        .addLayer(
+                            LayerSettings.Builder.newInstance()
+                                .label("Wikimedia")
+                                .addSource("https://maps.wikimedia.org/osm-intl")
                                 .build()
                         )
                         .build()

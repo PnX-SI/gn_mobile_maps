@@ -3,6 +3,7 @@ package fr.geonature.maps.settings
 import android.graphics.Color
 import android.os.Parcel
 import androidx.core.graphics.ColorUtils
+import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -12,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [LayerPropertiesSettings].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class LayerPropertiesSettingsTest {
@@ -262,7 +263,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             layerPropertiesSettings,
-            LayerPropertiesSettings.createFromParcel(parcel)
+            parcelableCreator<LayerPropertiesSettings>().createFromParcel(parcel)
         )
     }
 }

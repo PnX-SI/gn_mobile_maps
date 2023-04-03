@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="layer_geoportail_attribution">© IGN Geoportail</string>
+    <string name="layer_osm_attribution">© OpenStreetMap contributors</string>
+    <string name="layer_otm_attribution">Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)</string>
+    <string name="layer_wikimedia_attribution">Wikimedia maps | Map data © OpenStreetMap contributors</string>
+
+</resources>

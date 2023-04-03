@@ -27,7 +27,11 @@ Example:
   "layers": [
     {
       "label": "OSM",
-      "source": "https://a.tile.openstreetmap.org"
+      "source": [
+        "https://a.tile.openstreetmap.org",
+        "https://b.tile.openstreetmap.org",
+        "https://c.tile.openstreetmap.org"
+      ]
     },
     {
       "label": "Nantes (Base)",
@@ -84,15 +88,19 @@ Example:
 
 #### Layer description
 
-| Parameter    | Type   | Description                                                                                               |
-| ------------ | ------ | --------------------------------------------------------------------------------------------------------- |
-| `label`      | String | A human friendly representation of this layer.                                                            |
-| `source`     | String | Define the layer source name (e.g. URL of the tile source provider or the name of the local source file). |
-| `properties` | Object | Define additional layer properties (default: `null`).                                                     |
+| Parameter    | Type               | Description                                                                                               |
+| ------------ | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `label`      | String             | A human friendly representation of this layer.                                                            |
+| `source`     | String or String[] | Define the layer source name (e.g. URL of the tile source provider or the name of the local source file). |
+| `properties` | Object             | Define additional layer properties (default: `null`).                                                     |
 
 **Supported sources:**
 
-- Online tiles source (URLs)
+- Online tiles source (URLs), supported online sources are:
+  - [Geoportail WMTS](https://www.geoportail.gouv.fr)
+  - [OpenTopoMap](https://www.opentopomap.org)
+  - [OpenStreetMap](https://www.openstreetmap.org)
+  - [Wikimedia Maps](https://maps.wikimedia.org)
 - Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`,
   `.wkt` for vector layer
 

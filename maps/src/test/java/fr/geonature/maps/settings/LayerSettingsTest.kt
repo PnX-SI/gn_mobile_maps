@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
+import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -12,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [LayerSettings].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class LayerSettingsTest {
@@ -22,14 +23,14 @@ class LayerSettingsTest {
         // given a layer settings instance from its builder
         val layerSettings = LayerSettings.Builder.newInstance()
             .label("Nantes")
-            .source("nantes.mbtiles")
+            .addSource("nantes.mbtiles")
             .build()
 
         // then
         assertEquals(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ),
             layerSettings
         )
@@ -40,18 +41,18 @@ class LayerSettingsTest {
         assertEquals(
             LayerSettings(
                 "Nantes",
-                "nantes.unknown"
+                listOf("nantes.unknown")
             ),
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.unknown")
+                .addSource("nantes.unknown")
                 .build()
         )
 
         assertEquals(
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org",
+                listOf("https://a.tile.openstreetmap.org"),
                 LayerPropertiesSettings(
                     minZoomLevel = 0,
                     maxZoomLevel = 19,
@@ -63,28 +64,28 @@ class LayerSettingsTest {
             ),
             LayerSettings.Builder.newInstance()
                 .label("OSM")
-                .source("https://a.tile.openstreetmap.org")
+                .addSource("https://a.tile.openstreetmap.org")
                 .build()
         )
 
         assertEquals(
             LayerSettings(
                 "Nantes",
-                "nantes.wkt",
+                listOf("nantes.wkt"),
                 LayerPropertiesSettings(
                     style = LayerStyleSettings()
                 )
             ),
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.wkt")
+                .addSource("nantes.wkt")
                 .build()
         )
 
         assertEquals(
             LayerSettings(
                 "Nantes",
-                "nantes.geojson",
+                listOf("nantes.geojson"),
                 LayerPropertiesSettings(
                     attribution = "Some attribution",
                     style = LayerStyleSettings()
@@ -97,7 +98,7 @@ class LayerSettingsTest {
                         .attribution("Some attribution")
                         .build()
                 )
-                .source("nantes.geojson")
+                .addSource("nantes.geojson")
                 .build()
         )
     }
@@ -107,7 +108,7 @@ class LayerSettingsTest {
         // given a layer settings instance
         val layerSettings = LayerSettings(
             "OSM",
-            "https://a.tile.openstreetmap.org",
+            listOf("https://a.tile.openstreetmap.org"),
             LayerPropertiesSettings(
                 minZoomLevel = 0,
                 maxZoomLevel = 19,
@@ -129,21 +130,21 @@ class LayerSettingsTest {
         // when applying new properties
         val fromExistingLayerSettings = LayerSettings.Builder.newInstance()
             .from(layerSettings)
-            .source("nantes.wkt")
+            .addSource("nantes.wkt")
             .build()
 
         // then
         assertEquals(
             LayerSettings(
                 "OSM",
-                "nantes.wkt",
+                listOf("https://a.tile.openstreetmap.org"),
                 LayerPropertiesSettings(
                     minZoomLevel = 0,
                     maxZoomLevel = 19,
                     tileSizePixels = 256,
                     tileMimeType = "image/png",
                     attribution = null,
-                    style = LayerStyleSettings()
+                    style = null
                 )
             ),
             fromExistingLayerSettings
@@ -153,7 +154,7 @@ class LayerSettingsTest {
     @Test(expected = IllegalArgumentException::class)
     fun testBuilderWithUndefinedLayerSourceLabel() {
         LayerSettings.Builder.newInstance()
-            .source("nantes.mbtiles")
+            .addSource("nantes.mbtiles")
             .build()
     }
 
@@ -168,7 +169,7 @@ class LayerSettingsTest {
     fun testBuilderFromEmptyLayerSourceName() {
         LayerSettings.Builder.newInstance()
             .label("Nantes")
-            .source("")
+            .addSource("")
             .build()
     }
 
@@ -178,7 +179,7 @@ class LayerSettingsTest {
             LayerType.TILES,
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             ).getType()
         )
 
@@ -186,7 +187,7 @@ class LayerSettingsTest {
             LayerType.TILES,
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ).getType()
         )
 
@@ -194,7 +195,7 @@ class LayerSettingsTest {
             LayerType.VECTOR,
             LayerSettings(
                 "Nantes",
-                "nantes.wkt"
+                listOf("nantes.wkt")
             ).getType()
         )
 
@@ -202,7 +203,7 @@ class LayerSettingsTest {
             LayerType.VECTOR,
             LayerSettings(
                 "Nantes",
-                "nantes.json"
+                listOf("nantes.json")
             ).getType()
         )
 
@@ -210,7 +211,7 @@ class LayerSettingsTest {
             LayerType.VECTOR,
             LayerSettings(
                 "Nantes",
-                "nantes.geojson"
+                listOf("nantes.geojson")
             ).getType()
         )
 
@@ -218,7 +219,7 @@ class LayerSettingsTest {
             LayerType.NOT_IMPLEMENTED,
             LayerSettings(
                 "Nantes",
-                "nantes.unknown"
+                listOf("nantes.unknown")
             ).getType()
         )
     }
@@ -228,14 +229,14 @@ class LayerSettingsTest {
         assertTrue(
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.mbtiles")
+                .addSource("nantes.mbtiles")
                 .build().properties.active
         )
 
         assertTrue(
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.mbtiles")
+                .addSource("nantes.mbtiles")
                 .properties(
                     LayerPropertiesSettings.Builder.newInstance()
                         .active()
@@ -247,7 +248,7 @@ class LayerSettingsTest {
         assertFalse(
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.mbtiles")
+                .addSource("nantes.mbtiles")
                 .properties(
                     LayerPropertiesSettings.Builder.newInstance()
                         .active(false)
@@ -259,7 +260,7 @@ class LayerSettingsTest {
         assertNotEquals(
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.mbtiles")
+                .addSource("nantes.mbtiles")
                 .properties(
                     LayerPropertiesSettings.Builder.newInstance()
                         .active()
@@ -268,7 +269,7 @@ class LayerSettingsTest {
                 .build(),
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
-                .source("nantes.mbtiles")
+                .addSource("nantes.mbtiles")
                 .properties(
                     LayerPropertiesSettings.Builder.newInstance()
                         .active(false)
@@ -283,7 +284,7 @@ class LayerSettingsTest {
         // given a layer settings
         val layerSettings = LayerSettings(
             "Nantes",
-            "nantes.mbtiles"
+            listOf("nantes.mbtiles")
         )
 
         // when we obtain a Parcel object to write the LayerPropertiesSettings instance to it
@@ -299,7 +300,7 @@ class LayerSettingsTest {
         // then
         assertEquals(
             layerSettings,
-            LayerSettings.createFromParcel(parcel)
+            parcelableCreator<LayerSettings>().createFromParcel(parcel)
         )
     }
 
@@ -308,84 +309,84 @@ class LayerSettingsTest {
         assertTrue(
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             ) < LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             )
         )
         assertTrue(
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             ) == LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             )
         )
         assertTrue(
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             ) < LayerSettings(
                 "OSM #1",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             )
         )
         assertTrue(
             LayerSettings(
                 "OSM",
-                "https://a.tile.openstreetmap.org"
+                listOf("https://a.tile.openstreetmap.org")
             ) < LayerSettings(
                 "OSM",
-                "https://b.tile.openstreetmap.org"
+                listOf("https://b.tile.openstreetmap.org")
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ) < LayerSettings(
                 "Nantes #1",
-                "nantes2.mbtiles"
+                listOf("nantes2.mbtiles")
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ) < LayerSettings(
                 "Nantes",
-                "nantes2.mbtiles"
+                listOf("nantes2.mbtiles")
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ) == LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles",
+                listOf("nantes.mbtiles"),
                 LayerPropertiesSettings(active = false)
             ) < LayerSettings(
                 "Nantes",
-                "nantes.mbtiles",
+                listOf("nantes.mbtiles"),
                 LayerPropertiesSettings(active = true)
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                "nantes.mbtiles"
+                listOf("nantes.mbtiles")
             ) < LayerSettings(
                 "Nantes",
-                "nantes.unknown"
+                listOf("nantes.unknown")
             )
         )
 
@@ -393,7 +394,7 @@ class LayerSettingsTest {
             listOf(
                 LayerSettings.Builder.newInstance()
                     .label("Nantes")
-                    .source("nantes.mbtiles")
+                    .addSource("nantes.mbtiles")
                     .properties(
                         LayerPropertiesSettings.Builder.newInstance()
                             .active(false)
@@ -402,29 +403,29 @@ class LayerSettingsTest {
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("OSM")
-                    .source("https://a.tile.openstreetmap.org")
+                    .addSource("https://a.tile.openstreetmap.org")
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")
-                    .source("nantes.wkt")
+                    .addSource("nantes.wkt")
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("OTM")
-                    .source("https://a.tile.opentopomap.org")
+                    .addSource("https://a.tile.opentopomap.org")
                     .build()
             ).sorted(),
             listOf(
                 LayerSettings.Builder.newInstance()
                     .label("OSM")
-                    .source("https://a.tile.openstreetmap.org")
+                    .addSource("https://a.tile.openstreetmap.org")
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("OTM")
-                    .source("https://a.tile.opentopomap.org")
+                    .addSource("https://a.tile.opentopomap.org")
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes")
-                    .source("nantes.mbtiles")
+                    .addSource("nantes.mbtiles")
                     .properties(
                         LayerPropertiesSettings.Builder.newInstance()
                             .active(false)
@@ -433,7 +434,7 @@ class LayerSettingsTest {
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")
-                    .source("nantes.wkt")
+                    .addSource("nantes.wkt")
                     .build()
             )
         )

@@ -16,10 +16,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
+import fr.geonature.maps.layer.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
-import fr.geonature.maps.settings.LayerSettingsViewModel
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
+import fr.geonature.maps.ui.overlay.AttributionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
 import fr.geonature.maps.ui.widget.EditFeatureButton
@@ -44,7 +45,6 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -233,8 +233,7 @@ open class MapFragment : Fragment(),
         )
 
         // update map settings according to preferences
-        return mapSettingsBuilder
-            .useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
+        return mapSettingsBuilder.useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
                 context,
                 mapSettingsBuilder.useOnlineLayers
             ))
@@ -268,10 +267,14 @@ open class MapFragment : Fragment(),
 
         // configure and display attribution notice for the current online source
         if (mapSettings.showAttribution) {
-            val copyrightOverlay = CopyrightOverlay(context)
-            copyrightOverlay.setAlignBottom(true)
-            copyrightOverlay.setAlignRight(true)
-            mapView.overlays.add(copyrightOverlay)
+            AttributionOverlay(mapView.context).apply {
+                setAlignBottom(true)
+                setAlignRight(true)
+                setTextSize(8)
+            }
+                .also {
+                    mapView.overlays.add(it)
+                }
         }
 
         // configure and display map compass
@@ -432,8 +435,7 @@ open class MapFragment : Fragment(),
                 override fun onZoom(event: ZoomEvent?): Boolean {
                     val zoomLevel = event?.zoomLevel ?: return true
 
-                    val selectedLayers =
-                        vm.getActiveLayersOnZoomLevel(zoomLevel)
+                    val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
 
                     getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
                         (overlay as FeatureCollectionOverlay).isEnabled =
@@ -469,8 +471,7 @@ open class MapFragment : Fragment(),
                         return@launch
                     }
 
-                    val selectedLayers =
-                        vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+                    val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
 
                     mapView.overlays.asSequence()
                         .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
@@ -478,17 +479,14 @@ open class MapFragment : Fragment(),
                             mapView.overlays.remove(it)
                         }
 
-                    val markerOverlaysFirstIndex =
-                        mapView.overlays.indexOfFirst { it is Marker }
-                            .coerceAtLeast(0)
+                    val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
+                        .coerceAtLeast(0)
                     it.forEach { overlay ->
-                        mapView.overlays.add(
-                            markerOverlaysFirstIndex,
+                        mapView.overlays.add(markerOverlaysFirstIndex,
                             (overlay as FeatureCollectionOverlay).apply {
                                 isEnabled =
                                     selectedLayers.any { selectedLayer -> selectedLayer.label == name }
-                            }
-                        )
+                            })
                     }
 
                     mapView.invalidate()
@@ -531,8 +529,7 @@ open class MapFragment : Fragment(),
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
 
-        private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
-            "layer_settings_dialog_fragment"
+        private const val LAYER_SETTINGS_DIALOG_FRAGMENT = "layer_settings_dialog_fragment"
 
         private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 
@@ -545,18 +542,17 @@ open class MapFragment : Fragment(),
         fun newInstance(
             mapSettings: MapSettings,
             editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
-        ) =
-            MapFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(
-                        ARG_MAP_SETTINGS,
-                        mapSettings
-                    )
-                    putSerializable(
-                        ARG_EDIT_MODE,
-                        editMode
-                    )
-                }
+        ) = MapFragment().apply {
+            arguments = Bundle().apply {
+                putParcelable(
+                    ARG_MAP_SETTINGS,
+                    mapSettings
+                )
+                putSerializable(
+                    ARG_EDIT_MODE,
+                    editMode
+                )
             }
+        }
     }
 }

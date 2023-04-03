@@ -1,4 +1,4 @@
-package fr.geonature.maps.settings
+package fr.geonature.maps.layer
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -9,6 +9,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.jts.geojson.io.WKTReader
+import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.settings.LayerType
+import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.getSelectedLayers
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setSelectedLayers
@@ -36,7 +40,6 @@ import org.osmdroid.tileprovider.modules.MapTileSqlCacheProvider
 import org.osmdroid.tileprovider.modules.NetworkAvailabliltyCheck
 import org.osmdroid.tileprovider.modules.OfflineTileProvider
 import org.osmdroid.tileprovider.modules.SqlTileWriter
-import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver
 import org.osmdroid.views.overlay.Overlay
 import org.tinylog.Logger
@@ -48,8 +51,10 @@ import java.io.FileReader
  *
  * @author S. Grimault
  */
-class LayerSettingsViewModel(application: Application, private val baseTilesPath: String? = null) :
-    AndroidViewModel(application) {
+class LayerSettingsViewModel(
+    application: Application,
+    private val baseTilesPath: String? = null
+) : AndroidViewModel(application) {
 
     private var rootPath: File? = null
     private val selectedLayers: MutableMap<String, LayerSettings> = mutableMapOf()
@@ -83,7 +88,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 putAll(validLayersSettings.filter { !it.properties.active }
                     .map {
                         Pair(
-                            it.source,
+                            it.getPrimarySource(),
                             it
                         )
                     })
@@ -96,10 +101,8 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             val vectorOverlays = buildVectorOverlays(activeLayerSettings)
 
             // save current selection
-            setUseOnlineLayers(
-                getApplication(),
-                selectedLayers.values.any { layer -> layer.isOnline() && layer.properties.active }
-            )
+            setUseOnlineLayers(getApplication(),
+                selectedLayers.values.any { layer -> layer.isOnline() && layer.properties.active })
             setSelectedLayers(
                 getApplication(),
                 selectedLayers.values.toList()
@@ -126,7 +129,11 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             (layerSettings.isOnline() && useOnlineLayers) || !layerSettings.isOnline()
         }).map { layerSettings ->
             if (layerSettings.isOnline()) {
-                layerSettings.copy(properties = layerSettings.properties.copy(active = useOnlineLayers))
+                layerSettings.copy(
+                    properties = layerSettings.properties.copy(
+                        active = useOnlineLayers
+                    )
+                )
             } else {
                 layerSettings.copy()
             }
@@ -141,14 +148,11 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
 
     fun getActiveLayersOnZoomLevel(zoomLevel: Double): List<LayerSettings> {
         return selectedLayers.values.filter {
-            it.properties.active &&
-                it.properties.minZoomLevel.toDouble()
-                    .coerceAtLeast(0.0)
-                    .rangeTo(
-                        it.properties.maxZoomLevel.toDouble()
-                            .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE
-                    )
-                    .contains(zoomLevel)
+            it.properties.active && it.properties.minZoomLevel.toDouble()
+                .coerceAtLeast(0.0)
+                .rangeTo(it.properties.maxZoomLevel.toDouble()
+                    .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE)
+                .contains(zoomLevel)
         }
     }
 
@@ -160,7 +164,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 .filter { it.getType() == LayerType.TILES }
                 .filter { !it.isOnline() }
                 .map {
-                    Logger.info { "loading local tiles layer '${it.source}'..." }
+                    Logger.info { "loading local tiles layer '${it.label}'..." }
 
                     Pair(
                         it,
@@ -168,43 +172,40 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                     )
                 }
                 .onEach {
-                    selectedLayers[it.first.source] =
-                        it.first.copy(properties = it.first.properties.copy(active = it.second != null))
-                }
-                .filter {
-                    val canRead = it.second?.canRead() == true
-
-                    if (!canRead) {
-                        Logger.warn { "cannot read local tiles layer '${it.first.source}'${if (it.second == null) "" else " (${it.second})"}..." }
-                    }
-
-                    canRead
+                    selectedLayers[it.first.getPrimarySource()] = it.first.copy(
+                        properties = it.first.properties.copy(
+                            active = it.second.isNotEmpty()
+                        )
+                    )
                 }
                 .map {
-                    Logger.info { "local tiles layer '${it.first.source}' loaded" }
+                    Logger.info { "local tiles layer '${it.first.label}' loaded" }
 
-                    it.second!!
+                    it.second
                 }
                 .toList()
+                .flatten()
 
             val onlineTileSource = layersSettings.find { it.isOnline() }
-                ?.let {
-                    selectedLayers[it.source] = it.copy()
+                ?.let { layersSettings ->
+                    val onlineTileSource = runCatching {
+                        TileSourceFactory.getOnlineTileSource(
+                            getApplication(),
+                            layersSettings
+                        )
+                    }.onFailure {
+                        Logger.warn {
+                            it.message
+                                ?: "failed to find the corresponding online tile source from online layer '${layersSettings.label}'"
+                        }
+                    }
+                        .getOrNull() ?: return@let null
 
-                    Logger.info { "loading online layer '${it.source}'..." }
+                    selectedLayers[layersSettings.getPrimarySource()] = layersSettings.copy()
 
-                    XYTileSource(
-                        it.label,
-                        it.properties.minZoomLevel,
-                        it.properties.maxZoomLevel,
-                        it.properties.tileSizePixels,
-                        ".${it.properties.tileMimeType?.substringAfter("image/")}",
-                        arrayOf(
-                            it.source.removeSuffix("/")
-                                .plus("/")
-                        ),
-                        it.properties.attribution
-                    )
+                    Logger.info { "loading online layer '${layersSettings.label}'..." }
+
+                    onlineTileSource
                 }
                 ?: return@withContext if (offlineTileSources.isEmpty()) null else OfflineTileProvider(
                     registerReceiver,
@@ -216,12 +217,10 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 onlineTileSource
             )
 
-            val offlineTileProvider = MapTileFileArchiveProvider(
-                registerReceiver,
+            val offlineTileProvider = MapTileFileArchiveProvider(registerReceiver,
                 onlineTileSource,
                 offlineTileSources.map { ArchiveFileFactory.getArchiveFile(it) }
-                    .toTypedArray()
-            )
+                    .toTypedArray())
 
             val approximationProvider = MapTileApproximater()
             approximationProvider.addProvider(cacheProvider)
@@ -237,12 +236,11 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 onlineTileSource,
                 registerReceiver,
                 (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(cacheProvider)
-                else emptyArray()) +
-                    arrayOf(
-                        offlineTileProvider,
-                        approximationProvider,
-                        onlineTileProvider,
-                    )
+                else emptyArray()) + arrayOf(
+                    offlineTileProvider,
+                    approximationProvider,
+                    onlineTileProvider,
+                )
             )
         }
 
@@ -251,7 +249,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             layersSettings.asFlow()
                 .filter { it.getType() == LayerType.VECTOR }
                 .map {
-                    Logger.info { "loading vector layer '${it.source}'..." }
+                    Logger.info { "loading vector layer '${it.label}'..." }
 
                     Pair(
                         it,
@@ -259,63 +257,61 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                     )
                 }
                 .onEach {
-                    selectedLayers[it.first.source] =
-                        it.first.copy(properties = it.first.properties.copy(active = it.second != null))
+                    selectedLayers[it.first.getPrimarySource()] = it.first.copy(
+                        properties = it.first.properties.copy(
+                            active = it.second.isNotEmpty()
+                        )
+                    )
                 }
                 .filter {
-                    if (it.second == null) {
-                        Logger.warn { "cannot read vector layer '${it.first.source}'..." }
+                    if (it.second.isEmpty()) {
+                        Logger.warn { "cannot read vector layer '${it.first.label}'..." }
                     }
 
-                    it.second != null
+                    it.second.isNotEmpty()
                 }
                 .map {
-                    when (it.second?.extension) {
-                        "geojson", "json" -> Pair(
-                            it.first,
-                            runCatching { GeoJsonReader().read(FileReader(it.second)) }.getOrNull()
-                        )
-                        "wkt" -> Pair(
-                            it.first,
-                            runCatching { WKTReader().readFeatures(FileReader(it.second)) }.getOrNull()
-                        )
-                        else -> {
-                            Logger.warn { "unsupported vector layer '${it.first.source}'" }
+                    it.first to it.second.map { file ->
+                        when (file.extension) {
+                            "geojson", "json" -> runCatching {
+                                GeoJsonReader().read(FileReader(file))
+                            }.onFailure {
+                                Logger.warn { "failed to load vector layer from file '${file.name}'" }
+                            }
+                                .getOrDefault(emptyList())
+                            "wkt" -> runCatching {
+                                WKTReader().readFeatures(FileReader(file))
+                            }.onFailure {
+                                Logger.warn { "failed to load vector layer from file '${file.name}'" }
+                            }
+                                .getOrDefault(emptyList())
+                            else -> {
+                                Logger.warn { "unsupported vector layer '${file.name}'" }
 
-                            Pair(
-                                it.first,
-                                null
-                            )
+                                emptyList()
+                            }
                         }
                     }
+                        .filter { features -> features.isNotEmpty() }
                 }
                 .onEach {
-                    selectedLayers[it.first.source] =
-                        it.first.copy(properties = it.first.properties.copy(active = !it.second.isNullOrEmpty()))
+                    selectedLayers[it.first.getPrimarySource()] =
+                        it.first.copy(properties = it.first.properties.copy(active = it.second.isNotEmpty()))
                 }
                 .filter {
-                    if (it.second == null) {
-                        Logger.warn { "cannot read vector layer '${it.first.source}'" }
+                    if (it.second.isEmpty()) {
+                        Logger.warn { "cannot read vector layer '${it.first.label}'" }
                     }
 
-                    it.second != null
-                }
-                .filter {
-                    val isLoaded = it.second!!.isNotEmpty()
-
-                    if (!isLoaded) {
-                        Logger.warn { "empty vector layer '${it.first.source}'" }
-                    }
-
-                    isLoaded
+                    it.second.isNotEmpty()
                 }
                 .map {
-                    Logger.info { "vector layer '${it.first.source}' loaded" }
+                    Logger.info { "vector layer '${it.first.label}' loaded" }
 
                     FeatureCollectionOverlay().apply {
                         name = it.first.label
                         setFeatures(
-                            it.second!!,
+                            it.second.flatten(),
                             it.first.properties.style ?: LayerStyleSettings()
                         )
                     }
@@ -333,7 +329,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                 }
             }
             // absolute path
-            else if (segments.isNotEmpty() && baseTilesPath?.startsWith(File.separator) == true) {
+            else if (baseTilesPath?.startsWith(File.separator) == true) {
                 File(
                     segments.joinToString(
                         separator = File.separator,
@@ -344,8 +340,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             // relative path
             else {
                 // first: try to find tiles relative path from external storage
-                (getFile(getExternalStorageDirectory(getApplication()))
-                    .walkTopDown()
+                (getFile(getExternalStorageDirectory(getApplication())).walkTopDown()
                     .filter { it.isDirectory }
                     .filter { segments.first() == it.name }
                     .find {
@@ -358,8 +353,7 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
                             } else segments.first() == it.name
                     }
                 // if not found, try to find tiles relative path from internal storage
-                    ?: getInternalStorage(getApplication()).mountPath
-                        .walkTopDown()
+                    ?: getInternalStorage(getApplication()).mountPath.walkTopDown()
                         .filter { it.isDirectory }
                         .filter { segments.first() == it.name }
                         .find {
@@ -389,34 +383,50 @@ class LayerSettingsViewModel(application: Application, private val baseTilesPath
             }
     }
 
-    private suspend fun resolveLayerSettingsPath(layerSettings: LayerSettings): File? =
+    private suspend fun resolveLayerSettingsPath(layerSettings: LayerSettings): List<File> =
         withContext(Dispatchers.IO) {
             if (layerSettings.isOnline()) {
-                return@withContext null
+                return@withContext emptyList()
             }
 
             val rootPath = resolveRootPath()
 
             rootPath.walkTopDown()
-                .firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
-                ?: getExternalStorageDirectory(getApplication())
-                    .also {
-                        Logger.warn {
-                            "no layer '${layerSettings.source}' found from root path: '$rootPath', try to perform a deep scan from ${if (it.absolutePath == getInternalStorage(getApplication()).mountPath.absolutePath) "internal" else "external"} storage '${it}'..."
-                        }
-                    }
-                    .walkTopDown()
-                    .firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
-                ?: getInternalStorage(getApplication()).mountPath.let {
-                    if (it.absolutePath == getExternalStorageDirectory(getApplication()).absolutePath) null else it
+                .filter { f ->
+                    f.isFile && f.canRead() && layerSettings.source.any { it == f.name }
                 }
-                    ?.also {
-                        Logger.warn {
-                            "no layer '${layerSettings.source}' found from root path: '$rootPath', try to perform a deep scan from internal storage '${it}'..."
-                        }
+                .toList()
+                .takeIf { it.isNotEmpty() } ?: getExternalStorageDirectory(getApplication()).also {
+                Logger.warn {
+                    "no layer '${layerSettings.label}' found from root path: '$rootPath', try to perform a deep scan from ${
+                        if (it.absolutePath == getInternalStorage(getApplication()).mountPath.absolutePath) "internal"
+                        else "external"
+                    } storage '${it}'..."
+                }
+            }
+                .walkTopDown()
+                .filter { f ->
+                    f.isFile && f.canRead() && layerSettings.source.any { it == f.name }
+                }
+                .toList()
+                .takeIf { it.isNotEmpty() } ?: getInternalStorage(getApplication()).mountPath.let {
+                if (it.absolutePath == getExternalStorageDirectory(getApplication()).absolutePath) null else it
+            }
+                ?.also {
+                    Logger.warn {
+                        "no layer '${layerSettings.label}' found from root path: '$rootPath', try to perform a deep scan from internal storage '${it}'..."
                     }
-                    ?.walkTopDown()
-                    ?.firstOrNull { f -> f.isFile && f.name == layerSettings.source && f.canRead() }
+                }
+                ?.walkTopDown()
+                ?.filter { f ->
+                    f.isFile && f.canRead() && layerSettings.source.any { it == f.name }
+                }
+                ?.toList() ?: run {
+                Logger.warn {
+                    "no layer '${layerSettings.label}' found from storage"
+                }
+                emptyList()
+            }
         }
 
     companion object {

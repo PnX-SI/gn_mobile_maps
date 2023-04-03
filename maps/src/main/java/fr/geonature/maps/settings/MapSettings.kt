@@ -1,8 +1,8 @@
 package fr.geonature.maps.settings
 
-import android.os.Parcel
 import android.os.Parcelable
-import androidx.core.os.ParcelCompat
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 
@@ -11,6 +11,7 @@ import org.osmdroid.util.GeoPoint
  *
  * @author S. Grimault
  */
+@Parcelize
 data class MapSettings(
     private val _layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
@@ -44,78 +45,6 @@ data class MapSettings(
         builder.maxBounds,
         builder.center
     )
-
-    private constructor(source: Parcel) : this(
-        mutableListOf(),
-        source.readString(),
-        ParcelCompat.readBoolean(source),
-        ParcelCompat.readBoolean(source),
-        ParcelCompat.readBoolean(source),
-        ParcelCompat.readBoolean(source),
-        ParcelCompat.readBoolean(source),
-        ParcelCompat.readBoolean(source),
-        source.readDouble(),
-        source.readDouble(),
-        source.readDouble(),
-        source.readDouble(),
-        source.readParcelable(BoundingBox::class.java.classLoader) as BoundingBox?,
-        source.readParcelable(GeoPoint::class.java.classLoader) as GeoPoint?
-    ) {
-        source.readTypedList(
-            _layersSettings,
-            LayerSettings.CREATOR
-        )
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    override fun writeToParcel(
-        dest: Parcel?,
-        flags: Int
-    ) {
-        dest?.also {
-            it.writeString(baseTilesPath)
-            ParcelCompat.writeBoolean(
-                dest,
-                useOnlineLayers
-            )
-            ParcelCompat.writeBoolean(
-                dest,
-                showAttribution
-            )
-            ParcelCompat.writeBoolean(
-                dest,
-                showCompass
-            )
-            ParcelCompat.writeBoolean(
-                dest,
-                showScale
-            )
-            ParcelCompat.writeBoolean(
-                dest,
-                showZoom
-            )
-            ParcelCompat.writeBoolean(
-                dest,
-                rotationGesture
-            )
-            it.writeDouble(zoom)
-            it.writeDouble(minZoomLevel)
-            it.writeDouble(maxZoomLevel)
-            it.writeDouble(minZoomEditing)
-            it.writeParcelable(
-                maxBounds,
-                0
-            )
-            it.writeParcelable(
-                center,
-                0
-            )
-            it.writeTypedList(_layersSettings)
-        }
-    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -169,6 +98,7 @@ data class MapSettings(
         return result
     }
 
+    @IgnoredOnParcel
     val layersSettings: List<LayerSettings> = _layersSettings.sorted()
 
     fun getOnlineLayers(): List<LayerSettings> {
@@ -305,13 +235,13 @@ data class MapSettings(
 
         fun addLayer(
             label: String,
-            source: String
+            vararg source: String
         ) =
             apply {
                 addLayer(
                     LayerSettings.Builder.newInstance()
                         .label(label)
-                        .source(source)
+                        .sources(source.toList())
                         .build()
                 )
             }
@@ -328,16 +258,6 @@ data class MapSettings(
 
         companion object {
             fun newInstance(): Builder = Builder()
-        }
-    }
-
-    companion object CREATOR : Parcelable.Creator<MapSettings> {
-        override fun createFromParcel(parcel: Parcel): MapSettings {
-            return MapSettings(parcel)
-        }
-
-        override fun newArray(size: Int): Array<MapSettings?> {
-            return arrayOfNulls(size)
         }
     }
 }

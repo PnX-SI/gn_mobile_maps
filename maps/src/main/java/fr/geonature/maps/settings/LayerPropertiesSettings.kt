@@ -1,14 +1,14 @@
 package fr.geonature.maps.settings
 
-import android.os.Parcel
 import android.os.Parcelable
-import androidx.core.os.ParcelCompat
+import kotlinx.parcelize.Parcelize
 
 /**
  * Layer additional properties.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
+@Parcelize
 data class LayerPropertiesSettings(
     val active: Boolean = Builder.newInstance().active,
     val minZoomLevel: Int = Builder.newInstance().minZoomLevel,
@@ -28,35 +28,6 @@ data class LayerPropertiesSettings(
         builder.attribution,
         builder.style
     )
-
-    private constructor(parcel: Parcel) : this(
-        ParcelCompat.readBoolean(parcel),
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readParcelable(LayerStyleSettings::class.java.classLoader)
-    )
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.also {
-            ParcelCompat.writeBoolean(dest, active)
-            it.writeInt(minZoomLevel)
-            it.writeInt(maxZoomLevel)
-            it.writeInt(tileSizePixels)
-            it.writeString(tileMimeType)
-            it.writeString(attribution)
-            it.writeParcelable(
-                style,
-                0
-            )
-        }
-    }
 
     class Builder {
         internal var active: Boolean = true
@@ -133,16 +104,6 @@ data class LayerPropertiesSettings(
 
         companion object {
             fun newInstance(): Builder = Builder()
-        }
-    }
-
-    companion object CREATOR : Parcelable.Creator<LayerPropertiesSettings> {
-        override fun createFromParcel(parcel: Parcel): LayerPropertiesSettings {
-            return LayerPropertiesSettings(parcel)
-        }
-
-        override fun newArray(size: Int): Array<LayerPropertiesSettings?> {
-            return arrayOfNulls(size)
         }
     }
 }

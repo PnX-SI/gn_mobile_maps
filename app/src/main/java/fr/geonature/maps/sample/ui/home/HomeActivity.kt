@@ -40,7 +40,15 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
             "osmdroid"
         )
 
-        Logger.debug { "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${if (osmdroidFile.canRead()) "r" else ""}${if (osmdroidFile.canWrite()) "w" else ""}${if (osmdroidFile.canExecute()) "x" else ""})" }
+        Logger.debug {
+            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${
+                if (osmdroidFile.canRead()) "r" else ""
+            }${
+                if (osmdroidFile.canWrite()) "w" else ""
+            }${
+                if (osmdroidFile.canExecute()) "x" else ""
+            })"
+        }
 
         mapSettingsResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
             when (result.resultCode) {
@@ -65,6 +73,8 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
 
                         return@registerForActivityResult
                     }
+
+                    Logger.info { "loading settings from '$uri'..." }
 
                     try {
                         val mapSettings =

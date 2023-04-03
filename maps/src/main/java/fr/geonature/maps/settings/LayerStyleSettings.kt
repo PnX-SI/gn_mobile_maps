@@ -1,17 +1,18 @@
 package fr.geonature.maps.settings
 
 import android.graphics.Color
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.core.graphics.ColorUtils
+import kotlinx.parcelize.Parcelize
 
 /**
  * Layer style to apply.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
+@Parcelize
 data class LayerStyleSettings(
     val stroke: Boolean = Builder.newInstance().stroke,
     @ColorInt
@@ -29,31 +30,6 @@ data class LayerStyleSettings(
         builder.fill,
         builder.fillColor
     )
-
-    private constructor(parcel: Parcel) : this(
-        parcel.readByte() == Integer.valueOf(1)
-            .toByte(), // as boolean value
-        parcel.readInt(),
-        parcel.readInt(),
-        parcel.readByte() == Integer.valueOf(1)
-            .toByte(), // as boolean value
-        parcel.readInt()
-    )
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    override fun writeToParcel(
-        dest: Parcel?,
-        flags: Int
-    ) {
-        dest?.writeByte((if (stroke) 1 else 0).toByte()) // as boolean value
-        dest?.writeInt(color)
-        dest?.writeInt(weight)
-        dest?.writeByte((if (fill) 1 else 0).toByte()) // as boolean value
-        dest?.writeInt(fillColor)
-    }
 
     class Builder {
 
@@ -194,16 +170,6 @@ data class LayerStyleSettings(
         companion object {
             fun newInstance(): Builder =
                 Builder()
-        }
-    }
-
-    companion object CREATOR : Parcelable.Creator<LayerStyleSettings> {
-        override fun createFromParcel(parcel: Parcel): LayerStyleSettings {
-            return LayerStyleSettings(parcel)
-        }
-
-        override fun newArray(size: Int): Array<LayerStyleSettings?> {
-            return arrayOfNulls(size)
         }
     }
 }
