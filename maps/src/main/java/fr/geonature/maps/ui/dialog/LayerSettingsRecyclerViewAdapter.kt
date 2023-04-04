@@ -207,7 +207,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         this.selectedItems.clear()
         this.selectedItems.putAll(selectedLayersSettings.map {
             Pair(
-                it.source,
+                it.getPrimarySource(),
                 it
             )
         })
@@ -236,7 +236,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 (selectedItems.values + items.filter { it.first.isOnline() }
                     .map { it.first }).firstOrNull { it.isOnline() }
                     ?.also {
-                        selectedItems[it.source] =
+                        selectedItems[it.getPrimarySource()] =
                             it.copy(properties = it.properties.copy(active = (view as SwitchCompat).isChecked))
                     }
 
@@ -303,18 +303,18 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                     selectedItems.values.any { it.source == layerSettings.source }
 
                 if (isAlreadySelected) {
-                    selectedItems.remove(layerSettings.source)
+                    selectedItems.remove(layerSettings.getPrimarySource())
                     checkbox.isChecked = false
                 } else {
                     if (layerSettings.isOnline()) {
                         selectedItems.values
                             .filter { it.isOnline() }
                             .forEach {
-                                selectedItems.remove(it.source)
+                                selectedItems.remove(it.getPrimarySource())
                             }
                     }
 
-                    selectedItems[layerSettings.source] = layerSettings
+                    selectedItems[layerSettings.getPrimarySource()] = layerSettings
                     checkbox.isChecked = true
                 }
 

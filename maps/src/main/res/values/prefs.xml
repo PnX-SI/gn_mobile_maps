@@ -10,5 +10,7 @@
     <string name="preference_category_map_show_scale">Display the map scale</string>
     <string name="preference_category_map_show_zoom_key" translatable="false">map_show_zoom</string>
     <string name="preference_category_map_show_zoom">Display the zoom control</string>
+    <string name="preference_category_map_rotation_key" translatable="false">map_rotation_gesture</string>
+    <string name="preference_category_map_rotation">Activate rotation gesture</string>
 
 </resources>

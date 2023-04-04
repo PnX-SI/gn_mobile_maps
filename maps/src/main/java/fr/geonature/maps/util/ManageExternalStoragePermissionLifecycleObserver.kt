@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
@@ -14,6 +13,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.tinylog.kotlin.Logger
 import kotlin.coroutines.resume
 
 /**
@@ -45,10 +45,7 @@ class ManageExternalStoragePermissionLifecycleObserver(activity: ComponentActivi
         ) {
             val granted = Environment.isExternalStorageManager()
 
-            Log.i(
-                TAG,
-                if (granted) "request manage external storage permission granted" else "request manage external storage permission cancelled"
-            )
+            Logger.info { if (granted) "request manage external storage permission granted" else "request manage external storage permission cancelled" }
 
             manageExternalStorageContinuation?.resumeWith(Result.success(granted))
         }
@@ -60,17 +57,14 @@ class ManageExternalStoragePermissionLifecycleObserver(activity: ComponentActivi
      *
      * @return `true` if this app has All Files Access on the primary shared/external storage media.
      */
-    suspend operator fun invoke() = suspendCancellableCoroutine<Boolean> { continuation ->
+    suspend operator fun invoke() = suspendCancellableCoroutine { continuation ->
         // already granted to manage all files
         if (Environment.isExternalStorageManager()) {
             continuation.resume(true)
             return@suspendCancellableCoroutine
         }
 
-        Log.i(
-            TAG,
-            "ask permission to have access to manage all files..."
-        )
+        Logger.info { "ask permission to have access to manage all files..." }
 
         manageExternalStorageContinuation = continuation
         startManageExternalStorageResultLauncher.launch(
@@ -80,9 +74,5 @@ class ManageExternalStoragePermissionLifecycleObserver(activity: ComponentActivi
         continuation.invokeOnCancellation {
             manageExternalStorageContinuation = null
         }
-    }
-
-    companion object {
-        private val TAG = ManageExternalStoragePermissionLifecycleObserver::class.java.name
     }
 }

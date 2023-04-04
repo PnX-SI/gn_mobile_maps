@@ -19,6 +19,7 @@
     <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>
     <string name="snackbar_layers_undefined">Aucun fond de défini</string>
     <string name="snackbar_base_path_undefined">Impossible de charger les couches depuis \'%1$s\'</string>
+    <string name="snackbar_add_poi_zoom_min">Le niveau de zoom est insuffisant pour ajouter un marqueur</string>
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
 

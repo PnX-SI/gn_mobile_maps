@@ -5,9 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
-import android.util.Log
 import fr.geonature.maps.R
-import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.util.DrawableUtils
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -19,6 +17,7 @@ import org.osmdroid.views.overlay.compass.IOrientationConsumer
 import org.osmdroid.views.overlay.compass.IOrientationProvider
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
+import org.tinylog.kotlin.Logger
 
 /**
  * Shows on the map the current user position.
@@ -91,10 +90,7 @@ class MyLocationOverlay(
         location: Location?,
         source: IMyLocationProvider?
     ) {
-        Log.i(
-            TAG,
-            "onLocationChanged: $location"
-        )
+        Logger.debug { "onLocationChanged: $location" }
 
         if (location == null) return
 
@@ -137,12 +133,10 @@ class MyLocationOverlay(
         if (isEnabled) return true
 
         isEnabled = myLocationProvider.startLocationProvider(this)
-        compassOrientationProviderEnabled = compassOrientationProvider.startOrientationProvider(this)
+        compassOrientationProviderEnabled =
+            compassOrientationProvider.startOrientationProvider(this)
 
-        Log.i(
-            TAG,
-            "enableMyLocation: $isEnabled"
-        )
+        Logger.debug { "enableMyLocation: $isEnabled" }
 
         onLocationChanged(
             myLocationProvider.lastKnownLocation,
@@ -283,9 +277,5 @@ class MyLocationOverlay(
 
             canvas.restore()
         }
-    }
-
-    companion object {
-        private val TAG = MyLocationOverlay::class.java.name
     }
 }

@@ -9,7 +9,6 @@ import android.util.JsonToken.NAME
 import android.util.JsonToken.NULL
 import android.util.JsonToken.NUMBER
 import android.util.JsonToken.STRING
-import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
@@ -26,17 +25,17 @@ import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
+import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.io.Reader
 import java.lang.Double.parseDouble
 import java.lang.Integer.parseInt
-import java.util.ArrayList
 
 /**
  * Default `JsonReader` about reading a `JSON` stream and build the corresponding
  * [AbstractGeoJson] implementation.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  *
  * @see [https://tools.ietf.org/html/rfc7946](https://tools.ietf.org/html/rfc7946)
  *
@@ -63,10 +62,7 @@ class GeoJsonReader {
         try {
             return read(json.reader())
         } catch (e: Exception) {
-            Log.w(
-                TAG,
-                e
-            )
+            Logger.warn(e)
         }
 
         return emptyList()
@@ -121,10 +117,7 @@ class GeoJsonReader {
                                 try {
                                     features.add(readFeature(reader))
                                 } catch (e: Exception) {
-                                    Log.w(
-                                        TAG,
-                                        e
-                                    )
+                                    Logger.warn(e)
                                 }
                             }
 
@@ -138,8 +131,7 @@ class GeoJsonReader {
 
                 if ("Feature" == type) {
                     // try to find ID value from properties
-                    id = if (id.isNullOrBlank()) bundle?.get("id")
-                        ?.toString() else id
+                    id = if (id.isNullOrBlank()) bundle?.getString("id") else id
 
                     if (id.isNullOrBlank()) {
                         throw IOException("No id found for feature")
@@ -172,10 +164,7 @@ class GeoJsonReader {
                     val feature = try {
                         readFeature(reader)
                     } catch (e: Exception) {
-                        Log.w(
-                            TAG,
-                            e
-                        )
+                        Logger.warn(e)
 
                         null
                     }
@@ -208,10 +197,7 @@ class GeoJsonReader {
         try {
             return readFeature(json.reader())
         } catch (e: Exception) {
-            Log.w(
-                TAG,
-                e
-            )
+            Logger.warn(e)
         }
 
         return null
@@ -307,10 +293,7 @@ class GeoJsonReader {
         try {
             return readFeatureCollection(json.reader())
         } catch (e: Exception) {
-            Log.w(
-                TAG,
-                e
-            )
+            Logger.warn(e)
         }
 
         return null
@@ -358,10 +341,7 @@ class GeoJsonReader {
                         try {
                             featureCollection.addFeature(readFeature(reader))
                         } catch (e: Exception) {
-                            Log.w(
-                                TAG,
-                                e
-                            )
+                            Logger.warn(e)
                         }
                     }
 
@@ -392,10 +372,7 @@ class GeoJsonReader {
         try {
             return readGeometry(json.reader())
         } catch (e: Exception) {
-            Log.w(
-                TAG,
-                e
-            )
+            Logger.warn(e)
         }
 
         return null
@@ -743,10 +720,5 @@ class GeoJsonReader {
         }
 
         return bundle
-    }
-
-    companion object {
-
-        private val TAG = GeoJsonReader::class.java.name
     }
 }

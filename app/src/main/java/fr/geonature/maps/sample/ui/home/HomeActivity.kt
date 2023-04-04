@@ -2,7 +2,6 @@ package fr.geonature.maps.sample.ui.home
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -11,6 +10,7 @@ import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
 import fr.geonature.maps.settings.io.MapSettingsReader
 import fr.geonature.mountpoint.util.FileUtils
+import org.tinylog.kotlin.Logger
 import java.io.InputStreamReader
 
 /**
@@ -39,10 +39,16 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
             FileUtils.getExternalStorageDirectory(application),
             "osmdroid"
         )
-        Log.d(
-            TAG,
-            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${if (osmdroidFile.canRead()) "r" else ""}${if (osmdroidFile.canWrite()) "w" else ""}${if (osmdroidFile.canExecute()) "x" else ""})"
-        )
+
+        Logger.debug {
+            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${
+                if (osmdroidFile.canRead()) "r" else ""
+            }${
+                if (osmdroidFile.canWrite()) "w" else ""
+            }${
+                if (osmdroidFile.canExecute()) "x" else ""
+            })"
+        }
 
         mapSettingsResultLauncher = registerForActivityResult(StartActivityForResult()) { result ->
             when (result.resultCode) {
@@ -68,6 +74,8 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                         return@registerForActivityResult
                     }
 
+                    Logger.info { "loading settings from '$uri'..." }
+
                     try {
                         val mapSettings =
                             MapSettingsReader().read(InputStreamReader(contentResolver.openInputStream(uri)))
@@ -83,11 +91,7 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                             )
                         )
                     } catch (e: Exception) {
-                        Log.w(
-                            TAG,
-                            "unable to load settings from $uri",
-                            e
-                        )
+                        Logger.warn(e) { "unable to load settings from $uri" }
 
                         Toast.makeText(
                             this,
@@ -121,9 +125,5 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                 menuItem.label
             )
         )
-    }
-
-    companion object {
-        private val TAG = HomeActivity::class.java.name
     }
 }

@@ -23,13 +23,16 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import java.util.HashMap
 import java.util.UUID
 
 /**
- * Edit feature (POI) on the map.
+ * Edit feature (POI) on the map:
+ * - by a long pressing gesture on the map
+ * - by tapping this floating action button
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * A [Snackbar] may be shown if the current zoom level doesn't meet the minimal editing zoom.
+ *
+ * @author S. Grimault
  */
 class EditFeatureButton(
     context: Context,
@@ -95,8 +98,28 @@ class EditFeatureButton(
 
     private val mapEventReceiver = object : MapEventsReceiver {
         override fun longPressHelper(p: GeoPoint?): Boolean {
-            // nothing to do...
-            return false
+            if (showSnackbarAboutAddingPoiAndInsufficientZoomLevel(p)) {
+                return false
+            }
+
+            if (listener?.getEditMode() == EditMode.SINGLE) {
+                val mapView = listener?.getMapView() ?: return false
+
+                with(pois) {
+                    forEach { poi ->
+                        findMarkerOverlay { it.id == poi.key }?.also {
+                            deselectMarker(it)
+                            it.remove(mapView)
+                            mapView.invalidate()
+                        }
+                    }
+                    clear()
+                }
+            }
+
+            addPoi(p)
+
+            return true
         }
 
         override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -124,7 +147,7 @@ class EditFeatureButton(
         if (!selectedPoi.isNullOrBlank()) return true
         if (pois.isNotEmpty() && listener?.getEditMode() == EditMode.SINGLE) return true
 
-        if (listener?.getMinZoomEditing() ?: 0.0 <= event?.zoomLevel ?: 0.0) {
+        if ((listener?.getMinZoomEditing() ?: 0.0) <= (event?.zoomLevel ?: 0.0)) {
             show()
         } else {
             hide()
@@ -144,21 +167,28 @@ class EditFeatureButton(
         mapView.addMapListener(this)
     }
 
+    /**
+     * Returns the currently added POIs on the map.
+     */
     fun getSelectedPOIs(): List<GeoPoint> {
         return pois.values.toList()
     }
 
+    /**
+     * Sets POIs on the map.
+     * Clear previous selection.
+     */
     fun setSelectedPOIs(selectedPois: List<GeoPoint>) {
         val mapView = this.listener?.getMapView() ?: return
 
-        if (this.listener?.getEditMode() == EditMode.SINGLE && this.pois.isNotEmpty()) {
-            mapView.zoomToBoundingBox(
-                BoundingBox.fromGeoPoints(getSelectedPOIs()),
-                true
-            )
-
-            return
+        pois.forEach { poi ->
+            findMarkerOverlay { overlay -> overlay.id == poi.key }?.also {
+                deselectMarker(it)
+                it.remove(mapView)
+            }
         }
+        pois.clear()
+        mapView.invalidate()
 
         selectedPois.forEach {
             addPoi(it)
@@ -170,6 +200,9 @@ class EditFeatureButton(
         )
     }
 
+    /**
+     * Clear the currently selected POI.
+     */
     fun clearActiveSelection(): Marker? {
         return findMarkerOverlay { it.id == selectedPoi }?.also { deselectMarker(it) }
     }
@@ -238,6 +271,8 @@ class EditFeatureButton(
 
         mapView.overlays.add(poiMarker)
         mapView.invalidate()
+        centerMapToMarker(poiMarker)
+
         pois[poiMarker.id] = poiMarker.position
         listener?.onSelectedPOIs(getSelectedPOIs())
 
@@ -305,7 +340,9 @@ class EditFeatureButton(
     private fun centerMapToMarker(marker: Marker) {
         val mapView = listener?.getMapView() ?: return
         val editZoom =
-            if (listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble <= mapView.zoomLevelDouble) mapView.zoomLevelDouble
+            if ((listener?.getMinZoomEditing()
+                    ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
+            ) mapView.zoomLevelDouble
             else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
 
         animateTo(
@@ -313,6 +350,25 @@ class EditFeatureButton(
             marker.position,
             editZoom
         )
+    }
+
+    private fun showSnackbarAboutAddingPoiAndInsufficientZoomLevel(geoPoint: GeoPoint?): Boolean {
+        val mapView = listener?.getMapView() ?: return false
+        if (geoPoint == null) return false
+
+        if ((listener?.getMinZoomEditing()
+                ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
+        ) {
+            return false
+        }
+
+        listener?.makeSnackbar(
+            R.string.snackbar_add_poi_zoom_min,
+            Snackbar.LENGTH_SHORT
+        )
+            ?.show()
+
+        return true
     }
 
     private fun showSnackbarAboutDeletedPoi(geoPoint: GeoPoint?) {

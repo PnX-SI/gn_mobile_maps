@@ -15,6 +15,7 @@ import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
+import fr.geonature.maps.util.getParcelableCompat
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -27,7 +28,7 @@ import org.osmdroid.views.overlay.mylocation.IMyLocationProvider
 /**
  * Show or hide current user location overlay on the map.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class MyLocationButton(
     context: Context,
@@ -90,7 +91,7 @@ class MyLocationButton(
                 if (state.getByte("locationState") == Integer.valueOf(1)
                         .toByte()
                 ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
-            super.onRestoreInstanceState(state.getParcelable("superState"))
+            super.onRestoreInstanceState(state.getParcelableCompat("superState"))
 
             return
         }

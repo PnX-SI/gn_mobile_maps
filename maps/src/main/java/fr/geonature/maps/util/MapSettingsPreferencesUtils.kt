@@ -12,7 +12,7 @@ import fr.geonature.maps.settings.MapSettings
 /**
  * Helper about application settings through [Preference].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 object MapSettingsPreferencesUtils {
 
@@ -57,6 +57,13 @@ object MapSettingsPreferencesUtils {
                 context.getString(R.string.preference_category_map_show_zoom_key),
                 Pair(
                     mapSettings.showZoom,
+                    true
+                )
+            ),
+            Pair(
+                context.getString(R.string.preference_category_map_rotation_key),
+                Pair(
+                    mapSettings.rotationGesture,
                     true
                 )
             ),
@@ -188,6 +195,21 @@ object MapSettingsPreferencesUtils {
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_zoom_key),
                 MapSettings.Builder.newInstance().showZoom
+            )
+    }
+
+    /**
+     * Whether to activate rotation gesture (default: [MapSettings.Builder.rotationGesture]).
+     *
+     * @param context the current context
+     *
+     * @return `true` if the rotation gesture is enabled
+     */
+    fun rotationGesture(context: Context): Boolean {
+        return getDefaultSharedPreferences(context)
+            .getBoolean(
+                context.getString(R.string.preference_category_map_rotation_key),
+                MapSettings.Builder.newInstance().rotationGesture
             )
     }
 }

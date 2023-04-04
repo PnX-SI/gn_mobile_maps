@@ -16,6 +16,9 @@
         <SwitchPreference
             android:key="@string/preference_category_map_show_zoom_key"
             android:title="@string/preference_category_map_show_zoom" />
+        <SwitchPreference
+            android:key="@string/preference_category_map_rotation_key"
+            android:title="@string/preference_category_map_rotation" />
 
     </PreferenceCategory>
 

@@ -4,9 +4,24 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../../../../../layout/custom_preview.xml" value="0.45" />
+        <entry key="app/src/main/res/drawable/ic_action_settings.xml" value="0.536" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.536" />
         <entry key="app/src/main/res/xml/preferences_about.xml" value="0.35054347826086957" />
         <entry key="app/src/main/res/xml/preferences_permissions.xml" value="0.1" />
         <entry key="app/src/main/res/xml/preferences_storage.xml" value="0.35054347826086957" />
+        <entry key="maps/src/main/res/drawable/ic_add_poi.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_compass.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_delete.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_gps_location_found.xml" value="0.5345" />
+        <entry key="maps/src/main/res/drawable/ic_gps_location_off.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_gps_location_searching.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_layer_online.xml" value="0.536" />
+        <entry key="maps/src/main/res/drawable/ic_zoom_in.xml" value="0.312" />
+        <entry key="maps/src/main/res/drawable/zoom_in_background.xml" value="0.5345" />
+        <entry key="maps/src/main/res/drawable/zoom_text_background.xml" value="0.4355" />
+        <entry key="maps/src/main/res/layout/button_zoom.xml" value="0.26063829787234044" />
+        <entry key="maps/src/main/res/layout/fragment_map.xml" value="0.26063829787234044" />
+        <entry key="maps/src/main/res/menu/map_action_mode.xml" value="0.7807291666666667" />
         <entry key="maps/src/main/res/xml/map_preferences.xml" value="0.1276595744680851" />
       </map>
     </option>

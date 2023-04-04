@@ -1,8 +1,6 @@
 package fr.geonature.maps.ui
 
-import android.Manifest
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,23 +16,24 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.maps.R
+import fr.geonature.maps.layer.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
-import fr.geonature.maps.settings.LayerSettingsViewModel
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
+import fr.geonature.maps.ui.overlay.AttributionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
-import fr.geonature.maps.util.CheckPermissionLifecycleObserver
-import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
+import fr.geonature.maps.util.MapSettingsPreferencesUtils.rotationGesture
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
+import fr.geonature.maps.util.getSerializableCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -47,7 +46,6 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -58,7 +56,7 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
  *
  * Use the [MapFragment.newInstance] factory method to create an instance of this fragment.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 open class MapFragment : Fragment(),
     LayerSettingsDialogFragment.OnLayerSettingsDialogFragmentListener {
@@ -67,12 +65,7 @@ open class MapFragment : Fragment(),
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
 
     private var layerSettingsViewModel: LayerSettingsViewModel? = null
-
-    private var manageExternalStoragePermissionLifecycleObserver: ManageExternalStoragePermissionLifecycleObserver? =
-        null
-    private var readExternalStoragePermissionLifecycleObserver: CheckPermissionLifecycleObserver? =
-        null
-    private var locationPermissionLifecycleObserver: CheckPermissionLifecycleObserver? = null
+    private var listener: OnMapFragmentPermissionsListener? = null
 
     private lateinit var container: View
     private lateinit var mapView: MapView
@@ -89,23 +82,6 @@ open class MapFragment : Fragment(),
         val context = context ?: return
 
         mapSettings = getMapSettings(context)
-
-        activity?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                manageExternalStoragePermissionLifecycleObserver =
-                    ManageExternalStoragePermissionLifecycleObserver(this)
-            } else {
-                readExternalStoragePermissionLifecycleObserver = CheckPermissionLifecycleObserver(
-                    this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                )
-            }
-
-            locationPermissionLifecycleObserver = CheckPermissionLifecycleObserver(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-        }
     }
 
     override fun onCreateView(
@@ -140,24 +116,20 @@ open class MapFragment : Fragment(),
 
         // check permissions and configure MapView
         activity?.also {
+            layerSettingsViewModel = ViewModelProvider(it,
+                LayerSettingsViewModel.Factory {
+                    LayerSettingsViewModel(
+                        it.application,
+                        mapSettings.baseTilesPath
+                    )
+                })[LayerSettingsViewModel::class.java]
+
             lifecycleScope.launch {
-                val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    manageExternalStoragePermissionLifecycleObserver?.invoke()
-                } else {
-                    readExternalStoragePermissionLifecycleObserver?.invoke(it)
-                } ?: false
+                val granted = listener?.onStoragePermissionsGranted() ?: false
 
                 if (!granted) {
                     showSnackbar(getString(R.string.snackbar_permissions_not_granted))
                 }
-
-                layerSettingsViewModel = ViewModelProvider(it,
-                    LayerSettingsViewModel.Factory {
-                        LayerSettingsViewModel(
-                            it.application,
-                            mapSettings.baseTilesPath
-                        )
-                    })[LayerSettingsViewModel::class.java]
 
                 // then load map configuration from preferences
                 Configuration.getInstance()
@@ -168,10 +140,19 @@ open class MapFragment : Fragment(),
                         )
                     }
 
-                configureMapView()
-                loadLayersSettings()
+                configureMapView(mapView)
             }
         }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        if (context !is OnMapFragmentPermissionsListener) {
+            throw RuntimeException("$context must implement OnMapFragmentPermissionsListener")
+        }
+
+        listener = context
     }
 
     override fun onDetach() {
@@ -195,6 +176,12 @@ open class MapFragment : Fragment(),
             showZoom(context).also {
                 zoomFab.setMapView(mapView)
                 zoomFab.visibility = if (it) View.VISIBLE else View.GONE
+            }
+            rotationGesture(context).also { isEnabled ->
+                (mapView.overlays.firstOrNull { it is RotationGestureOverlay }
+                    ?: RotationGestureOverlay(mapView).also {
+                        mapView.overlays.add(it)
+                    }).let { it.isEnabled = isEnabled }
             }
         }
 
@@ -247,14 +234,14 @@ open class MapFragment : Fragment(),
         )
 
         // update map settings according to preferences
-        return mapSettingsBuilder
-            .useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
-                context,
-                mapSettingsBuilder.useOnlineLayers
-            ))
+        return mapSettingsBuilder.useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
+            context,
+            mapSettingsBuilder.useOnlineLayers
+        ))
             .showCompass(showCompass(context))
             .showScale(showScale(context))
             .showZoom(showZoom(context))
+            .rotationGesture(rotationGesture(context))
             .build()
     }
 
@@ -264,7 +251,7 @@ open class MapFragment : Fragment(),
         }
     }
 
-    private fun configureMapView() {
+    private fun configureMapView(mapView: MapView) {
         // disable default zoom controller
         mapView.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         mapView.setMultiTouchControls(true)
@@ -273,17 +260,21 @@ open class MapFragment : Fragment(),
         mapView.setUseDataConnection(false)
 
         // configure and activate rotation gesture
-        val rotationGestureOverlay = RotationGestureOverlay(mapView)
-        rotationGestureOverlay.isEnabled = true
-        mapView.overlays.add(rotationGestureOverlay)
+        if (mapSettings.rotationGesture) {
+            val rotationGestureOverlay = RotationGestureOverlay(mapView)
+            rotationGestureOverlay.isEnabled = true
+            mapView.overlays.add(rotationGestureOverlay)
+        }
 
         // configure and display attribution notice for the current online source
-        if (mapSettings.showAttribution) {
-            val copyrightOverlay = CopyrightOverlay(context)
-            copyrightOverlay.setAlignBottom(true)
-            copyrightOverlay.setAlignRight(true)
-            mapView.overlays.add(copyrightOverlay)
+        AttributionOverlay(mapView.context).apply {
+            setAlignBottom(true)
+            setAlignRight(true)
+            setTextSize(8)
         }
+            .also {
+                mapView.overlays.add(it)
+            }
 
         // configure and display map compass
         if (mapSettings.showCompass) {
@@ -301,68 +292,10 @@ open class MapFragment : Fragment(),
         }
 
         // configure edit POIs overlay
-        editFeatureFab.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
-            override fun getMapView(): MapView {
-                return mapView
-            }
-
-            override fun getEditMode(): EditFeatureButton.EditMode {
-                return arguments?.getSerializable(ARG_EDIT_MODE) as EditFeatureButton.EditMode
-            }
-
-            override fun getMinZoom(): Double {
-                return mapSettings.minZoomLevel
-            }
-
-            override fun getMinZoomEditing(): Double {
-                return mapSettings.minZoomEditing
-            }
-
-            override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
-                return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
-            }
-
-            override fun makeSnackbar(
-                resId: Int,
-                duration: Int
-            ): Snackbar {
-                return Snackbar.make(
-                    container,
-                    resId,
-                    duration
-                )
-            }
-
-            override fun onSelectedPOIs(pois: List<GeoPoint>) {
-                onSelectedPOIsListener(pois)
-            }
-        })
+        configureEditFeatureFab()
 
         // configure my location overlay
-        myLocationFab.setListener(object : MyLocationButton.OnMyLocationButtonListener {
-            override fun getMapView(): MapView {
-                return mapView
-            }
-
-            override fun getMaxBounds(): BoundingBox? {
-                return mapSettings.maxBounds
-            }
-
-            override fun checkPermissions(permission: String) {
-                lifecycleScope.launch {
-                    context?.also {
-                        val granted = locationPermissionLifecycleObserver?.invoke(it) ?: false
-
-                        if (!granted) {
-                            showSnackbar(getString(R.string.snackbar_permissions_not_granted))
-                            return@also
-                        }
-
-                        myLocationFab.requestLocation()
-                    }
-                }
-            }
-        })
+        configureMyLocationFab()
 
         if (mapSettings.zoom > 0.0) {
             mapView.controller.setZoom(mapSettings.zoom)
@@ -405,6 +338,71 @@ open class MapFragment : Fragment(),
         scaleBarOverlay.isEnabled = enabled
     }
 
+    private fun configureEditFeatureFab() {
+        editFeatureFab.setListener(object : EditFeatureButton.OnEditFeatureButtonListener {
+            override fun getMapView(): MapView {
+                return mapView
+            }
+
+            override fun getEditMode(): EditFeatureButton.EditMode {
+                return arguments?.getSerializableCompat(ARG_EDIT_MODE)
+                    ?: EditFeatureButton.EditMode.SINGLE
+            }
+
+            override fun getMinZoom(): Double {
+                return mapSettings.minZoomLevel
+            }
+
+            override fun getMinZoomEditing(): Double {
+                return mapSettings.minZoomEditing
+            }
+
+            override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
+                return (activity as AppCompatActivity?)?.startSupportActionMode(callback)
+            }
+
+            override fun makeSnackbar(
+                resId: Int,
+                duration: Int
+            ): Snackbar {
+                return Snackbar.make(
+                    container,
+                    resId,
+                    duration
+                )
+            }
+
+            override fun onSelectedPOIs(pois: List<GeoPoint>) {
+                onSelectedPOIsListener(pois)
+            }
+        })
+    }
+
+    private fun configureMyLocationFab() {
+        myLocationFab.setListener(object : MyLocationButton.OnMyLocationButtonListener {
+            override fun getMapView(): MapView {
+                return mapView
+            }
+
+            override fun getMaxBounds(): BoundingBox? {
+                return mapSettings.maxBounds
+            }
+
+            override fun checkPermissions(permission: String) {
+                lifecycleScope.launch {
+                    val granted = listener?.onLocationPermissionGranted() ?: false
+
+                    if (!granted) {
+                        showSnackbar(getString(R.string.snackbar_permissions_not_granted))
+                        return@launch
+                    }
+
+                    myLocationFab.requestLocation()
+                }
+            }
+        })
+    }
+
     private fun configureLayersSelector() {
         layerSettingsViewModel?.also { vm ->
             val layerSettings = mapSettings.layersSettings.takeIf { it.isNotEmpty() } ?: return@also
@@ -437,8 +435,7 @@ open class MapFragment : Fragment(),
                 override fun onZoom(event: ZoomEvent?): Boolean {
                     val zoomLevel = event?.zoomLevel ?: return true
 
-                    val selectedLayers =
-                        vm.getActiveLayersOnZoomLevel(zoomLevel)
+                    val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
 
                     getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
                         (overlay as FeatureCollectionOverlay).isEnabled =
@@ -474,8 +471,7 @@ open class MapFragment : Fragment(),
                         return@launch
                     }
 
-                    val selectedLayers =
-                        vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+                    val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
 
                     mapView.overlays.asSequence()
                         .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
@@ -483,17 +479,14 @@ open class MapFragment : Fragment(),
                             mapView.overlays.remove(it)
                         }
 
-                    val markerOverlaysFirstIndex =
-                        mapView.overlays.indexOfFirst { it is Marker }
-                            .coerceAtLeast(0)
+                    val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
+                        .coerceAtLeast(0)
                     it.forEach { overlay ->
-                        mapView.overlays.add(
-                            markerOverlaysFirstIndex,
+                        mapView.overlays.add(markerOverlaysFirstIndex,
                             (overlay as FeatureCollectionOverlay).apply {
                                 isEnabled =
                                     selectedLayers.any { selectedLayer -> selectedLayer.label == name }
-                            }
-                        )
+                            })
                     }
 
                     mapView.invalidate()
@@ -515,13 +508,28 @@ open class MapFragment : Fragment(),
             .show()
     }
 
+    /**
+     * Callback used by [MapFragment].
+     */
+    interface OnMapFragmentPermissionsListener {
+
+        /**
+         * Whether storage access permissions were granted.
+         */
+        suspend fun onStoragePermissionsGranted(): Boolean
+
+        /**
+         * Whether location permission was granted.
+         */
+        suspend fun onLocationPermissionGranted(): Boolean
+    }
+
     companion object {
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
         const val ARG_EDIT_MODE = "arg_edit_mode"
 
-        private const val LAYER_SETTINGS_DIALOG_FRAGMENT =
-            "layer_settings_dialog_fragment"
+        private const val LAYER_SETTINGS_DIALOG_FRAGMENT = "layer_settings_dialog_fragment"
 
         private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 
@@ -534,18 +542,17 @@ open class MapFragment : Fragment(),
         fun newInstance(
             mapSettings: MapSettings,
             editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
-        ) =
-            MapFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(
-                        ARG_MAP_SETTINGS,
-                        mapSettings
-                    )
-                    putSerializable(
-                        ARG_EDIT_MODE,
-                        editMode
-                    )
-                }
+        ) = MapFragment().apply {
+            arguments = Bundle().apply {
+                putParcelable(
+                    ARG_MAP_SETTINGS,
+                    mapSettings
+                )
+                putSerializable(
+                    ARG_EDIT_MODE,
+                    editMode
+                )
             }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
+import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -13,13 +14,13 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [MapSettings].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class MapSettingsTest {
 
     @Test
-    fun testBuilder() {
+    fun `should instantiate map settings from builder`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -33,9 +34,9 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
+            .rotationGesture(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -70,14 +71,14 @@ class MapSettingsTest {
                 arrayListOf(
                     LayerSettings(
                         "Nantes",
-                        "nantes.mbtiles"
+                        listOf("nantes.mbtiles")
                     )
                 ),
                 "/mnt/sdcard",
                 showScale = false,
-                showAttribution = false,
                 showCompass = false,
                 showZoom = true,
+                rotationGesture = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -98,7 +99,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testFromExistingMapSettings() {
+    fun `should instantiate a new map settings from existing instance`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -112,8 +113,8 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
+            .rotationGesture(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -151,7 +152,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testLayers() {
+    fun `should add layers from builder`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -164,9 +165,6 @@ class MapSettingsTest {
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
-            .showScale(false)
-            .showAttribution(false)
-            .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -206,7 +204,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     label = "OSM",
-                    source = "https://a.tile.openstreetmap.org",
+                    source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -217,7 +215,7 @@ class MapSettingsTest {
                 ),
                 LayerSettings(
                     label = "OTM",
-                    source = "https://a.tile.opentopomap.org",
+                    source = listOf("https://a.tile.opentopomap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -227,13 +225,13 @@ class MapSettingsTest {
                     )
                 ),
                 LayerSettings(
-                    "Nantes",
-                    "nantes.mbtiles"
+                    label = "Nantes",
+                    source = listOf("nantes.mbtiles")
                 ),
                 LayerSettings(
-                    "nantes.wkt",
-                    "nantes.wkt",
-                    LayerPropertiesSettings(
+                    label = "nantes.wkt",
+                    source = listOf("nantes.wkt"),
+                    properties = LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
@@ -243,7 +241,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testGetOnlineLayers() {
+    fun `should add online layers from builder`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -256,9 +254,6 @@ class MapSettingsTest {
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
-            .showScale(false)
-            .showAttribution(false)
-            .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -294,7 +289,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     label = "OSM",
-                    source = "https://a.tile.openstreetmap.org",
+                    source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
                         active = true,
                         minZoomLevel = 0,
@@ -310,7 +305,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testGetTilesLayers() {
+    fun `should get tiles layers from map settings`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -323,9 +318,6 @@ class MapSettingsTest {
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
-            .showScale(false)
-            .showAttribution(false)
-            .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -357,7 +349,7 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     "Nantes",
-                    "nantes.mbtiles"
+                    listOf("nantes.mbtiles")
                 )
             ),
             mapSettings.getTilesLayers()
@@ -366,7 +358,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testGetVectorLayers() {
+    fun `should get vector layers`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -379,9 +371,6 @@ class MapSettingsTest {
         // given map settings instance from its builder
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
-            .showScale(false)
-            .showAttribution(false)
-            .showCompass(false)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -421,21 +410,21 @@ class MapSettingsTest {
             arrayOf(
                 LayerSettings(
                     "nantes.wkt",
-                    "nantes.wkt",
+                    listOf("nantes.wkt"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
                 LayerSettings(
                     "nantes.json",
-                    "nantes.json",
+                    listOf("nantes.json"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
                 ),
                 LayerSettings(
                     "nantes.geojson",
-                    "nantes.geojson",
+                    listOf("nantes.geojson"),
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
@@ -447,7 +436,7 @@ class MapSettingsTest {
     }
 
     @Test
-    fun testParcelable() {
+    fun `should obtain map settings instance from parcelable`() {
         val nwGeoPoint = GeoPoint(
             47.253369,
             -1.605721
@@ -461,9 +450,9 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
+            .rotationGesture(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -499,7 +488,7 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.createFromParcel(parcel)
+            parcelableCreator<MapSettings>().createFromParcel(parcel)
         )
     }
 }

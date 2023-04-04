@@ -1,24 +1,23 @@
 package fr.geonature.maps.jts.geojson.io
 
-import android.util.Log
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
+import org.locationtech.jts.io.ParseException
+import org.tinylog.kotlin.Logger
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.Reader
-import java.util.ArrayList
 import java.util.regex.Pattern
-import org.locationtech.jts.io.ParseException
 
 /**
  * Converts a GeoJSON in Well-Known Text format to a [AbstractGeoJson] implementation.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class WKTReader {
 
-    private val wktLinePattern = Pattern.compile("^([0-9]+),([A-Z]+\\s*\\(.+\\))$")
+    private val wktLinePattern = Pattern.compile("^(\\d+),([A-Z]+\\s*\\(.+\\))$")
     private val wktReader: org.locationtech.jts.io.WKTReader = org.locationtech.jts.io.WKTReader()
 
     /**
@@ -57,10 +56,7 @@ class WKTReader {
                             feature
                         )
                     } catch (pe: ParseException) {
-                        Log.w(
-                            TAG,
-                            pe
-                        )
+                        Logger.warn(pe)
                     }
                 }
 
@@ -72,10 +68,7 @@ class WKTReader {
             listener.onFinish(featureCollection)
             bufferedReader.close()
         } catch (ioe: IOException) {
-            Log.w(
-                TAG,
-                ioe
-            )
+            Logger.warn(ioe)
 
             listener.onError(ioe)
         }
@@ -134,10 +127,5 @@ class WKTReader {
         fun onFinish(featureCollection: FeatureCollection)
 
         fun onError(t: Throwable)
-    }
-
-    companion object {
-
-        private val TAG = WKTReader::class.java.name
     }
 }

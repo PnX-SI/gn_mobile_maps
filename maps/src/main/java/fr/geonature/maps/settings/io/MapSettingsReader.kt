@@ -1,21 +1,23 @@
 package fr.geonature.maps.settings.io
 
 import android.util.JsonReader
+import android.util.JsonToken
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
-import android.util.Log
+import android.util.JsonToken.STRING
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.MapSettings
 import org.osmdroid.util.GeoPoint
+import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.io.Reader
 
 /**
  * Default [JsonReader] about reading a `JSON` stream and build the corresponding [MapSettings] metadata.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class MapSettingsReader {
 
@@ -34,10 +36,7 @@ class MapSettingsReader {
         try {
             return read(json.reader())
         } catch (ioe: Exception) {
-            Log.w(
-                TAG,
-                ioe
-            )
+            Logger.warn(ioe)
         }
 
         return null
@@ -81,10 +80,10 @@ class MapSettingsReader {
             when (reader.nextName()) {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
                 "use_default_online_tile_source" -> builder.useOnlineLayers(reader.nextBoolean())
-                "show_attribution" -> builder.showAttribution(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
                 "show_scale" -> builder.showScale(reader.nextBoolean())
                 "show_zoom" -> builder.showZoom(reader.nextBoolean())
+                "rotate" -> builder.rotationGesture(reader.nextBoolean())
                 "max_bounds" -> {
                     val maxBounds = mutableListOf<GeoPoint>()
 
@@ -178,7 +177,7 @@ class MapSettingsReader {
 
             when (reader.nextName()) {
                 "label" -> builder.label(reader.nextString())
-                "source" -> builder.source(reader.nextString())
+                "source" -> builder.sources(readLayerSettingsSource(reader))
                 "properties" -> builder.properties(readLayerPropertiesSettings(reader))
                 else -> reader.skipValue()
             }
@@ -189,12 +188,37 @@ class MapSettingsReader {
         return try {
             builder.build()
         } catch (iae: IllegalArgumentException) {
-            Log.w(
-                TAG,
-                iae
-            )
+            Logger.warn(iae)
 
             null
+        }
+    }
+
+    private fun readLayerSettingsSource(reader: JsonReader): List<String> {
+        return when (reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                emptyList()
+            }
+            STRING -> {
+                listOf(reader.nextString())
+            }
+            JsonToken.BEGIN_ARRAY -> {
+                reader.beginArray()
+                val source = mutableListOf<String>()
+
+                while (reader.hasNext()) {
+                    source.add(reader.nextString())
+                }
+
+                reader.endArray()
+
+                source
+            }
+            else -> {
+                reader.skipValue()
+                emptyList()
+            }
         }
     }
 
@@ -265,10 +289,5 @@ class MapSettingsReader {
             }
             else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
-    }
-
-    companion object {
-
-        private val TAG = MapSettingsReader::class.java.name
     }
 }

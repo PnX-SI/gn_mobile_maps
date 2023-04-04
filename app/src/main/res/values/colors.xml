@@ -6,7 +6,4 @@
     <color name="primary_dark">#00701a</color>
     <color name="accent">#f4511e</color>
 
-    <color name="bright_foreground_dark">@android:color/white</color>
-    <color name="bright_foreground_dark_disabled">#80ffffff</color>
-
 </resources>
