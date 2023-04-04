@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.util.getParcelableExtraCompat
 
 /**
  * Global settings.
@@ -21,7 +22,7 @@ class PreferencesActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val mapSettings: MapSettings? = intent.getParcelableExtra(EXTRA_MAP_SETTINGS)
+        val mapSettings: MapSettings? = intent.getParcelableExtraCompat(EXTRA_MAP_SETTINGS)
 
         // Display the fragment as the main content.
         supportFragmentManager.beginTransaction()

@@ -57,7 +57,7 @@ class ManageExternalStoragePermissionLifecycleObserver(activity: ComponentActivi
      *
      * @return `true` if this app has All Files Access on the primary shared/external storage media.
      */
-    suspend operator fun invoke() = suspendCancellableCoroutine<Boolean> { continuation ->
+    suspend operator fun invoke() = suspendCancellableCoroutine { continuation ->
         // already granted to manage all files
         if (Environment.isExternalStorageManager()) {
             continuation.resume(true)

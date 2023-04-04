@@ -10,6 +10,7 @@ import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.util.PreferencesUtils.updatePreferences
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.util.MapSettingsPreferencesUtils
+import fr.geonature.maps.util.getParcelableCompat
 
 /**
  * Global settings.
@@ -21,7 +22,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setDefaultPreferences(arguments?.getParcelable(ARG_MAP_SETTINGS))
+        setDefaultPreferences(arguments?.getParcelableCompat(ARG_MAP_SETTINGS))
         updatePreferences(preferenceScreen)
         configurePermissions()
     }

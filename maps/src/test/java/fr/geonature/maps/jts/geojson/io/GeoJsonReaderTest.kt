@@ -24,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [GeoJsonReader].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class GeoJsonReaderTest {
@@ -232,25 +232,26 @@ class GeoJsonReaderTest {
         )
         assertEquals(
             "Ile de Versailles",
-            feature.properties["name"]
+            feature.properties.getString("name")
         )
         assertEquals(
             1831,
-            feature.properties["year"]
+            feature.properties.getInt("year")
         )
         assertEquals(
             3.14,
-            feature.properties["double_attribute"]
+            feature.properties.getDouble("double_attribute"),
+            0.0
         )
         assertEquals(
             false,
-            feature.properties["boolean_attribute_false"]
+            feature.properties.getBoolean("boolean_attribute_false")
         )
         assertEquals(
             true,
-            feature.properties["boolean_attribute_true"]
+            feature.properties.getBoolean("boolean_attribute_true")
         )
-        assertNull(feature.properties["undefined_attribute"])
+        assertFalse(feature.properties.containsKey("undefined_attribute"))
         assertNotNull(feature.geometry)
         assertEquals(
             createPoint(

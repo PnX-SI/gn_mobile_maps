@@ -13,11 +13,11 @@ import java.util.regex.Pattern
 /**
  * Converts a GeoJSON in Well-Known Text format to a [AbstractGeoJson] implementation.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class WKTReader {
 
-    private val wktLinePattern = Pattern.compile("^([0-9]+),([A-Z]+\\s*\\(.+\\))$")
+    private val wktLinePattern = Pattern.compile("^(\\d+),([A-Z]+\\s*\\(.+\\))$")
     private val wktReader: org.locationtech.jts.io.WKTReader = org.locationtech.jts.io.WKTReader()
 
     /**

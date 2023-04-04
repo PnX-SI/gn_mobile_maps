@@ -18,6 +18,7 @@ import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
 import fr.geonature.maps.util.CheckPermissionLifecycleObserver
 import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
+import fr.geonature.maps.util.getParcelableExtraCompat
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -58,7 +59,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        mapSettings = intent.getParcelableExtra(EXTRA_MAP_SETTINGS)
+        mapSettings = intent.getParcelableExtraCompat(EXTRA_MAP_SETTINGS)
 
         if (mapSettings == null) {
             Toast.makeText(
@@ -122,7 +123,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
     }
 
     override suspend fun onStoragePermissionsGranted() =
-        suspendCancellableCoroutine<Boolean> { continuation ->
+        suspendCancellableCoroutine { continuation ->
             lifecycleScope.launch {
                 continuation.resume(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -135,7 +136,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
         }
 
     override suspend fun onLocationPermissionGranted() =
-        suspendCancellableCoroutine<Boolean> { continuation ->
+        suspendCancellableCoroutine { continuation ->
             lifecycleScope.launch {
                 continuation.resume(
                     locationPermissionLifecycleObserver?.invoke(this@MapActivity)

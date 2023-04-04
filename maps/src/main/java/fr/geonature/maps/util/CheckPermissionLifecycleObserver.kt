@@ -54,7 +54,7 @@ class CheckPermissionLifecycleObserver(
      * @return `true` if the permission has been granted
      */
     suspend operator fun invoke(context: Context) =
-        suspendCancellableCoroutine<Boolean> { continuation ->
+        suspendCancellableCoroutine { continuation ->
             // already granted
             if (PermissionUtils.checkSelfPermissions(
                     context,

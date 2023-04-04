@@ -35,7 +35,7 @@ import java.lang.Integer.parseInt
  * Default `JsonReader` about reading a `JSON` stream and build the corresponding
  * [AbstractGeoJson] implementation.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  *
  * @see [https://tools.ietf.org/html/rfc7946](https://tools.ietf.org/html/rfc7946)
  *
@@ -131,8 +131,7 @@ class GeoJsonReader {
 
                 if ("Feature" == type) {
                     // try to find ID value from properties
-                    id = if (id.isNullOrBlank()) bundle?.get("id")
-                        ?.toString() else id
+                    id = if (id.isNullOrBlank()) bundle?.getString("id") else id
 
                     if (id.isNullOrBlank()) {
                         throw IOException("No id found for feature")

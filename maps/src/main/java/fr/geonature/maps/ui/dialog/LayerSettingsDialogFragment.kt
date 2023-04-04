@@ -12,11 +12,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.util.getParcelableArrayCompat
 
 /**
  * [DialogFragment] to let the user to select [LayerSettings] to show on the map.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class LayerSettingsDialogFragment : DialogFragment() {
 
@@ -105,9 +106,13 @@ class LayerSettingsDialogFragment : DialogFragment() {
         super.onResume()
 
         adapter?.also {
-            it.setItems(arguments?.getParcelableArrayList(ARG_LAYERS) ?: emptyList())
+            it.setItems(
+                arguments?.getParcelableArrayCompat<LayerSettings>(ARG_LAYERS)
+                    ?.asList() ?: emptyList()
+            )
             it.setSelectedLayers(
-                arguments?.getParcelableArrayList(ARG_LAYERS_SELECTION) ?: emptyList()
+                arguments?.getParcelableArrayCompat<LayerSettings>(ARG_LAYERS_SELECTION)
+                    ?.asList() ?: emptyList()
             )
         }
     }
@@ -140,13 +145,13 @@ class LayerSettingsDialogFragment : DialogFragment() {
             selection: List<LayerSettings> = emptyList()
         ) = LayerSettingsDialogFragment().apply {
             arguments = Bundle().apply {
-                putParcelableArrayList(
+                putParcelableArray(
                     ARG_LAYERS,
-                    ArrayList(layersSettings)
+                    layersSettings.toTypedArray()
                 )
-                putParcelableArrayList(
+                putParcelableArray(
                     ARG_LAYERS_SELECTION,
-                    ArrayList(selection)
+                    selection.toTypedArray()
                 )
             }
         }

@@ -33,6 +33,7 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
+import fr.geonature.maps.util.getSerializableCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -234,9 +235,9 @@ open class MapFragment : Fragment(),
 
         // update map settings according to preferences
         return mapSettingsBuilder.useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
-                context,
-                mapSettingsBuilder.useOnlineLayers
-            ))
+            context,
+            mapSettingsBuilder.useOnlineLayers
+        ))
             .showCompass(showCompass(context))
             .showScale(showScale(context))
             .showZoom(showZoom(context))
@@ -344,7 +345,8 @@ open class MapFragment : Fragment(),
             }
 
             override fun getEditMode(): EditFeatureButton.EditMode {
-                return arguments?.getSerializable(ARG_EDIT_MODE) as EditFeatureButton.EditMode
+                return arguments?.getSerializableCompat(ARG_EDIT_MODE)
+                    ?: EditFeatureButton.EditMode.SINGLE
             }
 
             override fun getMinZoom(): Double {

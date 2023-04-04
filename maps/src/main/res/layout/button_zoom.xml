@@ -11,6 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="32dp"
         android:background="@drawable/zoom_in_background"
+        android:layout_marginTop="@dimen/fab_elevation"
+        android:layout_marginHorizontal="@dimen/fab_elevation"
         android:contentDescription="@string/button_zoom_in_hint"
         android:elevation="@dimen/fab_elevation"
         android:src="@drawable/ic_zoom_in" />
@@ -29,6 +31,8 @@
         android:layout_below="@android:id/empty"
         android:background="@drawable/zoom_out_background"
         android:contentDescription="@string/button_zoom_out_hint"
+        android:layout_marginBottom="@dimen/fab_elevation"
+        android:layout_marginHorizontal="@dimen/fab_elevation"
         android:elevation="@dimen/fab_elevation"
         android:src="@drawable/ic_zoom_out" />
 

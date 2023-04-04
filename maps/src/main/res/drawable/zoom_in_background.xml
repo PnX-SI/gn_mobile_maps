@@ -2,14 +2,14 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@android:color/darker_gray" />
+            <solid android:color="?attr/colorButtonNormal" />
             <corners android:topLeftRadius="48dp"
                 android:topRightRadius="48dp" />
         </shape>
     </item>
     <item>
         <shape>
-            <solid android:color="@android:color/background_light" />
+            <solid android:color="?attr/colorOnPrimarySurface" />
             <corners android:topLeftRadius="48dp"
                 android:topRightRadius="48dp" />
         </shape>
