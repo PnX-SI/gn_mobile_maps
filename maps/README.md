@@ -11,7 +11,6 @@ Example:
 
 ```json
 {
-  "show_attribution": true,
   "show_compass": true,
   "show_scale": true,
   "show_zoom": false,
@@ -62,7 +61,6 @@ Example:
 | -------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
 | `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                                              |
 | `use_default_online_tile_source` | &#9745; | Whether to use the default online tiles source (default: `true`, default tiles source: OSM). |
-| `show_attribution`               | &#9744; | Whether to show the layer attribution control (default: `true`).                             |
 | `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).                         |
 | `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                                             |
 | `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                                             |
@@ -106,14 +104,14 @@ Example:
 
 ##### Layer properties
 
-| Parameter        | Type   | Default value | Description                                                                                           |
-| ---------------- | ------ | ------------- | ----------------------------------------------------------------------------------------------------- |
-| `min_zoom`       | Number | -1            | The minimum zoom level                                                                                |
-| `max_zoom`       | Number | -1            | The maximum zoom level                                                                                |
-| `tile_size`      | Number | 256           | The tile size in pixels (Only applicable to tiles layers).                                            |
-| `tile_mime_type` | Number | `image/png`   | The MIME type used for tiles (Only applicable to tiles layers).                                       |
-| `attribution`    | String | `null`        | Describe the layer data and is often a legal obligation towards copyright holders and tile providers. |
-| `style`          | Object | `null`        | Define the layer style (only applicable to vector layers).                                            |
+| Parameter        | Type   | Default value | Description                                                                                                                             |
+| ---------------- | ------ | ------------- |-----------------------------------------------------------------------------------------------------------------------------------------|
+| `min_zoom`       | Number | -1            | The minimum zoom level                                                                                                                  |
+| `max_zoom`       | Number | -1            | The maximum zoom level                                                                                                                  |
+| `tile_size`      | Number | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
+| `tile_mime_type` | Number | `image/png`   | The MIME type used for tiles (only applicable to tiles layers).                                                                         |
+| `attribution`    | String | `null`        | Describe the layer data and is often a legal obligation towards copyright holders and tile providers (only applicable to tiles layers). |
+| `style`          | Object | `null`        | Define the layer style (only applicable to vector layers).                                                                              |
 
 ##### Layer style
 

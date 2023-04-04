@@ -1,7 +1,6 @@
 {
   "base_path": "/mnt/sdcard/osmdroid",
   "show_scale": false,
-  "show_attribution": false,
   "show_compass": false,
   "show_zoom": true,
   "rotate": true,

@@ -1,6 +1,8 @@
 # gn_mobile_maps
 
 Android Map library based on [osmdroid](http://osmdroid.github.io/osmdroid/index.html).
+* `maps`: The library itself
+* `app`: Demo app
 
 ## Upgrade git sub modules
 

@@ -16,7 +16,6 @@ data class MapSettings(
     private val _layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
     val useOnlineLayers: Boolean = Builder.newInstance().useOnlineLayers,
-    val showAttribution: Boolean = Builder.newInstance().showAttribution,
     val showCompass: Boolean = Builder.newInstance().showCompass,
     val showScale: Boolean = Builder.newInstance().showScale,
     val showZoom: Boolean = Builder.newInstance().showZoom,
@@ -33,7 +32,6 @@ data class MapSettings(
         builder.layersSettings,
         builder.baseTilesPath,
         builder.useOnlineLayers,
-        builder.showAttribution,
         builder.showCompass,
         builder.showScale,
         builder.showZoom,
@@ -55,7 +53,6 @@ data class MapSettings(
         if (_layersSettings != other._layersSettings) return false
         if (baseTilesPath != other.baseTilesPath) return false
         if (useOnlineLayers != other.useOnlineLayers) return false
-        if (showAttribution != other.showAttribution) return false
         if (showCompass != other.showCompass) return false
         if (showScale != other.showScale) return false
         if (showZoom != other.showZoom) return false
@@ -83,7 +80,6 @@ data class MapSettings(
         var result = _layersSettings.hashCode()
         result = 31 * result + baseTilesPath.hashCode()
         result = 31 * result + useOnlineLayers.hashCode()
-        result = 31 * result + showAttribution.hashCode()
         result = 31 * result + showCompass.hashCode()
         result = 31 * result + showScale.hashCode()
         result = 31 * result + showZoom.hashCode()
@@ -124,12 +120,6 @@ data class MapSettings(
          * Whether to use online layers (default: `true`).
          */
         var useOnlineLayers: Boolean = true
-            private set
-
-        /**
-         * Whether to show the layer attribution control (default: `true`).
-         */
-        var showAttribution: Boolean = true
             private set
 
         /**
@@ -181,7 +171,6 @@ data class MapSettings(
                 this.layersSettings.addAll(mapSettings._layersSettings)
                 this.baseTilesPath = mapSettings.baseTilesPath
                 this.useOnlineLayers = mapSettings.useOnlineLayers
-                this.showAttribution = mapSettings.showAttribution
                 this.showCompass = mapSettings.showCompass
                 this.showScale = mapSettings.showScale
                 this.showZoom = mapSettings.showZoom
@@ -199,9 +188,6 @@ data class MapSettings(
 
         fun useOnlineLayers(useOnlineLayers: Boolean) =
             apply { this.useOnlineLayers = useOnlineLayers }
-
-        fun showAttribution(showAttribution: Boolean) =
-            apply { this.showAttribution = showAttribution }
 
         fun showCompass(showCompass: Boolean) =
             apply { this.showCompass = showCompass }

@@ -266,16 +266,14 @@ open class MapFragment : Fragment(),
         }
 
         // configure and display attribution notice for the current online source
-        if (mapSettings.showAttribution) {
-            AttributionOverlay(mapView.context).apply {
-                setAlignBottom(true)
-                setAlignRight(true)
-                setTextSize(8)
-            }
-                .also {
-                    mapView.overlays.add(it)
-                }
+        AttributionOverlay(mapView.context).apply {
+            setAlignBottom(true)
+            setAlignRight(true)
+            setTextSize(8)
         }
+            .also {
+                mapView.overlays.add(it)
+            }
 
         // configure and display map compass
         if (mapSettings.showCompass) {

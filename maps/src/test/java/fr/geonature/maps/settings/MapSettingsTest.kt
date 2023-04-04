@@ -34,7 +34,6 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
             .rotationGesture(true)
@@ -77,7 +76,6 @@ class MapSettingsTest {
                 ),
                 "/mnt/sdcard",
                 showScale = false,
-                showAttribution = false,
                 showCompass = false,
                 showZoom = true,
                 rotationGesture = true,
@@ -115,7 +113,6 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
             .rotationGesture(true)
             .zoom(8.0)
@@ -453,7 +450,6 @@ class MapSettingsTest {
         val mapSettings = MapSettings.Builder.newInstance()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
-            .showAttribution(false)
             .showCompass(false)
             .showZoom(true)
             .rotationGesture(true)
