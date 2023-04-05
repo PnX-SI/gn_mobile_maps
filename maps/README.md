@@ -57,21 +57,21 @@ Example:
 
 ### Parameters description
 
-| Parameter                        | UI      | Description                                                                                  |
-| -------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                                              |
-| `use_default_online_tile_source` | &#9745; | Whether to use the default online tiles source (default: `true`, default tiles source: OSM). |
-| `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).                         |
-| `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                                             |
-| `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                                             |
-| `rotate`                         | &#9745; | Whether to activate rotation gesture (default: `false`).                                     |
-| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box.                     |
-| `center`                         | &#9744; | Center automatically the map at given position at startup.                                   |
-| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                                         |
-| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                                          |
-| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                                          |
-| `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.                              |
-| `layers[]`                       | &#9744; | Define layers to display on the map.                                                         |
+| Parameter                        | UI      | Description                                                              |
+| -------------------------------- | ------- | ------------------------------------------------------------------------ |
+| `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                          |
+| `use_default_online_tile_source` | &#9745; | Whether to use the default online tiles source (default: `true`).        |
+| `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).     |
+| `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                         |
+| `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                         |
+| `rotate`                         | &#9745; | Whether to activate rotation gesture (default: `false`).                 |
+| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box. |
+| `center`                         | &#9744; | Center automatically the map at given position at startup.               |
+| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                     |
+| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                      |
+| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                      |
+| `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.          |
+| `layers[]`                       | &#9744; | Define layers to display on the map.                                     |
 
 #### Base path
 
@@ -84,7 +84,7 @@ Example:
 - If a configured layer was not found from `base_path`, tries to find it by performing a deep scan
   from external storage root path (if defined) or from internal storage root path as fallback
 
-#### Layer description
+## Layer description
 
 | Parameter    | Type               | Description                                                                                               |
 | ------------ | ------------------ | --------------------------------------------------------------------------------------------------------- |
@@ -96,16 +96,56 @@ Example:
 
 - Online tiles source (URLs), supported online sources are:
   - [Geoportail WMTS](https://www.geoportail.gouv.fr)
-  - [OpenTopoMap](https://www.opentopomap.org)
   - [OpenStreetMap](https://www.openstreetmap.org)
+  - [OpenTopoMap](https://www.opentopomap.org)
   - [Wikimedia Maps](https://maps.wikimedia.org)
 - Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`,
-  `.wkt` for vector layer
+  `.wkt` for vector layer.
 
-##### Layer properties
+### Online tiles source
+
+#### Geoportail
+
+Through [WMTS](http://www.opengeospatial.org/standards/wmts) protocol.
+
+Examples of available layer sources:
+
+- **IGN plan v2**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2
+- **Ortho photo**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS
+- **Cadastral map**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS
+
+Where `API_KEY` parameter must be replaced by a valid API key or by the one defined in an open
+access URL to web services.
+
+See https://geoservices.ign.fr/documentation/services/api-et-services-ogc/images-tuilees-wmts-ogc
+for more information (in french).
+
+#### OpenStreetMap
+
+Base URLs:
+
+- https://a.tile.openstreetmap.org
+- https://b.tile.openstreetmap.org
+- https://c.tile.openstreetmap.org
+
+#### OpenTopoMap
+
+Base URLs:
+
+- https://a.tile.opentopomap.org
+- https://b.tile.opentopomap.org
+- https://c.tile.opentopomap.org
+
+#### Wikimedia Maps
+
+Base URLs:
+
+- https://maps.wikimedia.org/osm-intl
+
+#### Layer properties
 
 | Parameter        | Type   | Default value | Description                                                                                                                             |
-| ---------------- | ------ | ------------- |-----------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------- | ------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `min_zoom`       | Number | -1            | The minimum zoom level                                                                                                                  |
 | `max_zoom`       | Number | -1            | The maximum zoom level                                                                                                                  |
 | `tile_size`      | Number | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
@@ -113,7 +153,14 @@ Example:
 | `attribution`    | String | `null`        | Describe the layer data and is often a legal obligation towards copyright holders and tile providers (only applicable to tiles layers). |
 | `style`          | Object | `null`        | Define the layer style (only applicable to vector layers).                                                                              |
 
-##### Layer style
+If an online tile layer is active but no attribution is defined, it will automatically be set to
+its default value according to this layer:
+* **Geoportail**: _© IGN Geoportail_
+* **OpenStreetMap**: _© OpenStreetMap contributors under ODbL licence_
+* **OpenTopoMap**: _Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)_
+* **Wikimedia Maps**: _Wikimedia maps | Map data © OpenStreetMap contributors_
+
+### Layer style
 
 Layer style is only available to vector layers (e.g. WKT or GeoJSON layers). Available parameters
 are as follow:
