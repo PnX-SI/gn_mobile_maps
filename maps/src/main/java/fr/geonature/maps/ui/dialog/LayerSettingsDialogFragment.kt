@@ -10,9 +10,9 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import fr.geonature.compat.os.getParcelableArrayCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
-import fr.geonature.maps.util.getParcelableArrayCompat
 
 /**
  * [DialogFragment] to let the user to select [LayerSettings] to show on the map.

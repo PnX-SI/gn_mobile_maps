@@ -1,1 +1,1 @@
-include ':app', ':maps', ':mountpoint'
+include ':app', ':compat', ':maps', ':mountpoint'

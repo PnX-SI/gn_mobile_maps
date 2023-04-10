@@ -1,9 +1,12 @@
 package fr.geonature.maps.ui.overlay.feature
 
 import fr.geonature.maps.FixtureHelper.getFixture
-import fr.geonature.maps.MockitoKotlinHelper.any
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.settings.LayerStyleSettings
+import io.mockk.every
+import io.mockk.mockkClass
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -11,18 +14,13 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.locationtech.jts.geom.Geometry
-import org.mockito.Mockito.atMostOnce
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 import org.osmdroid.views.overlay.Overlay
 import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests about [FeatureOverlay].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class FeatureOverlayTest {
@@ -159,11 +157,11 @@ class FeatureOverlayTest {
 
     @Test
     fun testSetStyleIfOverlayWasSet() {
-        val backendOverlay = mock(AbstractGeometryOverlay::class.java)
+        val backendOverlay = mockkClass(AbstractGeometryOverlay::class)
+        every { backendOverlay.setStyle(any()) } returns Unit
 
         // given FeatureOverlay with its Overlay
-        @Suppress("UNCHECKED_CAST")
-        val featureOverlay = FeatureOverlay().also {
+        @Suppress("UNCHECKED_CAST") val featureOverlay = FeatureOverlay().also {
             it.backendOverlay = backendOverlay as AbstractGeometryOverlay<Geometry, Overlay>
         }
 
@@ -184,16 +182,13 @@ class FeatureOverlayTest {
             layerStyle,
             featureOverlay.layerStyle
         )
-        verify(
-            backendOverlay,
-            atMostOnce()
-        ).setStyle(featureOverlay.layerStyle)
+        verify { backendOverlay.setStyle(featureOverlay.layerStyle) }
     }
 
     @Test
     fun testDoNotSetStyleIfOverlayWasNotSet() {
         // given an empty FeatureOverlay
-        val featureOverlay = spy(FeatureOverlay())
+        val featureOverlay = spyk(FeatureOverlay())
 
         // when set new style
         val layerStyle = LayerStyleSettings.Builder.newInstance()
@@ -212,9 +207,6 @@ class FeatureOverlayTest {
             LayerStyleSettings(),
             featureOverlay.layerStyle
         )
-        verify(
-            featureOverlay,
-            never()
-        ).backendOverlay?.setStyle(any(LayerStyleSettings::class.java))
+        verify(inverse = true) { featureOverlay.backendOverlay?.setStyle(any()) }
     }
 }

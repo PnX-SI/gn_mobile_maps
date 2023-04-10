@@ -15,6 +15,8 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
+import fr.geonature.compat.os.getParcelableCompat
+import fr.geonature.compat.os.getSerializableCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
@@ -33,7 +35,6 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
-import fr.geonature.maps.util.getSerializableCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -226,7 +227,7 @@ open class MapFragment : Fragment(),
     private fun getMapSettings(context: Context): MapSettings {
         // read map settings from arguments or build the default one
         val mapSettingsBuilder = MapSettings.Builder.newInstance()
-            .from(arguments?.getParcelable(ARG_MAP_SETTINGS))
+            .from(arguments?.getParcelableCompat(ARG_MAP_SETTINGS))
 
         setDefaultPreferences(
             context,

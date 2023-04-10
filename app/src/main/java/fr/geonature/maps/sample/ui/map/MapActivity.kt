@@ -12,13 +12,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.lifecycle.lifecycleScope
+import fr.geonature.compat.content.getParcelableExtraCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
 import fr.geonature.maps.util.CheckPermissionLifecycleObserver
 import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
-import fr.geonature.maps.util.getParcelableExtraCompat
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume

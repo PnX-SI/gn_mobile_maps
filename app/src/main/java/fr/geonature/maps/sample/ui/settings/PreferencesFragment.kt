@@ -6,11 +6,11 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.util.PreferencesUtils.updatePreferences
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.util.MapSettingsPreferencesUtils
-import fr.geonature.maps.util.getParcelableCompat
 
 /**
  * Global settings.

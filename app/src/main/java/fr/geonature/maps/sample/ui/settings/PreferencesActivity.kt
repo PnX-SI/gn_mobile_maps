@@ -6,8 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import fr.geonature.compat.content.getParcelableExtraCompat
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.util.getParcelableExtraCompat
 
 /**
  * Global settings.

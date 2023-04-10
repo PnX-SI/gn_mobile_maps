@@ -7,6 +7,7 @@ plugins {
 version = "0.7.0"
 
 android {
+    namespace 'fr.geonature.maps'
     compileSdkVersion 33
 
     compileOptions {
@@ -36,12 +37,12 @@ android {
             includeAndroidResources = true
         }
     }
-    namespace 'fr.geonature.maps'
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
+    implementation project(':compat')
     implementation project(':mountpoint')
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
@@ -55,12 +56,13 @@ dependencies {
     api 'org.osmdroid:osmdroid-android:6.1.14'
 
     // Logging
-    implementation 'org.tinylog:tinylog-api-kotlin:2.4.1'
-    runtimeOnly 'org.tinylog:tinylog-impl:2.4.1'
+    implementation "org.tinylog:tinylog-api-kotlin:$tinylog_version"
+    runtimeOnly "org.tinylog:tinylog-impl:$tinylog_version"
 
     // Testing dependencies
     testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'io.mockk:mockk:1.13.4'
+    testImplementation 'io.mockk:mockk-agent-jvm:1.13.4'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:4.5.1'
-    testImplementation 'org.robolectric:robolectric:4.8.1'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
 }

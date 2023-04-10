@@ -11,11 +11,11 @@ import android.util.AttributeSet
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
-import fr.geonature.maps.util.getParcelableCompat
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
