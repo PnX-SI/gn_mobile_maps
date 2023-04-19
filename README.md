@@ -4,6 +4,8 @@ Android Map library based on [osmdroid](http://osmdroid.github.io/osmdroid/index
 * `maps`: The library itself
 * `app`: Demo app
 
+See [settings documentation](/maps).
+
 ## Upgrade git sub modules
 
 Do **NOT** modify directly any git sub modules (e.g. `mountpoint`).
