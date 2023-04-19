@@ -25,19 +25,19 @@ Example:
   "min_zoom_editing": 10.0,
   "layers": [
     {
-      "label": "IGN: plan v2",
+      "label": "IGN plan v2",
       "source": "https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"
     },
     {
-      "label": "IGN: ortho",
+      "label": "IGN ortho",
       "source": "https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS"
     },
     {
-      "label": "IGN: cadastral",
+      "label": "IGN cadastre",
       "source": "https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS"
     },
     {
-      "label": "OSM",
+      "label": "OpenStreetMap",
       "source": [
         "https://a.tile.openstreetmap.org",
         "https://b.tile.openstreetmap.org",
@@ -45,7 +45,7 @@ Example:
       ]
     },
     {
-      "label": "OTM",
+      "label": "OpenTopoMap",
       "source": [
         "https://a.tile.opentopomap.org",
         "https://b.tile.opentopomap.org",
@@ -115,16 +115,16 @@ Example:
 **Supported sources:**
 
 - Online tiles source (URLs), supported online sources are:
-  - [Geoportail WMTS](https://www.geoportail.gouv.fr)
+  - [IGN Geoportail WMTS](https://www.geoportail.gouv.fr)
   - [OpenStreetMap](https://www.openstreetmap.org)
   - [OpenTopoMap](https://www.opentopomap.org)
   - [Wikimedia Maps](https://maps.wikimedia.org)
 - Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`,
   `.wkt` for vector layer.
 
-### Online tiles source
+### Online tiles sources
 
-#### Geoportail
+#### IGN Geoportail
 
 Through [WMTS](http://www.opengeospatial.org/standards/wmts) protocol.
 
@@ -138,7 +138,7 @@ Where `API_KEY` parameter must be replaced by a valid API key or by the one defi
 access URL to web services (e.g. `essentiels` or `ortho`).
 
 See https://geoservices.ign.fr/documentation/services/api-et-services-ogc/images-tuilees-wmts-ogc
-for more information (in french).
+for more information (in French).
 
 #### OpenStreetMap
 
@@ -162,7 +162,7 @@ Base URLs:
 
 - https://maps.wikimedia.org/osm-intl
 
-#### Layer properties
+### Layer properties
 
 | Parameter        | Type   | Default value | Description                                                                                                                             |
 | ---------------- | ------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -176,14 +176,14 @@ Base URLs:
 If an online tile layer is active but no attribution is defined, it will automatically be set to
 its default value according to this layer:
 
-- **Geoportail**: _© IGN Geoportail_
-- **OpenStreetMap**: _© OpenStreetMap contributors under ODbL licence_
-- **OpenTopoMap**: _Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)_
+- **IGN Geoportail**: _© IGN Geoportail_
+- **OpenStreetMap**: _© OpenStreetMap contributors, under ODbL licence_
+- **OpenTopoMap**: _Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)_
 - **Wikimedia Maps**: _Wikimedia maps | Map data © OpenStreetMap contributors_
 
 ### Layer style
 
-Layer style is only available to vector layers (e.g. WKT or GeoJSON layers). Available parameters
+Layer style is only available for vector layers (e.g. WKT or GeoJSON layers). Available parameters
 are as follow:
 
 | Parameter     | Type    | Default value | Description                                                                                                    |
