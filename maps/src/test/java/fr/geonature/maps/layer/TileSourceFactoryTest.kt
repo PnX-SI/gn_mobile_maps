@@ -35,8 +35,8 @@ internal class TileSourceFactoryTest {
             TileSourceFactory.getOnlineTileSource(
                 application,
                 LayerSettings(
-                    label = "Plan v2 IGN",
-                    source = listOf("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+                    label = "IGN: Plan v2",
+                    source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
                 )
             ) is GeoportailWMTSOnlineLayerTileSource
         )

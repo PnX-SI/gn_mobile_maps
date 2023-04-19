@@ -25,11 +25,31 @@ Example:
   "min_zoom_editing": 10.0,
   "layers": [
     {
+      "label": "IGN: plan v2",
+      "source": "https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"
+    },
+    {
+      "label": "IGN: ortho",
+      "source": "https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS"
+    },
+    {
+      "label": "IGN: cadastral",
+      "source": "https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS"
+    },
+    {
       "label": "OSM",
       "source": [
         "https://a.tile.openstreetmap.org",
         "https://b.tile.openstreetmap.org",
         "https://c.tile.openstreetmap.org"
+      ]
+    },
+    {
+      "label": "OTM",
+      "source": [
+        "https://a.tile.opentopomap.org",
+        "https://b.tile.opentopomap.org",
+        "https://c.tile.opentopomap.org"
       ]
     },
     {
@@ -110,12 +130,12 @@ Through [WMTS](http://www.opengeospatial.org/standards/wmts) protocol.
 
 Examples of available layer sources:
 
-- **IGN plan v2**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2
-- **Ortho photo**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS
-- **Cadastral map**: https://wxs.ign.fr/`API_KEY`/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS
+- **IGN plan v2**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2
+- **Ortho photo**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS
+- **Cadastral map**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS
 
 Where `API_KEY` parameter must be replaced by a valid API key or by the one defined in an open
-access URL to web services.
+access URL to web services (e.g. `essentiels` or `ortho`).
 
 See https://geoservices.ign.fr/documentation/services/api-et-services-ogc/images-tuilees-wmts-ogc
 for more information (in french).
@@ -155,10 +175,11 @@ Base URLs:
 
 If an online tile layer is active but no attribution is defined, it will automatically be set to
 its default value according to this layer:
-* **Geoportail**: _© IGN Geoportail_
-* **OpenStreetMap**: _© OpenStreetMap contributors under ODbL licence_
-* **OpenTopoMap**: _Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)_
-* **Wikimedia Maps**: _Wikimedia maps | Map data © OpenStreetMap contributors_
+
+- **Geoportail**: _© IGN Geoportail_
+- **OpenStreetMap**: _© OpenStreetMap contributors under ODbL licence_
+- **OpenTopoMap**: _Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)_
+- **Wikimedia Maps**: _Wikimedia maps | Map data © OpenStreetMap contributors_
 
 ### Layer style
 

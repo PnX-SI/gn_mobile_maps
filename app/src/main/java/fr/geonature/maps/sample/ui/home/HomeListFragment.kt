@@ -80,19 +80,19 @@ class HomeListFragment : Fragment() {
                         .zoom(6.0)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : plan v2")
-                                .addSource("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
+                                .label("IGN: plan v2")
+                                .addSource("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
                                 .build()
                         )
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : ortho")
+                                .label("IGN: ortho")
                                 .addSource("https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS")
                                 .build()
                         )
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : cadastre")
+                                .label("IGN: cadastral")
                                 .addSource("https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS")
                                 .build()
                         )

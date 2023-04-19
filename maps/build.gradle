@@ -4,7 +4,7 @@ plugins {
     id 'kotlin-parcelize'
 }
 
-version = "0.7.0"
+version = "0.7.1"
 
 android {
     namespace 'fr.geonature.maps'
@@ -65,4 +65,5 @@ dependencies {
     testImplementation 'io.mockk:mockk-agent-jvm:1.13.4'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.9.2'
+    testImplementation "org.tinylog:slf4j-tinylog:$tinylog_version"
 }
