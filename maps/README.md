@@ -80,7 +80,7 @@ Example:
 | Parameter                        | UI      | Description                                                              |
 | -------------------------------- | ------- | ------------------------------------------------------------------------ |
 | `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                          |
-| `use_default_online_tile_source` | &#9745; | Whether to use the default online tiles source (default: `true`).        |
+| `use_default_online_tile_source` | &#9745; | Whether to use online tiles source (default: `true`).                    |
 | `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).     |
 | `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                         |
 | `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                         |
@@ -123,6 +123,40 @@ Example:
   `.wkt` for vector layer.
 
 ### Online tiles sources
+
+Online tiles sources are active by default if at least one is registered in the configuration.
+Online tiles sources can be disable through `use_default_online_tile_source` parameter to `false`.
+In this case, the local source file take over the display of the tiles if at least one is registered
+and active in the configuration.
+
+If there is no Internet connection, the display of the tiles is based either on the tiles cache or
+on the currently active local tiles source file.
+
+#### Tiles resolution
+
+Tiles are displayed in the following order of priority, depending on the zoom level and the x,y
+position:
+* If we have an active local tiles source and that tiles source can provide a tile at the requested
+position (x, y) for the current zoom level, then the tile will be displayed from this local tiles
+source.
+* If we do not have an active local tiles source or that local tiles source cannot provide a tile at
+the requested position (x, y) for the current zoom level, the system tries to request that tile from
+the cached data or from an active online tiles source:
+  * If we have an active online tiles source and that online tiles source can provide a tile at the
+requested position (x, y) for the current zoom level, then the tile will be displayed from this
+online tiles source.
+  * If we have an active online tiles source but without Internet connection, the system tries to
+request that tile from tiles cache. If the tiles cache can provide the requested tile, then the
+cached tile will be displayed. If the tiles cache system does not have the correct tile requested,
+an approximation of the tile will be made from the tiles at a lower zoom level and from the tiles
+coming from the local tiles source if it is active. The resulting tile may be of lower quality
+(pixelated) depending on the tiles used during the approximation process.
+
+Local tiles sources can be registered without any online tiles sources. In this case, the tile cache
+system is not very useful because the local tiles source will be the only tiles provider. The tiles
+cache could potentially resolve tiles outside of the geographic range of the current active local
+tiles source (for example, if an online tiles source has already been displayed on the requested
+area).
 
 #### IGN Geoportail
 
