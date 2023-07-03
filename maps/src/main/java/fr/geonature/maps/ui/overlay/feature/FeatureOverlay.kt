@@ -3,12 +3,14 @@ package fr.geonature.maps.ui.overlay.feature
 import android.graphics.Canvas
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.ui.overlay.OverlayUtils.calculateBounds
 import fr.geonature.maps.ui.overlay.feature.filter.IFeatureOverlayFilterVisitor
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
 import org.locationtech.jts.geom.LineString
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.views.Projection
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.OverlayWithIW
@@ -25,6 +27,10 @@ class FeatureOverlay : OverlayWithIW() {
 
     internal var backendOverlay: AbstractGeometryOverlay<Geometry, Overlay>? = null
     internal var feature: Feature? = null
+
+    override fun getBounds(): BoundingBox {
+        return backendOverlay?.let { calculateBounds(it) } ?: super.getBounds()
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun setFeature(

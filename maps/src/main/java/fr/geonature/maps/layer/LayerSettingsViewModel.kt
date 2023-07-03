@@ -308,8 +308,7 @@ class LayerSettingsViewModel(
                 .map {
                     Logger.info { "vector layer '${it.first.label}' loaded" }
 
-                    FeatureCollectionOverlay().apply {
-                        name = it.first.label
+                    FeatureCollectionOverlay(it.first.label).apply {
                         setFeatures(
                             it.second.flatten(),
                             it.first.properties.style ?: LayerStyleSettings()

@@ -18,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [FeatureCollectionOverlay].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class FeatureCollectionOverlayTest {

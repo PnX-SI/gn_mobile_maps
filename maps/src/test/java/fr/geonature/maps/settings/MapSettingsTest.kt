@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
+import fr.geonature.maps.ui.widget.EditFeatureButton
 import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -37,6 +38,7 @@ class MapSettingsTest {
             .showCompass(false)
             .showZoom(true)
             .rotationGesture(true)
+            .editMode(EditFeatureButton.EditMode.SINGLE)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -79,6 +81,7 @@ class MapSettingsTest {
                 showCompass = false,
                 showZoom = true,
                 rotationGesture = true,
+                editMode = EditFeatureButton.EditMode.SINGLE,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,

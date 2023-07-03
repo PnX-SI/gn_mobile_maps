@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
@@ -12,14 +14,15 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import fr.geonature.compat.os.getParcelableCompat
-import fr.geonature.compat.os.getSerializableCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
@@ -64,18 +67,25 @@ open class MapFragment : Fragment(),
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
+    var onConfigureBottomSheetListener: (parent: ViewGroup, bottomSheetBehavior: BottomSheetBehavior<ViewGroup>) -> Unit =
+        { _, _ -> }
+    var onConfigureBottomFabsListener: (parent: ViewGroup) -> Unit = {}
+
+    lateinit var mapView: MapView
+        private set
 
     private var layerSettingsViewModel: LayerSettingsViewModel? = null
     private var listener: OnMapFragmentPermissionsListener? = null
 
     private lateinit var container: View
-    private lateinit var mapView: MapView
+
     private lateinit var editFeatureFab: EditFeatureButton
     private lateinit var myLocationFab: MyLocationButton
     private lateinit var rotateCompassFab: RotateCompassButton
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
+    private lateinit var bottomSheet: FrameLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,6 +124,16 @@ open class MapFragment : Fragment(),
         this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
+        this.bottomSheet = view.findViewById<FrameLayout?>(R.id.bottom_sheet)
+            .apply {
+                onConfigureBottomSheetListener(this,
+                    BottomSheetBehavior.from(this as ViewGroup)
+                        .apply { state = BottomSheetBehavior.STATE_HIDDEN })
+            }
+        view.findViewById<LinearLayout>(R.id.fabs_bottom)
+            .apply {
+                onConfigureBottomFabsListener(this)
+            }
 
         // check permissions and configure MapView
         activity?.also {
@@ -209,6 +229,14 @@ open class MapFragment : Fragment(),
 
     fun clearActiveSelection() {
         editFeatureFab.clearActiveSelection()
+    }
+
+    fun addOverlay(overlay: Overlay) {
+        mapView.overlays.add(overlay)
+    }
+
+    fun removeOverlay(overlay: Overlay) {
+        mapView.overlays.remove(overlay)
     }
 
     /**
@@ -346,8 +374,7 @@ open class MapFragment : Fragment(),
             }
 
             override fun getEditMode(): EditFeatureButton.EditMode {
-                return arguments?.getSerializableCompat(ARG_EDIT_MODE)
-                    ?: EditFeatureButton.EditMode.SINGLE
+                return mapSettings.editMode
             }
 
             override fun getMinZoom(): Double {
@@ -474,14 +501,18 @@ open class MapFragment : Fragment(),
 
                     val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
 
+                    val vectorLayers =
+                        mapSettings.layersSettings.filter { it.getType() == LayerType.VECTOR }
+
                     mapView.overlays.asSequence()
-                        .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                        .filter { (it is FeatureCollectionOverlay) && vectorLayers.any { vectorLayer -> vectorLayer.label == it.name } || it is FeatureOverlay }
                         .forEach {
                             mapView.overlays.remove(it)
                         }
 
                     val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
                         .coerceAtLeast(0)
+
                     it.forEach { overlay ->
                         mapView.overlays.add(markerOverlaysFirstIndex,
                             (overlay as FeatureCollectionOverlay).apply {
@@ -528,10 +559,8 @@ open class MapFragment : Fragment(),
     companion object {
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
-        const val ARG_EDIT_MODE = "arg_edit_mode"
 
         private const val LAYER_SETTINGS_DIALOG_FRAGMENT = "layer_settings_dialog_fragment"
-
         private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 
         /**
@@ -540,18 +569,11 @@ open class MapFragment : Fragment(),
          * @return A new instance of [MapFragment]
          */
         @JvmStatic
-        fun newInstance(
-            mapSettings: MapSettings,
-            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
-        ) = MapFragment().apply {
+        fun newInstance(mapSettings: MapSettings) = MapFragment().apply {
             arguments = Bundle().apply {
                 putParcelable(
                     ARG_MAP_SETTINGS,
                     mapSettings
-                )
-                putSerializable(
-                    ARG_EDIT_MODE,
-                    editMode
                 )
             }
         }

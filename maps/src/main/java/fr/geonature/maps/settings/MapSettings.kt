@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcelable
+import fr.geonature.maps.ui.widget.EditFeatureButton
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import org.osmdroid.util.BoundingBox
@@ -20,6 +21,7 @@ data class MapSettings(
     val showScale: Boolean = Builder.newInstance().showScale,
     val showZoom: Boolean = Builder.newInstance().showZoom,
     val rotationGesture: Boolean = Builder.newInstance().rotationGesture,
+    val editMode: EditFeatureButton.EditMode = Builder.newInstance().editMode,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -36,6 +38,7 @@ data class MapSettings(
         builder.showScale,
         builder.showZoom,
         builder.rotationGesture,
+        builder.editMode,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -57,6 +60,7 @@ data class MapSettings(
         if (showScale != other.showScale) return false
         if (showZoom != other.showZoom) return false
         if (rotationGesture != other.rotationGesture) return false
+        if (editMode != other.editMode) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
         if (maxZoomLevel != other.maxZoomLevel) return false
@@ -84,6 +88,7 @@ data class MapSettings(
         result = 31 * result + showScale.hashCode()
         result = 31 * result + showZoom.hashCode()
         result = 31 * result + rotationGesture.hashCode()
+        result = 31 * result + editMode.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
         result = 31 * result + maxZoomLevel.hashCode()
@@ -146,6 +151,12 @@ data class MapSettings(
         var rotationGesture: Boolean = false
             private set
 
+        /**
+         * Sets the edit mode when adding POIs on the map.
+         */
+        var editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.NONE
+            private set
+
         internal var zoom: Double = 0.0
             private set
 
@@ -175,6 +186,7 @@ data class MapSettings(
                 this.showScale = mapSettings.showScale
                 this.showZoom = mapSettings.showZoom
                 this.rotationGesture = mapSettings.rotationGesture
+                this.editMode = mapSettings.editMode
                 this.zoom = mapSettings.zoom
                 this.minZoomLevel = mapSettings.minZoomLevel
                 this.maxZoomLevel = mapSettings.maxZoomLevel
@@ -200,6 +212,9 @@ data class MapSettings(
 
         fun rotationGesture(rotateGesture: Boolean) =
             apply { this.rotationGesture = rotateGesture }
+
+        fun editMode(editMode: EditFeatureButton.EditMode) =
+            apply { this.editMode = editMode }
 
         fun zoom(zoom: Double) =
             apply { this.zoom = zoom }

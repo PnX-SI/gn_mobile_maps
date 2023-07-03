@@ -1,7 +1,9 @@
 package fr.geonature.maps.jts.geojson
 
+import android.os.Bundle
 import android.os.Parcel
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
+import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
@@ -13,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [Feature].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class FeatureTest {
@@ -26,7 +28,7 @@ class FeatureTest {
     }
 
     @Test
-    fun testType() {
+    fun `should have the right type`() {
         // given a Feature
         val feature = Feature(
             "1234",
@@ -50,7 +52,7 @@ class FeatureTest {
     }
 
     @Test
-    fun testEquals() {
+    fun `should be the same`() {
         assertEquals(Feature(
             "1234",
             createPoint(
@@ -143,21 +145,20 @@ class FeatureTest {
     }
 
     @Test
-    fun testParcelable() {
+    fun `should obtain feature instance from parcelable`() {
         // given a Feature
-        val feature = Feature(
-            "1234",
+        val feature = Feature("1234",
             createPoint(
                 gf,
                 47.225782,
                 -1.554476
-            )
-        ).apply {
-            properties.putString(
-                "name",
-                "feature1"
-            )
-        }
+            ),
+            Bundle().apply {
+                putString(
+                    "name",
+                    "feature1"
+                )
+            })
 
         // when we obtain a Parcel object to write the Feature instance to it
         val parcel = Parcel.obtain()
@@ -172,7 +173,7 @@ class FeatureTest {
         // then
         assertEquals(
             feature,
-            Feature.createFromParcel(parcel)
+            parcelableCreator<Feature>().createFromParcel(parcel)
         )
     }
 }

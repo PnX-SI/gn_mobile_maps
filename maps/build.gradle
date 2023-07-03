@@ -4,7 +4,7 @@ plugins {
     id 'kotlin-parcelize'
 }
 
-version = "0.7.1"
+version = "0.7.2"
 
 android {
     namespace 'fr.geonature.maps'
@@ -21,6 +21,8 @@ android {
 
     defaultConfig {
         minSdkVersion 21
+        versionCode updateVersionCode(project.name)
+        versionName version
         targetSdkVersion 33
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

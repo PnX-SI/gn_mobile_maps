@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.widget.EditFeatureButton
 
 /**
  * A fragment representing a list of [MenuItem].
@@ -78,6 +79,7 @@ class HomeListFragment : Fragment() {
                     MapSettings.Builder.newInstance()
                         .minZoomLevel(3.0)
                         .zoom(6.0)
+                        .editMode(EditFeatureButton.EditMode.SINGLE)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
                                 .label("IGN: plan v2")

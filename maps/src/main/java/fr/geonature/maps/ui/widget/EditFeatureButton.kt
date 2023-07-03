@@ -86,6 +86,7 @@ class EditFeatureButton(
 
                     true
                 }
+
                 else -> false
             }
         }
@@ -159,7 +160,14 @@ class EditFeatureButton(
     fun setListener(listener: OnEditFeatureButtonListener) {
         this.listener = listener
 
-        val mapView = this.listener?.getMapView() ?: return
+        val editMode = listener.getEditMode()
+
+        if (editMode == EditMode.NONE) {
+            hide()
+            return
+        }
+
+        val mapView = listener.getMapView()
 
         val overlayEvents = MapEventsOverlay(mapEventReceiver)
         mapView.overlays.add(overlayEvents)
@@ -179,6 +187,8 @@ class EditFeatureButton(
      * Clear previous selection.
      */
     fun setSelectedPOIs(selectedPois: List<GeoPoint>) {
+        if (listener?.getEditMode() == EditMode.NONE) return
+
         val mapView = this.listener?.getMapView() ?: return
 
         pois.forEach { poi ->
@@ -283,8 +293,7 @@ class EditFeatureButton(
 
     private fun setMarkerIcon(
         marker: Marker,
-        @ColorInt
-        tintColor: Int,
+        @ColorInt tintColor: Int,
         scale: Float = 1.0f
     ) {
         val context = context ?: return
@@ -318,9 +327,7 @@ class EditFeatureButton(
     }
 
     private fun deselectMarker(marker: Marker) {
-        if (listener?.getEditMode() == EditMode.MULTIPLE) {
-            show()
-        }
+        if (listener?.getEditMode() == EditMode.MULTIPLE) show()
 
         selectedPoi = null
         actionMode?.finish()
@@ -339,11 +346,10 @@ class EditFeatureButton(
 
     private fun centerMapToMarker(marker: Marker) {
         val mapView = listener?.getMapView() ?: return
-        val editZoom =
-            if ((listener?.getMinZoomEditing()
-                    ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
-            ) mapView.zoomLevelDouble
-            else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
+        val editZoom = if ((listener?.getMinZoomEditing()
+                ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
+        ) mapView.zoomLevelDouble
+        else listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble
 
         animateTo(
             mapView,
@@ -356,9 +362,7 @@ class EditFeatureButton(
         val mapView = listener?.getMapView() ?: return false
         if (geoPoint == null) return false
 
-        if ((listener?.getMinZoomEditing()
-                ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble
-        ) {
+        if ((listener?.getMinZoomEditing() ?: mapView.zoomLevelDouble) <= mapView.zoomLevelDouble) {
             return false
         }
 
@@ -427,11 +431,16 @@ class EditFeatureButton(
         fun getMinZoom(): Double
         fun getMinZoomEditing(): Double
         fun startActionMode(callback: ActionMode.Callback): ActionMode?
-        fun makeSnackbar(@StringRes resId: Int, duration: Int): Snackbar?
+        fun makeSnackbar(
+            @StringRes resId: Int,
+            duration: Int
+        ): Snackbar?
+
         fun onSelectedPOIs(pois: List<GeoPoint>)
     }
 
     enum class EditMode {
+        NONE,
         SINGLE,
         MULTIPLE
     }

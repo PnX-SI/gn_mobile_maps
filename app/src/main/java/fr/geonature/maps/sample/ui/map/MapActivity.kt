@@ -83,7 +83,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
             supportFragmentManager.beginTransaction()
                 .replace(
                     android.R.id.content,
-                    MapFragment.newInstance(it)
+                    CustomMapFragment.newInstance(it)
                 )
                 .commit()
         }
@@ -109,6 +109,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
                 finish()
                 true
             }
+
             R.id.menu_settings -> {
                 startActivity(
                     PreferencesActivity.newIntent(
@@ -118,6 +119,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
                 )
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -139,8 +141,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
         suspendCancellableCoroutine { continuation ->
             lifecycleScope.launch {
                 continuation.resume(
-                    locationPermissionLifecycleObserver?.invoke(this@MapActivity)
-                        ?: false
+                    locationPermissionLifecycleObserver?.invoke(this@MapActivity) ?: false
                 )
             }
         }
