@@ -1,49 +1,70 @@
 package fr.geonature.maps.ui.dialog
 
-import android.app.Dialog
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.view.animation.AnimationUtils
+import android.view.ViewGroup
+import android.view.animation.AnimationUtils.loadAnimation
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import fr.geonature.compat.os.getParcelableArrayCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
 
 /**
- * [DialogFragment] to let the user to select [LayerSettings] to show on the map.
+ * Custom [DialogFragment] to show a bottom sheet to let the user to select [LayerSettings] to show
+ * on the map.
  *
  * @author S. Grimault
  */
-class LayerSettingsDialogFragment : DialogFragment() {
+class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private var listener: OnLayerSettingsDialogFragmentListener? = null
     private var adapter: LayerSettingsRecyclerViewAdapter? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        if (parentFragment is OnLayerSettingsDialogFragmentListener) {
-            listener = parentFragment as OnLayerSettingsDialogFragmentListener
-        } else {
-            throw RuntimeException("$parentFragment must implement OnLayerSettingsDialogFragmentListener")
-        }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(
+            R.layout.bottom_sheet_layers,
+            container,
+            false
+        )
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val context = requireContext()
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        view.findViewById<Toolbar>(R.id.toolbar)
+            .apply {
+                setTitle(R.string.alert_dialog_layers_title)
+                inflateMenu(R.menu.layer_add)
+                setNavigationOnClickListener {
+                    dismiss()
+                }
+                setOnMenuItemClickListener {
+                    when (it.itemId) {
+                        R.id.menu_add_layer -> {
+                            listener?.onAddLayer()
+                            dismiss()
+                            true
+                        }
 
-        val view = View.inflate(
-            context,
-            R.layout.fragment_recycler_view,
-            null
-        )
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
-        val emptyTextView = view.findViewById<TextView>(R.id.emptyTextView)
+                        else -> false
+                    }
+                }
+            }
+
+        val recyclerView = view.findViewById<RecyclerView>(android.R.id.list)
+        val emptyTextView = view.findViewById<TextView>(android.R.id.empty)
             .apply {
                 setText(R.string.alert_dialog_layers_no_data)
             }
@@ -63,7 +84,7 @@ class LayerSettingsDialogFragment : DialogFragment() {
 
                 if (show) {
                     emptyTextView.startAnimation(
-                        AnimationUtils.loadAnimation(
+                        loadAnimation(
                             context,
                             android.R.anim.fade_in
                         )
@@ -71,7 +92,7 @@ class LayerSettingsDialogFragment : DialogFragment() {
                     emptyTextView.visibility = View.VISIBLE
                 } else {
                     emptyTextView.startAnimation(
-                        AnimationUtils.loadAnimation(
+                        loadAnimation(
                             context,
                             android.R.anim.fade_out
                         )
@@ -81,25 +102,22 @@ class LayerSettingsDialogFragment : DialogFragment() {
             }
         })
 
-        with(recyclerView as RecyclerView) {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = this@LayerSettingsDialogFragment.adapter
-
-            val dividerItemDecoration = DividerItemDecoration(
-                context,
-                (layoutManager as LinearLayoutManager).orientation
-            )
-            addItemDecoration(dividerItemDecoration)
+            adapter = this@LayerSettingsBottomSheetDialogFragment.adapter
         }
+            .also {
+                it.addItemDecoration(
+                    DividerItemDecoration(
+                        context,
+                        (it.layoutManager as LinearLayoutManager).orientation
+                    )
+                )
+            }
+    }
 
-        return AlertDialog.Builder(context)
-            .setView(view)
-            .setTitle(R.string.alert_dialog_layers_title)
-            .setNegativeButton(
-                R.string.alert_dialog_layers_close,
-                null
-            )
-            .create()
+    fun setOnLayerSettingsDialogFragmentListener(listener: OnLayerSettingsDialogFragmentListener) {
+        this.listener = listener
     }
 
     override fun onResume() {
@@ -118,7 +136,7 @@ class LayerSettingsDialogFragment : DialogFragment() {
     }
 
     /**
-     * Callback used by [LayerSettingsDialogFragment].
+     * Callback used by [LayerSettingsBottomSheetDialogFragment].
      */
     interface OnLayerSettingsDialogFragmentListener {
 
@@ -128,6 +146,11 @@ class LayerSettingsDialogFragment : DialogFragment() {
          * @param layersSettings the selected list of [LayerSettings]
          */
         fun onSelectedLayersSettings(layersSettings: List<LayerSettings>)
+
+        /**
+         * Called when we want to add a layer.
+         */
+        fun onAddLayer()
     }
 
     companion object {
@@ -135,15 +158,15 @@ class LayerSettingsDialogFragment : DialogFragment() {
         const val ARG_LAYERS_SELECTION = "arg_layers_selection"
 
         /**
-         * Use this factory method to create a new instance of [LayerSettingsDialogFragment].
+         * Use this factory method to create a new instance of [LayerSettingsBottomSheetDialogFragment].
          *
-         * @return A new instance of [LayerSettingsDialogFragment]
+         * @return A new instance of [LayerSettingsBottomSheetDialogFragment]
          */
         @JvmStatic
         fun newInstance(
             layersSettings: List<LayerSettings>,
             selection: List<LayerSettings> = emptyList()
-        ) = LayerSettingsDialogFragment().apply {
+        ) = LayerSettingsBottomSheetDialogFragment().apply {
             arguments = Bundle().apply {
                 putParcelableArray(
                     ARG_LAYERS,

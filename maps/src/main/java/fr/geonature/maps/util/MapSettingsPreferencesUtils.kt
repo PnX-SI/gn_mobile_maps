@@ -6,7 +6,6 @@ import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
 import fr.geonature.maps.R
-import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
 
 /**
@@ -15,8 +14,6 @@ import fr.geonature.maps.settings.MapSettings
  * @author S. Grimault
  */
 object MapSettingsPreferencesUtils {
-
-    private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
     /**
      * Sets default preferences settings values from [MapSettings].
@@ -119,36 +116,6 @@ object MapSettingsPreferencesUtils {
             .putBoolean(
                 context.getString(R.string.preference_category_map_use_online_layers_key),
                 useOnlineLayer
-            )
-            .apply()
-    }
-
-    /**
-     * Returns the current selected layers.
-     *
-     * @return a list of selected [LayerSettings] or an empty list if no selection was made.
-     */
-    fun getSelectedLayers(context: Context, mapSettings: MapSettings): List<LayerSettings> {
-        return getDefaultSharedPreferences(context).getStringSet(
-            KEY_SELECTED_LAYERS,
-            emptySet()
-        )
-            ?.asSequence()
-            ?.map { mapSettings.layersSettings.firstOrNull { layerSettings -> layerSettings.label == it } }
-            ?.filterNotNull()
-            ?.toList() ?: emptyList()
-    }
-
-    /**
-     * Updates selected layers preference.
-     */
-    fun setSelectedLayers(context: Context, selectedLayers: List<LayerSettings>) {
-        getDefaultSharedPreferences(context).edit()
-            .putStringSet(
-                KEY_SELECTED_LAYERS,
-                selectedLayers.asSequence()
-                    .map { it.label }
-                    .toSet()
             )
             .apply()
     }

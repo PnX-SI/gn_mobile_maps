@@ -1,11 +1,8 @@
-package fr.geonature.maps.layer
+package fr.geonature.maps.layer.tilesource
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import fr.geonature.maps.layer.tilesource.GeoportailWMTSOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OSMOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OpenTopoMapOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.WikimediaOnlineLayerTileSource
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -87,7 +84,7 @@ internal class TileSourceFactoryTest {
 
     @Test
     fun `should throw NotFoundException if the given layer settings is not eligible`() {
-        assertThrows(LayerException.NotFoundException::class.java) {
+        assertThrows(LayerException.NotSupportedException::class.java) {
             TileSourceFactory.getOnlineTileSource(
                 application,
                 LayerSettings(

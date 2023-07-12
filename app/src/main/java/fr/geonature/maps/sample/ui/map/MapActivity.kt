@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import fr.geonature.compat.content.getParcelableExtraCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
@@ -29,6 +30,7 @@ import kotlin.coroutines.resume
  * @author S. Grimault
  * @see MapFragment
  */
+@AndroidEntryPoint
 class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsListener {
 
     private var manageExternalStoragePermissionLifecycleObserver: ManageExternalStoragePermissionLifecycleObserver? =

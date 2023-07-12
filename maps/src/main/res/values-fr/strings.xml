@@ -14,6 +14,7 @@
     <string name="action_title_poi_edit">Éditer le marqueur</string>
     <string name="action_poi_delete">Supprimer le marqueur</string>
     <string name="action_poi_deleted">Marqueur supprimé</string>
+    <string name="action_layer_add">Ajouter une couche géographique</string>
 
     <string name="snackbar_permissions_not_granted">Les permissions n\'ont pas été accordées</string>
     <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>

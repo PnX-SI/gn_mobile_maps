@@ -1,10 +1,12 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
+    id 'dagger.hilt.android.plugin'
+    id 'kotlin-kapt'
     id 'kotlin-parcelize'
+    id 'org.jetbrains.kotlin.android'
 }
 
-version = "0.7.2"
+version = "0.8.0"
 
 android {
     namespace 'fr.geonature.maps'
@@ -49,7 +51,9 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation "androidx.fragment:fragment-ktx:1.6.0"
     implementation 'androidx.lifecycle:lifecycle-common:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'com.google.android.material:material:1.8.0'
@@ -57,15 +61,23 @@ dependencies {
     api 'org.locationtech.jts:jts-core:1.19.0'
     api 'org.osmdroid:osmdroid-android:6.1.14'
 
+    // Hilt dependencies
+    implementation "androidx.hilt:hilt-work:$androidx_hilt_version"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "androidx.hilt:hilt-compiler:$androidx_hilt_version"
+    kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
+
     // Logging
     implementation "org.tinylog:tinylog-api-kotlin:$tinylog_version"
     runtimeOnly "org.tinylog:tinylog-impl:$tinylog_version"
 
     // Testing dependencies
+    testImplementation 'androidx.arch.core:core-testing:2.2.0'
     testImplementation 'androidx.test:core:1.5.0'
     testImplementation 'io.mockk:mockk:1.13.4'
     testImplementation 'io.mockk:mockk-agent-jvm:1.13.4'
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4'
     testImplementation 'org.robolectric:robolectric:4.9.2'
     testImplementation "org.tinylog:slf4j-tinylog:$tinylog_version"
 }

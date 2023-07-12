@@ -1,30 +1,34 @@
 package fr.geonature.maps.ui
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.LayerSettingsViewModel
+import fr.geonature.maps.layer.presentation.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
+import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
@@ -38,6 +42,7 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
+import fr.geonature.maps.util.observeOnce
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -54,6 +59,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import org.tinylog.Logger
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -62,8 +68,10 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
  *
  * @author S. Grimault
  */
-open class MapFragment : Fragment(),
-    LayerSettingsDialogFragment.OnLayerSettingsDialogFragmentListener {
+@AndroidEntryPoint
+open class MapFragment : Fragment() {
+
+    private val layerSettingsViewModel: LayerSettingsViewModel by viewModels()
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
@@ -74,7 +82,6 @@ open class MapFragment : Fragment(),
     lateinit var mapView: MapView
         private set
 
-    private var layerSettingsViewModel: LayerSettingsViewModel? = null
     private var listener: OnMapFragmentPermissionsListener? = null
 
     private lateinit var container: View
@@ -86,6 +93,29 @@ open class MapFragment : Fragment(),
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
     private lateinit var bottomSheet: FrameLayout
+
+    private var loadLocalLayerResultLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            when (result.resultCode) {
+                AppCompatActivity.RESULT_CANCELED -> {
+                    // nothing to do...
+                    Logger.info { "choose layer to add on the map aborted by user" }
+                }
+
+                AppCompatActivity.RESULT_OK -> {
+                    val uri = result.data?.data
+
+                    if (uri == null) {
+                        Logger.warn { "failed to load layer" }
+                        return@registerForActivityResult
+                    }
+
+                    Logger.info { "new layer to add from URI '$uri'" }
+
+                    layerSettingsViewModel.addLayer(uri)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,14 +167,6 @@ open class MapFragment : Fragment(),
 
         // check permissions and configure MapView
         activity?.also {
-            layerSettingsViewModel = ViewModelProvider(it,
-                LayerSettingsViewModel.Factory {
-                    LayerSettingsViewModel(
-                        it.application,
-                        mapSettings.baseTilesPath
-                    )
-                })[LayerSettingsViewModel::class.java]
-
             lifecycleScope.launch {
                 val granted = listener?.onStoragePermissionsGranted() ?: false
 
@@ -215,10 +237,6 @@ open class MapFragment : Fragment(),
         mapView.onPause()
     }
 
-    override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-        layerSettingsViewModel?.load(layersSettings)
-    }
-
     fun getSelectedPOIs(): List<GeoPoint> {
         return editFeatureFab.getSelectedPOIs()
     }
@@ -275,9 +293,18 @@ open class MapFragment : Fragment(),
     }
 
     private fun loadLayersSettings() {
-        layerSettingsViewModel?.also { vm ->
-            vm.load(vm.getSelectedLayers(mapSettings))
-        }
+        layerSettingsViewModel.init(mapSettings)
+            .observeOnce(this) {
+                if (it.isNullOrEmpty()) {
+                    return@observeOnce
+                }
+
+                layerSettingsViewModel.load(
+                    layerSettingsViewModel.selectedLayers.value ?: emptyList()
+                )
+
+                configureLayersSelector()
+            }
     }
 
     private fun configureMapView(mapView: MapView) {
@@ -345,8 +372,6 @@ open class MapFragment : Fragment(),
         if (mapSettings.maxBounds != null) {
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
-
-        configureLayersSelector()
 
         activity?.also {
             configureLayers(it)
@@ -432,15 +457,45 @@ open class MapFragment : Fragment(),
     }
 
     private fun configureLayersSelector() {
-        layerSettingsViewModel?.also { vm ->
-            val layerSettings = mapSettings.layersSettings.takeIf { it.isNotEmpty() } ?: return@also
+        layerSettingsViewModel.also { vm ->
+            if (vm.layers.value.isNullOrEmpty()) {
+                return@also
+            }
 
             with(layersFab) {
                 setOnClickListener {
-                    LayerSettingsDialogFragment.newInstance(
-                        layerSettings,
-                        vm.getSelectedLayers(mapSettings)
+                    LayerSettingsBottomSheetDialogFragment.newInstance(
+                        vm.layers.value ?: emptyList(),
+                        vm.selectedLayers.value ?: emptyList()
                     )
+                        .apply {
+                            setOnLayerSettingsDialogFragmentListener(object :
+                                LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
+                                override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
+                                    vm.load(layersSettings)
+                                }
+
+                                override fun onAddLayer() {
+                                    loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                                        addCategory(Intent.CATEGORY_OPENABLE)
+                                        type = "application/*"
+                                        putExtra(
+                                            Intent.EXTRA_MIME_TYPES,
+                                            arrayOf(
+                                                "application/geo+json",
+                                                "application/json",
+                                                "application/octet-stream",
+                                                "application/vnd.sqlite3",
+                                                "application/x-binary",
+                                                "application/x-sqlite3",
+                                                "text/plain"
+                                            )
+                                        )
+                                    })
+                                }
+                            })
+
+                        }
                         .also { dialogFragment ->
                             dialogFragment.show(
                                 childFragmentManager,
@@ -454,7 +509,7 @@ open class MapFragment : Fragment(),
     }
 
     private fun configureLayers(activity: FragmentActivity) {
-        layerSettingsViewModel?.also { vm ->
+        layerSettingsViewModel.also { vm ->
             mapView.addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
                     return true
@@ -500,9 +555,8 @@ open class MapFragment : Fragment(),
                     }
 
                     val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
-
                     val vectorLayers =
-                        mapSettings.layersSettings.filter { it.getType() == LayerType.VECTOR }
+                        (vm.layers.value ?: emptyList()).filter { it.getType() == LayerType.VECTOR }
 
                     mapView.overlays.asSequence()
                         .filter { (it is FeatureCollectionOverlay) && vectorLayers.any { vectorLayer -> vectorLayer.label == it.name } || it is FeatureOverlay }
@@ -526,6 +580,14 @@ open class MapFragment : Fragment(),
                     delay(100)
 
                     onVectorLayersChangedListener(it)
+                }
+            }
+            vm.zoomToBoundingBox.observe(activity) {
+                it?.also {
+                    mapView.zoomToBoundingBox(
+                        it,
+                        true
+                    )
                 }
             }
         }

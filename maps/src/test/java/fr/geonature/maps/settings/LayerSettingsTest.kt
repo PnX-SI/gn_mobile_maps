@@ -1,5 +1,6 @@
 package fr.geonature.maps.settings
 
+import android.net.Uri
 import android.os.Parcel
 import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
@@ -19,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 class LayerSettingsTest {
 
     @Test
-    fun testValidBuilder() {
+    fun `should instantiate layer settings from builder`() {
         // given a layer settings instance from its builder
         val layerSettings = LayerSettings.Builder.newInstance()
             .label("Nantes")
@@ -37,7 +38,7 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testBuilderWithDefaultProperties() {
+    fun `should instantiate layer settings from builder with default properties`() {
         assertEquals(
             LayerSettings(
                 "Nantes",
@@ -104,7 +105,7 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testFromExistingLayerSettings() {
+    fun `should instantiate a new layer settings from existing instance`() {
         // given a layer settings instance
         val layerSettings = LayerSettings(
             "OSM",
@@ -152,21 +153,21 @@ class LayerSettingsTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testBuilderWithUndefinedLayerSourceLabel() {
+    fun `should throw IllegalArgumentException if trying to build layer settings with undefined label`() {
         LayerSettings.Builder.newInstance()
             .addSource("nantes.mbtiles")
             .build()
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testBuilderFromUndefinedLayerSourceName() {
+    fun `should throw IllegalArgumentException if trying to build layer settings with undefined source`() {
         LayerSettings.Builder.newInstance()
             .label("Nantes")
             .build()
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testBuilderFromEmptyLayerSourceName() {
+    fun `should throw IllegalArgumentException if trying to build layer settings with invalid source`() {
         LayerSettings.Builder.newInstance()
             .label("Nantes")
             .addSource("")
@@ -174,7 +175,7 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testGetType() {
+    fun `should get the layer type`() {
         assertEquals(
             LayerType.TILES,
             LayerSettings(
@@ -225,7 +226,7 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testActiveLayer() {
+    fun `should activate or not layer`() {
         assertTrue(
             LayerSettings.Builder.newInstance()
                 .label("Nantes")
@@ -280,7 +281,62 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testParcelable() {
+    fun `should get corresponding URIs from layer sources`() {
+        // from source with only relative path
+        assertTrue(
+            LayerSettings(
+                "Nantes",
+                listOf("nantes.mbtiles")
+            ).getSourcesAsUri()
+                .isEmpty()
+        )
+
+        // from valid local source
+        assertEquals(
+            listOf(Uri.parse("file:///some/path/to/nantes.mbtiles")),
+            LayerSettings(
+                "Nantes",
+                listOf("file:///some/path/to/nantes.mbtiles")
+            ).getSourcesAsUri()
+        )
+
+        // from only valid local sources
+        assertEquals(
+            listOf(
+                Uri.parse("file:///some/path/to/nantes_areas.wkt"),
+                Uri.parse("file:///some/path/to/nantes_pois.json")
+            ),
+            LayerSettings(
+                "Nantes",
+                listOf(
+                    "file:///some/path/to/nantes_areas.wkt",
+                    "to/nantes_ways.wkt",
+                    "file:///some/path/to/nantes_pois.json",
+                    "https://a.tile.openstreetmap.org"
+                )
+            ).getSourcesAsUri()
+        )
+
+        // from only valid online sources
+        assertEquals(
+            listOf(
+                Uri.parse("https://a.tile.openstreetmap.org"),
+                Uri.parse("https://c.tile.openstreetmap.org")
+            ),
+            LayerSettings(
+                "OSM",
+                listOf(
+                    "https://a.tile.openstreetmap.org",
+                    "b.tile.openstreetmap.org",
+                    "https://c.tile.openstreetmap.org",
+                    "file:///some/path/to/nantes_pois.json"
+                )
+            ).getSourcesAsUri()
+        )
+    }
+
+    @Test
+    fun `should obtain layer settings instance from parcelable`() {
         // given a layer settings
         val layerSettings = LayerSettings(
             "Nantes",
@@ -305,7 +361,7 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun testComparable() {
+    fun `should compare two layers`() {
         assertTrue(
             LayerSettings(
                 "OSM",

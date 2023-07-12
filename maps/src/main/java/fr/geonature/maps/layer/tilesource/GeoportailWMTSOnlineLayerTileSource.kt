@@ -3,7 +3,7 @@ package fr.geonature.maps.layer.tilesource
 import android.content.Context
 import android.net.Uri
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.LayerException
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import org.osmdroid.tileprovider.tilesource.TileSourcePolicy
 import org.osmdroid.util.MapTileIndex

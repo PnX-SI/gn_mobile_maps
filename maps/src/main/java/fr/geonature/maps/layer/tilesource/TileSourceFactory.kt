@@ -1,11 +1,7 @@
-package fr.geonature.maps.layer
+package fr.geonature.maps.layer.tilesource
 
 import android.content.Context
-import fr.geonature.maps.layer.tilesource.AbstractOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.GeoportailWMTSOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OSMOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OpenTopoMapOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.WikimediaOnlineLayerTileSource
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import org.osmdroid.tileprovider.tilesource.ITileSource
 
@@ -20,7 +16,7 @@ object TileSourceFactory {
      * Gets the corresponding online tile source from given [LayerSettings].
      *
      * @throws LayerException.InvalidOnlineLayerException if the given layer settings cannot be used as online tile source
-     * @throws LayerException.NotFoundException if no implementation was found from given [LayerSettings]
+     * @throws LayerException.NotSupportedException if no implementation was found from given [LayerSettings]
      */
     fun getOnlineTileSource(
         context: Context,
@@ -51,7 +47,7 @@ object TileSourceFactory {
                     layerSettings
                 )
             }
-            .onFailure { throw LayerException.NotFoundException(layerSettings.source) }
+            .onFailure { throw LayerException.NotSupportedException(layerSettings.source) }
             .getOrThrow()
     }
 }
