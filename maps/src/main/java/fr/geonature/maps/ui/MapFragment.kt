@@ -42,7 +42,6 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
-import fr.geonature.maps.util.observeOnce
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -123,6 +122,7 @@ open class MapFragment : Fragment() {
         val context = context ?: return
 
         mapSettings = getMapSettings(context)
+        layerSettingsViewModel.init(mapSettings)
     }
 
     override fun onCreateView(
@@ -226,9 +226,9 @@ open class MapFragment : Fragment() {
                         mapView.overlays.add(it)
                     }).let { it.isEnabled = isEnabled }
             }
-        }
 
-        loadLayersSettings()
+            loadLayersSettings(context)
+        }
     }
 
     override fun onPause() {
@@ -292,19 +292,17 @@ open class MapFragment : Fragment() {
             .build()
     }
 
-    private fun loadLayersSettings() {
-        layerSettingsViewModel.init(mapSettings)
-            .observeOnce(this) {
-                if (it.isNullOrEmpty()) {
-                    return@observeOnce
+    private fun loadLayersSettings(context: Context) {
+        CoroutineScope(Main).launch {
+            val selectedLayers = layerSettingsViewModel.getSelectedLayers()
+                .ifEmpty {
+                    if (useOnlineLayers(context)) listOfNotNull(
+                        layerSettingsViewModel.getAllLayers()
+                            .firstOrNull { it.isOnline() }) else emptyList()
                 }
 
-                layerSettingsViewModel.load(
-                    layerSettingsViewModel.selectedLayers.value ?: emptyList()
-                )
-
-                configureLayersSelector()
-            }
+            layerSettingsViewModel.load(selectedLayers)
+        }
     }
 
     private fun configureMapView(mapView: MapView) {
@@ -376,6 +374,8 @@ open class MapFragment : Fragment() {
         activity?.also {
             configureLayers(it)
         }
+
+        configureLayersSelector()
     }
 
     private fun configureScaleBarOverlay(enabled: Boolean = mapSettings.showScale) {
@@ -457,22 +457,21 @@ open class MapFragment : Fragment() {
     }
 
     private fun configureLayersSelector() {
-        layerSettingsViewModel.also { vm ->
-            if (vm.layers.value.isNullOrEmpty()) {
-                return@also
-            }
+        with(layersFab) {
+            setOnClickListener {
+                lifecycleScope.launch {
+                    val allLayers = layerSettingsViewModel.getAllLayers()
+                    val selectedLayers = layerSettingsViewModel.getSelectedLayers()
 
-            with(layersFab) {
-                setOnClickListener {
                     LayerSettingsBottomSheetDialogFragment.newInstance(
-                        vm.layers.value ?: emptyList(),
-                        vm.selectedLayers.value ?: emptyList()
+                        allLayers,
+                        selectedLayers
                     )
                         .apply {
                             setOnLayerSettingsDialogFragmentListener(object :
                                 LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
                                 override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-                                    vm.load(layersSettings)
+                                    layerSettingsViewModel.load(layersSettings)
                                 }
 
                                 override fun onAddLayer() {
@@ -503,8 +502,8 @@ open class MapFragment : Fragment() {
                             )
                         }
                 }
-                show()
             }
+            show()
         }
     }
 
@@ -518,11 +517,13 @@ open class MapFragment : Fragment() {
                 override fun onZoom(event: ZoomEvent?): Boolean {
                     val zoomLevel = event?.zoomLevel ?: return true
 
-                    val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
+                    CoroutineScope(Main).launch {
+                        val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
 
-                    getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
-                        (overlay as FeatureCollectionOverlay).isEnabled =
-                            selectedLayers.any { it.label == overlay.name }
+                        getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
+                            (overlay as FeatureCollectionOverlay).isEnabled =
+                                selectedLayers.any { it.label == overlay.name }
+                        }
                     }
 
                     return true
@@ -555,8 +556,8 @@ open class MapFragment : Fragment() {
                     }
 
                     val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
-                    val vectorLayers =
-                        (vm.layers.value ?: emptyList()).filter { it.getType() == LayerType.VECTOR }
+                    val vectorLayers = vm.getAllLayers()
+                        .filter { it.getType() == LayerType.VECTOR }
 
                     mapView.overlays.asSequence()
                         .filter { (it is FeatureCollectionOverlay) && vectorLayers.any { vectorLayer -> vectorLayer.label == it.name } || it is FeatureOverlay }

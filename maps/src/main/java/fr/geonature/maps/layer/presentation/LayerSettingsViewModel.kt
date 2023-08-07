@@ -6,7 +6,6 @@ import androidx.core.net.toFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
@@ -18,12 +17,10 @@ import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
-import fr.geonature.maps.util.MapSettingsPreferencesUtils.setUseOnlineLayers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -56,12 +53,6 @@ class LayerSettingsViewModel @Inject constructor(
     private val layerRepository: ILayerRepository
 ) : AndroidViewModel(application) {
 
-    private val _layers = MutableLiveData<List<LayerSettings>>()
-    val layers: LiveData<List<LayerSettings>> = _layers
-
-    private val _selectedLayers = MutableLiveData<List<LayerSettings>>()
-    val selectedLayers: LiveData<List<LayerSettings>> = _selectedLayers
-
     private val _tileProvider = MutableLiveData<MapTileProviderBase?>()
     val tileProvider: LiveData<MapTileProviderBase?> = _tileProvider
 
@@ -79,36 +70,36 @@ class LayerSettingsViewModel @Inject constructor(
     /**
      * Loads and prepare all layers defined in [MapSettings].
      */
-    fun init(mapSettings: MapSettings) = liveData {
+    fun init(mapSettings: MapSettings) {
         Logger.info {
             "preparing all layers:\n${
-                mapSettings.layersSettings.joinToString("\n") { "\t'${it.label}': ${it.source}' (active: ${it.properties.active})" }
+                mapSettings.layersSettings.joinToString(
+                    separator = "\n",
+                    postfix = ",\nusing online layers: ${mapSettings.useOnlineLayers}"
+                ) { "\t'${it.label}': ${it.source}' (active: ${it.properties.active})" }
             }..."
         }
 
-        // loads and prepare all layers
-        val allLayers = layerRepository.prepareLayers(
-            mapSettings.layersSettings,
-            mapSettings.baseTilesPath
-        )
-            .getOrDefault(emptyList())
-            .also {
-                _layers.value = it
-            }
+        viewModelScope.launch {
+            // loads and prepare all layers
+            val allLayers = layerRepository.prepareLayers(
+                mapSettings.layersSettings,
+                mapSettings.baseTilesPath
+            )
+                .getOrDefault(emptyList())
 
-        // loads selected layers to show on the map or use the first eligible layer
-        layerRepository.getSelectedLayers()
-            .getOrDefault(emptyList())
-            .also {
-                _selectedLayers.value = it.ifEmpty {
-                    listOfNotNull((allLayers.firstOrNull { layer -> layer.isOnline() && mapSettings.useOnlineLayers }
-                        ?: allLayers.firstOrNull { layer -> !layer.isOnline() })?.also { layer ->
-                        layerRepository.setSelectedLayers(listOf(layer))
-                    })
+            // loads selected layers to show on the map or use the first eligible layer
+            layerRepository.getSelectedLayers()
+                .getOrDefault(emptyList())
+                .also {
+                    if (it.isEmpty() && mapSettings.useOnlineLayers) {
+                        listOfNotNull((allLayers.firstOrNull { layer -> layer.isOnline() }
+                            ?: allLayers.firstOrNull { layer -> !layer.isOnline() })?.also { layer ->
+                            layerRepository.setSelectedLayers(listOf(layer))
+                        })
+                    }
                 }
-            }
-
-        emit(allLayers)
+        }
     }
 
     /**
@@ -117,7 +108,7 @@ class LayerSettingsViewModel @Inject constructor(
     fun load(selectedLayersSettings: List<LayerSettings>) {
         Logger.info {
             "loading selected layers:\n${
-                selectedLayersSettings.joinToString("\n") { "\t'${it.label}': ${it.source}' (active: ${it.properties.active})" }
+                selectedLayersSettings.joinToString("\n") { "\t'${it.label}': ${it.source} (active: ${it.properties.active})" }
             }"
         }
 
@@ -127,13 +118,9 @@ class LayerSettingsViewModel @Inject constructor(
                 listOfNotNull(selectedLayersSettings.firstOrNull { it.isOnline() }) +
                     // and load all valid local layers
                     selectedLayersSettings.filter {
-                        it.getSourcesAsUri()
+                        !it.isOnline() && it.getSourcesAsUri()
                             .isNotEmpty()
                     }
-
-            // add first all inactive layers
-            _selectedLayers.value = validLayersSettings.filter { !it.properties.active }
-                .distinctBy { it.getPrimarySource() }
 
             // load only active layers from selection
             val activeLayerSettings = validLayersSettings.filter { it.properties.active }
@@ -141,13 +128,7 @@ class LayerSettingsViewModel @Inject constructor(
             val tileProvider = buildTileProvider(activeLayerSettings)
             val vectorOverlays = buildVectorOverlays(activeLayerSettings)
 
-            // save current selection
-            setUseOnlineLayers(
-                getApplication(),
-                (_selectedLayers.value
-                    ?: emptyList()).any { layer -> layer.isOnline() && layer.properties.active },
-            )
-            layerRepository.setSelectedLayers(_selectedLayers.value ?: emptyList())
+            layerRepository.setSelectedLayers(selectedLayersSettings)
 
             _tileProvider.postValue(tileProvider)
             _vectorOverlays.postValue(vectorOverlays)
@@ -159,20 +140,33 @@ class LayerSettingsViewModel @Inject constructor(
      */
     fun addLayer(uri: Uri) {
         viewModelScope.launch {
+            val selectedLayers = layerRepository.getSelectedLayers()
+                .getOrDefault(emptyList())
+
             layerRepository.addLayerFromURI(uri)
                 .getOrNull()
                 ?.also {
                     centerAndZoomOnSelectedLayer = it
-                    _layers.value = ((_layers.value
-                        ?: emptyList()) + listOf(it)).distinctBy { layer -> layer.getPrimarySource() }
-                    load(((_selectedLayers.value
-                        ?: emptyList()) + listOf(it)).distinctBy { layer -> layer.getPrimarySource() })
+                    load((selectedLayers + listOf(it)).distinctBy { layer -> layer.getPrimarySource() })
                 }
         }
     }
 
-    fun getActiveLayersOnZoomLevel(zoomLevel: Double): List<LayerSettings> {
-        return (_selectedLayers.value ?: emptyList()).filter {
+    suspend fun getAllLayers(): List<LayerSettings> {
+        return layerRepository.getAllLayers()
+            .getOrDefault(emptyList())
+    }
+
+    suspend fun getSelectedLayers(): List<LayerSettings> {
+        return layerRepository.getSelectedLayers()
+            .getOrDefault(emptyList())
+    }
+
+    suspend fun getActiveLayersOnZoomLevel(zoomLevel: Double): List<LayerSettings> {
+        val selectedLayers = layerRepository.getSelectedLayers()
+            .getOrDefault(emptyList())
+
+        return selectedLayers.filter {
             it.properties.active && it.properties.minZoomLevel.toDouble()
                 .coerceAtLeast(0.0)
                 .rangeTo(it.properties.maxZoomLevel.toDouble()
@@ -197,15 +191,6 @@ class LayerSettingsViewModel @Inject constructor(
                             .mapNotNull { uri -> runCatching { uri.toFile() }.getOrNull() },
                     )
                 }
-                .onEach {
-                    _selectedLayers.postValue(((_selectedLayers.value ?: emptyList()) + listOf(
-                        it.first.copy(
-                            properties = it.first.properties.copy(
-                                active = it.second.isNotEmpty()
-                            )
-                        )
-                    )).distinctBy { layer -> layer.getPrimarySource() })
-                }
                 .map {
                     Logger.info { "local tiles layer '${it.first.label}' loaded" }
 
@@ -228,10 +213,6 @@ class LayerSettingsViewModel @Inject constructor(
                         }
                     }
                         .getOrNull() ?: return@let null
-
-                    _selectedLayers.postValue(((_selectedLayers.value ?: emptyList()) + listOf(
-                        layersSettings.copy()
-                    )).distinctBy { layer -> layer.getPrimarySource() })
 
                     Logger.info { "loading online layer '${layersSettings.label}'..." }
 
@@ -319,15 +300,6 @@ class LayerSettingsViewModel @Inject constructor(
                         }
                     }
                         .filter { features -> features.isNotEmpty() }
-                }
-                .onEach {
-                    _selectedLayers.postValue(((_selectedLayers.value ?: emptyList()) + listOf(
-                        it.first.copy(
-                            properties = it.first.properties.copy(
-                                active = it.second.isNotEmpty()
-                            )
-                        )
-                    )).distinctBy { layer -> layer.getPrimarySource() })
                 }
                 .filter {
                     if (it.second.isEmpty()) {

@@ -6,7 +6,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-version = "0.8.0"
+version = "0.8.1"
 
 android {
     namespace 'fr.geonature.maps'
