@@ -272,7 +272,7 @@ open class MapFragment : Fragment() {
 
     private fun getMapSettings(context: Context): MapSettings {
         // read map settings from arguments or build the default one
-        val mapSettingsBuilder = MapSettings.Builder.newInstance()
+        val mapSettingsBuilder = MapSettings.Builder()
             .from(arguments?.getParcelableCompat(ARG_MAP_SETTINGS))
 
         setDefaultPreferences(

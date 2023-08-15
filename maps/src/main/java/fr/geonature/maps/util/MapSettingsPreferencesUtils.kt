@@ -94,7 +94,7 @@ object MapSettingsPreferencesUtils {
      */
     fun useOnlineLayers(
         context: Context,
-        defaultValue: Boolean = MapSettings.Builder.newInstance().useOnlineLayers
+        defaultValue: Boolean = MapSettings.Builder().useOnlineLayers
     ): Boolean {
         return getDefaultSharedPreferences(context)
             .getBoolean(
@@ -131,7 +131,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_compass_key),
-                MapSettings.Builder.newInstance().showCompass
+                MapSettings.Builder().showCompass
             )
     }
 
@@ -146,7 +146,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_scale_key),
-                MapSettings.Builder.newInstance().showScale
+                MapSettings.Builder().showScale
             )
     }
 
@@ -161,7 +161,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_zoom_key),
-                MapSettings.Builder.newInstance().showZoom
+                MapSettings.Builder().showZoom
             )
     }
 
@@ -176,7 +176,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_rotation_key),
-                MapSettings.Builder.newInstance().rotationGesture
+                MapSettings.Builder().rotationGesture
             )
     }
 }

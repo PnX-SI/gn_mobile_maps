@@ -32,7 +32,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
@@ -113,7 +113,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
@@ -148,7 +148,7 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.Builder.newInstance()
+            MapSettings.Builder()
                 .from(mapSettings)
                 .build()
         )
@@ -166,7 +166,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -255,7 +255,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -319,7 +319,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -372,7 +372,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -450,7 +450,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)

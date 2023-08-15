@@ -1,0 +1,8 @@
+{
+  "layers": [
+    {
+      "label": "OSM",
+      "source": "https://a.tile.openstreetmap.org"
+    }
+  ]
+}

@@ -16,12 +16,12 @@ import org.osmdroid.util.GeoPoint
 data class MapSettings(
     private val _layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
-    val useOnlineLayers: Boolean = Builder.newInstance().useOnlineLayers,
-    val showCompass: Boolean = Builder.newInstance().showCompass,
-    val showScale: Boolean = Builder.newInstance().showScale,
-    val showZoom: Boolean = Builder.newInstance().showZoom,
-    val rotationGesture: Boolean = Builder.newInstance().rotationGesture,
-    val editMode: EditFeatureButton.EditMode = Builder.newInstance().editMode,
+    val useOnlineLayers: Boolean = Builder().useOnlineLayers,
+    val showCompass: Boolean = Builder().showCompass,
+    val showScale: Boolean = Builder().showScale,
+    val showZoom: Boolean = Builder().showZoom,
+    val rotationGesture: Boolean = Builder().rotationGesture,
+    val editMode: EditFeatureButton.EditMode = Builder().editMode,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -175,90 +175,74 @@ data class MapSettings(
         internal var center: GeoPoint? = null
             private set
 
-        fun from(mapSettings: MapSettings?) =
-            apply {
-                if (mapSettings == null) return@apply
+        /**
+         * Makes a copy of given [MapSettings].
+         */
+        fun from(mapSettings: MapSettings?) = apply {
+            if (mapSettings == null) return@apply
 
-                this.layersSettings.addAll(mapSettings._layersSettings)
-                this.baseTilesPath = mapSettings.baseTilesPath
-                this.useOnlineLayers = mapSettings.useOnlineLayers
-                this.showCompass = mapSettings.showCompass
-                this.showScale = mapSettings.showScale
-                this.showZoom = mapSettings.showZoom
-                this.rotationGesture = mapSettings.rotationGesture
-                this.editMode = mapSettings.editMode
-                this.zoom = mapSettings.zoom
-                this.minZoomLevel = mapSettings.minZoomLevel
-                this.maxZoomLevel = mapSettings.maxZoomLevel
-                this.minZoomEditing = mapSettings.minZoomEditing
-                this.maxBounds = mapSettings.maxBounds
-                this.center = mapSettings.center
-            }
+            this.layersSettings.addAll(mapSettings._layersSettings)
+            this.baseTilesPath = mapSettings.baseTilesPath
+            this.useOnlineLayers = mapSettings.useOnlineLayers
+            this.showCompass = mapSettings.showCompass
+            this.showScale = mapSettings.showScale
+            this.showZoom = mapSettings.showZoom
+            this.rotationGesture = mapSettings.rotationGesture
+            this.editMode = mapSettings.editMode
+            this.zoom = mapSettings.zoom
+            this.minZoomLevel = mapSettings.minZoomLevel
+            this.maxZoomLevel = mapSettings.maxZoomLevel
+            this.minZoomEditing = mapSettings.minZoomEditing
+            this.maxBounds = mapSettings.maxBounds
+            this.center = mapSettings.center
+        }
 
-        fun baseTilesPath(baseTilesPath: String) =
-            apply { this.baseTilesPath = baseTilesPath }
+        fun baseTilesPath(baseTilesPath: String) = apply { this.baseTilesPath = baseTilesPath }
 
         fun useOnlineLayers(useOnlineLayers: Boolean) =
             apply { this.useOnlineLayers = useOnlineLayers }
 
-        fun showCompass(showCompass: Boolean) =
-            apply { this.showCompass = showCompass }
+        fun showCompass(showCompass: Boolean) = apply { this.showCompass = showCompass }
 
-        fun showScale(showScale: Boolean) =
-            apply { this.showScale = showScale }
+        fun showScale(showScale: Boolean) = apply { this.showScale = showScale }
 
-        fun showZoom(showZoom: Boolean) =
-            apply { this.showZoom = showZoom }
+        fun showZoom(showZoom: Boolean) = apply { this.showZoom = showZoom }
 
-        fun rotationGesture(rotateGesture: Boolean) =
-            apply { this.rotationGesture = rotateGesture }
+        fun rotationGesture(rotateGesture: Boolean) = apply { this.rotationGesture = rotateGesture }
 
-        fun editMode(editMode: EditFeatureButton.EditMode) =
-            apply { this.editMode = editMode }
+        fun editMode(editMode: EditFeatureButton.EditMode) = apply { this.editMode = editMode }
 
-        fun zoom(zoom: Double) =
-            apply { this.zoom = zoom }
+        fun zoom(zoom: Double) = apply { this.zoom = zoom }
 
-        fun minZoomLevel(minZoomLevel: Double) =
-            apply { this.minZoomLevel = minZoomLevel }
+        fun minZoomLevel(minZoomLevel: Double) = apply { this.minZoomLevel = minZoomLevel }
 
-        fun maxZoomLevel(maxZoomLevel: Double) =
-            apply { this.maxZoomLevel = maxZoomLevel }
+        fun maxZoomLevel(maxZoomLevel: Double) = apply { this.maxZoomLevel = maxZoomLevel }
 
-        fun minZoomEditing(minZoomEditing: Double) =
-            apply { this.minZoomEditing = minZoomEditing }
+        fun minZoomEditing(minZoomEditing: Double) = apply { this.minZoomEditing = minZoomEditing }
 
         fun maxBounds(geoPoints: List<GeoPoint>) =
             apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
 
-        fun center(center: GeoPoint?) =
-            apply { this.center = center }
+        fun center(center: GeoPoint?) = apply { this.center = center }
 
         fun addLayer(
             label: String,
             vararg source: String
-        ) =
-            apply {
-                addLayer(
-                    LayerSettings.Builder.newInstance()
-                        .label(label)
-                        .sources(source.toList())
-                        .build()
-                )
-            }
-
-        fun addLayer(layerSettings: LayerSettings) =
-            apply {
-                if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(
-                    layerSettings
-                )
-            }
-
-        fun build() =
-            MapSettings(this)
-
-        companion object {
-            fun newInstance(): Builder = Builder()
+        ) = apply {
+            addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label(label)
+                    .sources(source.toList())
+                    .build()
+            )
         }
+
+        fun addLayer(layerSettings: LayerSettings) = apply {
+            if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(
+                layerSettings
+            )
+        }
+
+        fun build() = MapSettings(this)
     }
 }
