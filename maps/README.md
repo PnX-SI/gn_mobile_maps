@@ -15,10 +15,19 @@ Example:
   "show_scale": true,
   "show_zoom": false,
   "max_bounds": [
-    [47.253369, -1.605721],
-    [47.173845, -1.482811]
+    [
+      47.253369,
+      -1.605721
+    ],
+    [
+      47.173845,
+      -1.482811
+    ]
   ],
-  "center": [47.225827, -1.55447],
+  "center": [
+    47.225827,
+    -1.55447
+  ],
   "start_zoom": 8.0,
   "min_zoom": 7.0,
   "max_zoom": 12.0,
@@ -78,7 +87,7 @@ Example:
 ### Parameters description
 
 | Parameter                        | UI      | Description                                                              |
-| -------------------------------- | ------- | ------------------------------------------------------------------------ |
+|----------------------------------|---------|--------------------------------------------------------------------------|
 | `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                          |
 | `use_default_online_tile_source` | &#9745; | Whether to use online tiles source (default: `true`).                    |
 | `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).     |
@@ -107,7 +116,7 @@ Example:
 ## Layer description
 
 | Parameter    | Type               | Description                                                                                               |
-| ------------ | ------------------ | --------------------------------------------------------------------------------------------------------- |
+|--------------|--------------------|-----------------------------------------------------------------------------------------------------------|
 | `label`      | String             | A human friendly representation of this layer.                                                            |
 | `source`     | String or String[] | Define the layer source name (e.g. URL of the tile source provider or the name of the local source file). |
 | `properties` | Object             | Define additional layer properties (default: `null`).                                                     |
@@ -199,7 +208,7 @@ Base URLs:
 ### Layer properties
 
 | Parameter        | Type   | Default value | Description                                                                                                                             |
-| ---------------- | ------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+|------------------|--------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `min_zoom`       | Number | -1            | The minimum zoom level                                                                                                                  |
 | `max_zoom`       | Number | -1            | The maximum zoom level                                                                                                                  |
 | `tile_size`      | Number | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
@@ -221,7 +230,7 @@ Layer style is only available for vector layers (e.g. WKT or GeoJSON layers). Av
 are as follow:
 
 | Parameter     | Type    | Default value | Description                                                                                                    |
-| ------------- | ------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
+|---------------|---------|---------------|----------------------------------------------------------------------------------------------------------------|
 | `stroke`      | Boolean | `true`        | Whether to draw stroke along the path. Set it to false to disable borders on polygons or circles.              |
 | `color`       | String  | `#444444`     | The stroke color. Supported formats are `#RRGGBB` and `#AARRGGBB`.                                             |
 | `weight`      | Number  | 8             | The stroke width in pixels.                                                                                    |

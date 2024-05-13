@@ -11,6 +11,7 @@ See [settings documentation](/maps).
 Do **NOT** modify directly any git sub modules (e.g. `mountpoint`).
 Any changes should be made from each underlying git repository:
 
+* `compat`: [gn_mobile_core](https://github.com/PnX-SI/gn_mobile_core) git repository
 * `mountpoint`: [gn_mobile_core](https://github.com/PnX-SI/gn_mobile_core) git repository
 
 ```bash
