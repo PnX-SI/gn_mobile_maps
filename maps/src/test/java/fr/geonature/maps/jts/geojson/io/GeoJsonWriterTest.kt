@@ -69,31 +69,15 @@ class GeoJsonWriterTest {
                 gf,
                 47.2256258,
                 -1.5545135
+            ),
+            hashMapOf(
+                "name" to "Ile de Versailles",
+                "year" to 1831,
+                "double_attribute" to 3.14,
+                "boolean_attribute_false" to false,
+                "boolean_attribute_true" to true
             )
-        ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "Ile de Versailles"
-                )
-                putInt(
-                    "year",
-                    1831
-                )
-                putDouble(
-                    "double_attribute",
-                    3.14
-                )
-                putBoolean(
-                    "boolean_attribute_false",
-                    false
-                )
-                putBoolean(
-                    "boolean_attribute_true",
-                    true
-                )
-            }
-        }
+        )
 
         // when write this Feature as JSON string
         val json = geoJsonWriter.write(feature)

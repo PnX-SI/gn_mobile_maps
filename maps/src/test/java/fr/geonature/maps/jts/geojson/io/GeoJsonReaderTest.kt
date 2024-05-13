@@ -228,28 +228,28 @@ class GeoJsonReaderTest {
         )
         assertEquals(
             5,
-            feature.properties.size()
+            feature.properties.size
         )
         assertEquals(
             "Ile de Versailles",
-            feature.properties.getString("name")
+            feature.properties["name"]
         )
         assertEquals(
             1831,
-            feature.properties.getInt("year")
+            feature.properties["year"]
         )
         assertEquals(
             3.14,
-            feature.properties.getDouble("double_attribute"),
+            feature.properties["double_attribute"] as Double,
             0.0
         )
         assertEquals(
             false,
-            feature.properties.getBoolean("boolean_attribute_false")
+            feature.properties["boolean_attribute_false"]
         )
         assertEquals(
             true,
-            feature.properties.getBoolean("boolean_attribute_true")
+            feature.properties["boolean_attribute_true"]
         )
         assertFalse(feature.properties.containsKey("undefined_attribute"))
         assertNotNull(feature.geometry)

@@ -1,9 +1,9 @@
 package fr.geonature.maps.jts.geojson
 
-import android.os.Bundle
+import android.os.Parcel
 import android.os.Parcelable
+import fr.geonature.compat.os.readSerializableCompat
 import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
-import kotlinx.parcelize.Parcelize
 import org.locationtech.jts.geom.Geometry
 
 /**
@@ -11,12 +11,31 @@ import org.locationtech.jts.geom.Geometry
  *
  * @author S. Grimault
  */
-@Parcelize
 data class Feature(
     val id: String?,
     val geometry: Geometry,
-    val properties: Bundle = Bundle()
+    val properties: HashMap<String, Any> = hashMapOf()
 ) : AbstractGeoJson(), Parcelable {
+
+    constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readSerializableCompat<Geometry>()!!,
+        parcel.readSerializableCompat<HashMap<String, Any>>()?: hashMapOf()
+    ) {
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    override fun writeToParcel(
+        dest: Parcel,
+        flags: Int
+    ) {
+        dest.writeString(id)
+        dest.writeSerializable(geometry)
+        dest.writeSerializable(properties)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -26,9 +45,9 @@ data class Feature(
 
         if (id != other.id) return false
         if (geometry != other.geometry) return false
-        if (properties.size() != other.properties.size()) return false
+        if (properties.size != other.properties.size) return false
 
-        for (key in properties.keySet()) {
+        for (key in properties.keys) {
             if (properties[key] != other.properties[key]) return false
         }
 
@@ -50,5 +69,15 @@ data class Feature(
      */
     fun apply(filter: IFeatureFilterVisitor) {
         filter.filter(this)
+    }
+
+    companion object CREATOR : Parcelable.Creator<Feature> {
+        override fun createFromParcel(parcel: Parcel): Feature {
+            return Feature(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Feature?> {
+            return arrayOfNulls(size)
+        }
     }
 }

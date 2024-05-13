@@ -94,22 +94,23 @@ class GeoJsonReader {
         IllegalStateException::class
     )
     fun read(reader: JsonReader): List<Feature> {
-        @Suppress("RemoveExplicitTypeArguments") return when (reader.peek()) {
+        return when (reader.peek()) {
             BEGIN_OBJECT -> {
                 val features = mutableListOf<Feature>()
+
                 var id: String? = null
                 var type: String? = null
                 var geometry: Geometry? = null
-                var bundle: Bundle? = null
+                var properties: Map<String, Any>? = null
 
                 reader.beginObject()
 
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
-                        "id" -> id = reader.nextString()
+                        "id" -> id = reader.nextStringOrNull()
                         "type" -> type = reader.nextString()
                         "geometry" -> geometry = readGeometry(reader)
-                        "properties" -> bundle = readProperties(reader)
+                        "properties" -> properties = readProperties(reader)
                         "features" -> {
                             reader.beginArray()
 
@@ -123,6 +124,7 @@ class GeoJsonReader {
 
                             reader.endArray()
                         }
+
                         else -> reader.skipValue()
                     }
                 }
@@ -131,11 +133,8 @@ class GeoJsonReader {
 
                 if ("Feature" == type) {
                     // try to find ID value from properties
-                    id = if (id.isNullOrBlank()) bundle?.getString("id") else id
-
-                    if (id.isNullOrBlank()) {
-                        throw IOException("No id found for feature")
-                    }
+                    id = if (id.isNullOrBlank()) properties?.get("id")
+                        ?.toString() else id
 
                     if (geometry == null) {
                         throw IOException("No geometry found for feature $id")
@@ -146,8 +145,8 @@ class GeoJsonReader {
                         geometry
                     )
 
-                    if (bundle != null && !bundle.isEmpty) {
-                        feature.properties.putAll(bundle)
+                    if (!properties.isNullOrEmpty()) {
+                        feature.properties.putAll(properties)
                     }
 
                     features.add(feature)
@@ -155,6 +154,7 @@ class GeoJsonReader {
 
                 return features
             }
+
             BEGIN_ARRAY -> {
                 val features = mutableListOf<Feature>()
 
@@ -176,7 +176,8 @@ class GeoJsonReader {
 
                 return features
             }
-            else -> emptyList<Feature>()
+
+            else -> emptyList()
         }
     }
 
@@ -232,16 +233,16 @@ class GeoJsonReader {
         var id: String? = null
         var type: String? = null
         var geometry: Geometry? = null
-        var bundle: Bundle? = null
+        var properties: Map<String, Any>? = null
 
         reader.beginObject()
 
         while (reader.hasNext()) {
             when (reader.nextName()) {
-                "id" -> id = reader.nextString()
+                "id" -> id = reader.nextStringOrNull()
                 "type" -> type = reader.nextString()
                 "geometry" -> geometry = readGeometry(reader)
-                "properties" -> bundle = readProperties(reader)
+                "properties" -> properties = readProperties(reader)
                 else -> reader.skipValue()
             }
         }
@@ -249,12 +250,8 @@ class GeoJsonReader {
         reader.endObject()
 
         // try to find ID value from properties
-        id = if (id.isNullOrBlank()) bundle?.get("id")
+        id = if (id.isNullOrBlank()) properties?.get("id")
             ?.toString() else id
-
-        if (id.isNullOrBlank()) {
-            throw IOException("No id found for feature")
-        }
 
         if ("Feature" != type) {
             throw IOException("No such type found for feature $id")
@@ -269,8 +266,8 @@ class GeoJsonReader {
             geometry
         )
 
-        if (bundle != null && !bundle.isEmpty) {
-            feature.properties.putAll(bundle)
+        if (!properties.isNullOrEmpty()) {
+            feature.properties.putAll(properties)
         }
 
         return feature
@@ -412,11 +409,10 @@ class GeoJsonReader {
             BEGIN_OBJECT -> {
                 reader.beginObject()
 
-                val type = reader
-                    .nextName(
-                        "type",
-                        STRING
-                    )
+                val type = reader.nextName(
+                    "type",
+                    STRING
+                )
                     .nextStringOrNull() ?: throw IOException("Missing 'type' property for Geometry")
 
                 val geometry: Geometry
@@ -666,8 +662,8 @@ class GeoJsonReader {
         IOException::class,
         IllegalStateException::class
     )
-    private fun readProperties(reader: JsonReader): Bundle {
-        val bundle = Bundle()
+    private fun readProperties(reader: JsonReader): Map<String, Any> {
+        val properties = hashMapOf<String, Any>()
 
         if (reader.peek() == BEGIN_OBJECT) {
             reader.beginObject()
@@ -677,37 +673,25 @@ class GeoJsonReader {
                 when (reader.peek()) {
                     NAME -> key = reader.nextName()
                     STRING -> if (!key.isNullOrBlank()) {
-                        bundle.putString(
-                            key,
-                            reader.nextString()
-                        )
+                        properties[key] = reader.nextString()
                     }
                     BOOLEAN -> if (!key.isNullOrBlank()) {
-                        bundle.putBoolean(
-                            key,
-                            reader.nextBoolean()
-                        )
+                        properties[key] = reader.nextBoolean()
                     }
                     NUMBER -> if (!key.isNullOrBlank()) {
                         val rawValue = reader.nextString()
 
-                        try {
-                            bundle.putInt(
-                                key,
-                                parseInt(rawValue)
-                            )
-                        } catch (nfe: NumberFormatException) {
-                            bundle.putDouble(
-                                key,
-                                parseDouble(rawValue)
-                            )
-                        }
+                        runCatching { parseInt(rawValue) }.recoverCatching { parseDouble(rawValue) }
+                            .getOrNull()
+                            ?.also { v ->
+                                key?.also { k -> properties[k] = v }
+                            }
                     }
                     BEGIN_OBJECT -> if (!key.isNullOrBlank()) {
-                        bundle.putBundle(
-                            key,
-                            readProperties(reader)
-                        )
+                        readProperties(reader).takeIf { it.isNotEmpty() }
+                            ?.also { v ->
+                                key?.also { k -> properties[k] = v }
+                            }
                     }
                     else -> {
                         key = null
@@ -719,6 +703,6 @@ class GeoJsonReader {
             reader.endObject()
         }
 
-        return bundle
+        return properties
     }
 }

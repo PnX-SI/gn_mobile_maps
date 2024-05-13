@@ -38,10 +38,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            properties.putString(
-                "name",
-                "feature1"
-            )
+            properties["name"] = "feature1"
         }
 
         // then
@@ -61,12 +58,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "feature1"
-                )
-            }
+            properties["name"] = "feature1"
         },
             Feature(
                 "1234",
@@ -76,12 +68,7 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                }
+                properties["name"] = "feature1"
             })
 
         assertNotEquals(Feature(
@@ -92,12 +79,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "feature1"
-                )
-            }
+            properties["name"] = "feature1"
         },
             Feature(
                 "1234",
@@ -107,16 +89,8 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                    putBoolean(
-                        "some_boolean_attribute",
-                        true
-                    )
-                }
+                properties["name"] = "feature1"
+                properties["some_boolean_attribute"] = true
             })
 
         assertNotEquals(Feature(
@@ -135,30 +109,22 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                }
+                properties["name"] = "feature1"
             })
     }
 
     @Test
     fun `should obtain feature instance from parcelable`() {
         // given a Feature
-        val feature = Feature("1234",
+        val feature = Feature(
+            "1234",
             createPoint(
                 gf,
                 47.225782,
                 -1.554476
             ),
-            Bundle().apply {
-                putString(
-                    "name",
-                    "feature1"
-                )
-            })
+            hashMapOf("name" to "feature1")
+        )
 
         // when we obtain a Parcel object to write the Feature instance to it
         val parcel = Parcel.obtain()
@@ -173,7 +139,7 @@ class FeatureTest {
         // then
         assertEquals(
             feature,
-            parcelableCreator<Feature>().createFromParcel(parcel)
+            Feature.createFromParcel(parcel)
         )
     }
 }

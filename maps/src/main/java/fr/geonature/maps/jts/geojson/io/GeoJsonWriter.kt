@@ -431,24 +431,24 @@ class GeoJsonWriter {
     @Throws(IOException::class)
     private fun writeProperties(
         writer: JsonWriter,
-        properties: Bundle
+        properties: Map<String, Any>
     ) {
         writer.name("properties")
-        writeBundle(
+        writeProperty(
             writer,
             properties
         )
     }
 
     @Throws(IOException::class)
-    private fun writeBundle(
+    private fun writeProperty(
         writer: JsonWriter,
-        bundle: Bundle
+        properties: Map<String, Any>
     ) {
         writer.beginObject()
 
-        for (key in bundle.keySet()) {
-            val value = bundle.get(key)
+        for (key in properties.keys) {
+            val value = properties[key]
 
             if (value is String) {
                 writer.name(key)
@@ -465,11 +465,11 @@ class GeoJsonWriter {
                     .value(value)
             }
 
-            if (value is Bundle) {
+            if (value is Map<*, *>) {
                 writer.name(key)
-                writeBundle(
+                @Suppress("UNCHECKED_CAST") writeProperty(
                     writer,
-                    value
+                    value as Map<String, Any>
                 )
             }
         }

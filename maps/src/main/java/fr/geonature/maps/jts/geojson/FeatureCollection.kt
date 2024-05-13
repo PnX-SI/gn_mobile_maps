@@ -3,9 +3,6 @@ package fr.geonature.maps.jts.geojson
 import android.os.Parcel
 import android.os.Parcelable
 import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
-import kotlinx.parcelize.parcelableCreator
-import java.util.ArrayList
-import java.util.HashMap
 
 /**
  * Describes a [FeatureCollection] object as a `List` of [Feature].
@@ -22,7 +19,7 @@ class FeatureCollection : AbstractGeoJson, Parcelable {
         val features = ArrayList<Feature>()
         source.readTypedList(
             features,
-            parcelableCreator()
+            Feature
         )
         addAllFeatures(features)
     }
