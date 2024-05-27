@@ -40,7 +40,10 @@ import org.osmdroid.util.BoundingBox
 import org.osmdroid.views.overlay.Overlay
 import org.tinylog.Logger
 import java.io.FileReader
+import java.util.Date
 import javax.inject.Inject
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * [LayerSettings] view model.
@@ -260,12 +263,14 @@ class LayerSettingsViewModel @Inject constructor(
             layersSettings.asFlow()
                 .filter { it.getType() == LayerType.VECTOR }
                 .map {
+                    val startTime = Date()
                     Logger.info { "loading vector layer '${it.label}'..." }
 
-                    Pair(
+                    Triple(
                         it,
                         it.getSourcesAsUri()
                             .mapNotNull { uri -> runCatching { uri.toFile() }.getOrNull() },
+                        startTime
                     )
                 }
                 .filter {
@@ -276,30 +281,34 @@ class LayerSettingsViewModel @Inject constructor(
                     it.second.isNotEmpty()
                 }
                 .map {
-                    it.first to it.second.map { file ->
-                        when (file.extension) {
-                            "geojson", "json" -> runCatching {
-                                GeoJsonReader().read(FileReader(file))
-                            }.onFailure {
-                                Logger.warn { "failed to load vector layer from file '${file.name}'" }
-                            }
-                                .getOrDefault(emptyList())
+                    Triple(
+                        it.first,
+                        it.second.map { file ->
+                            when (file.extension) {
+                                "geojson", "json" -> runCatching {
+                                    GeoJsonReader().read(FileReader(file))
+                                }.onFailure {
+                                    Logger.warn { "failed to load vector layer from file '${file.name}'" }
+                                }
+                                    .getOrDefault(emptyList())
 
-                            "wkt" -> runCatching {
-                                WKTReader().readFeatures(FileReader(file))
-                            }.onFailure {
-                                Logger.warn { "failed to load vector layer from file '${file.name}'" }
-                            }
-                                .getOrDefault(emptyList())
+                                "wkt" -> runCatching {
+                                    WKTReader().readFeatures(FileReader(file))
+                                }.onFailure {
+                                    Logger.warn { "failed to load vector layer from file '${file.name}'" }
+                                }
+                                    .getOrDefault(emptyList())
 
-                            else -> {
-                                Logger.warn { "unsupported vector layer '${file.name}'" }
+                                else -> {
+                                    Logger.warn { "unsupported vector layer '${file.name}'" }
 
-                                emptyList()
+                                    emptyList()
+                                }
                             }
                         }
-                    }
-                        .filter { features -> features.isNotEmpty() }
+                            .filter { features -> features.isNotEmpty() },
+                        it.third
+                    )
                 }
                 .filter {
                     if (it.second.isEmpty()) {
@@ -309,7 +318,7 @@ class LayerSettingsViewModel @Inject constructor(
                     it.second.isNotEmpty()
                 }
                 .map {
-                    Logger.info { "vector layer '${it.first.label}' loaded" }
+                    Logger.info { "vector layer '${it.first.label}' loaded (took ${(Date().time - it.third.time).toDuration(DurationUnit.MILLISECONDS)})" }
 
                     FeatureCollectionOverlay(it.first.label).apply {
                         setFeatures(

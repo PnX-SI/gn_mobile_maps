@@ -1,6 +1,5 @@
 package fr.geonature.maps.jts.geojson.io
 
-import android.os.Bundle
 import android.util.JsonReader
 import android.util.JsonToken.BEGIN_ARRAY
 import android.util.JsonToken.BEGIN_OBJECT
@@ -12,14 +11,13 @@ import android.util.JsonToken.STRING
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import fr.geonature.maps.util.nextName
 import fr.geonature.maps.util.nextStringOrNull
+import fr.geonature.maps.util.readObject
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryCollection
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.LineString
-import org.locationtech.jts.geom.LinearRing
 import org.locationtech.jts.geom.MultiLineString
 import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon
@@ -37,7 +35,7 @@ import java.lang.Integer.parseInt
  *
  * @author S. Grimault
  *
- * @see [https://tools.ietf.org/html/rfc7946](https://tools.ietf.org/html/rfc7946)
+ * @see <a href="https://tools.ietf.org/html/rfc7946">https://tools.ietf.org/html/rfc7946</a>
  *
  * @see GeoJsonWriter
  */
@@ -115,11 +113,11 @@ class GeoJsonReader {
                             reader.beginArray()
 
                             while (reader.hasNext()) {
-                                try {
-                                    features.add(readFeature(reader))
-                                } catch (e: Exception) {
-                                    Logger.warn(e)
-                                }
+                                runCatching { readFeature(reader) }.onFailure { it.message?.also { m-> Logger.warn(it) { m } } }
+                                    .getOrNull()
+                                    ?.also {
+                                        features.add(it)
+                                    }
                             }
 
                             reader.endArray()
@@ -331,6 +329,7 @@ class GeoJsonReader {
                 "type" -> if ("FeatureCollection" != reader.nextString()) {
                     throw IOException("No such type found for FeatureCollection")
                 }
+
                 "features" -> {
                     reader.beginArray()
 
@@ -406,38 +405,13 @@ class GeoJsonReader {
                 reader.nextNull()
                 throw IOException("Geometry must not be null")
             }
+
             BEGIN_OBJECT -> {
-                reader.beginObject()
-
-                val type = reader.nextName(
-                    "type",
-                    STRING
-                )
-                    .nextStringOrNull() ?: throw IOException("Missing 'type' property for Geometry")
-
-                val geometry: Geometry
-
-                when (type) {
-                    "Point" -> geometry = readPoint(reader)
-                    "MultiPoint" -> geometry = readMultiPoint(reader)
-                    "LineString" -> geometry = readLineString(
-                        reader,
-                        true
-                    )
-                    "MultiLineString" -> geometry = readMultiLineString(reader)
-                    "Polygon" -> geometry = readPolygon(
-                        reader,
-                        true
-                    )
-                    "MultiPolygon" -> geometry = readMultiPolygon(reader)
-                    "GeometryCollection" -> geometry = readGeometryCollection(reader)
-                    else -> throw IOException("No such geometry type '$type'")
-                }
-
-                reader.endObject()
-
-                geometry
+                val asObject =
+                    reader.readObject() ?: throw IOException("Invalid object as Geometry")
+                readGeometry(asObject)
             }
+
             else -> {
                 reader.skipValue()
                 throw IOException("Invalid Geometry")
@@ -449,98 +423,66 @@ class GeoJsonReader {
         IOException::class,
         IllegalStateException::class
     )
-    private fun readPoint(reader: JsonReader): Point {
-        reader.nextName(
-            "coordinates",
-            BEGIN_ARRAY
-        )
+    private fun readGeometry(map: Map<String, Any?>): Geometry {
+        return when (val type = map["type"] as String) {
+            "Point" -> readPoint((map["coordinates"] as List<*>).map { (it as Number).toDouble() })
+            "MultiPoint" -> readMultiPoint((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { (it as Number).toDouble()} })
+            "LineString" -> readLineString((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { (it as Number).toDouble() } })
+            "MultiLineString" -> readMultiLineString((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { c1 -> (c1 as List<*>).map { (it as Number).toDouble() } } })
+            "Polygon" -> readPolygon((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { c1 -> (c1 as List<*>).map { (it as Number).toDouble() } } })
+            "MultiPolygon" -> readMultiPolygon((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { c1 -> (c1 as List<*>).map { c2 -> (c2 as List<*>).map { (it as Number).toDouble() } } } })
+            "GeometryCollection" -> readGeometryCollection((map["geometries"] as List<*>).map {
+                (it as Map<*, *>).map { e -> e.key as String to e.value }
+                    .toMap()
+            })
 
-        return gf.createPoint(readCoordinate(reader))
+            else -> throw IOException("No such geometry type '$type'")
+        }
     }
 
     @Throws(
         IOException::class,
         IllegalStateException::class
     )
-    private fun readMultiPoint(reader: JsonReader): MultiPoint {
-        reader.nextName(
-            "coordinates",
-            BEGIN_ARRAY
-        )
-
-        return gf.createMultiPointFromCoords(readCoordinates(reader))
+    private fun readPoint(coordinates: List<Double>): Point {
+        return gf.createPoint(readCoordinate(coordinates))
     }
 
     @Throws(
         IOException::class,
         IllegalStateException::class
     )
-    private fun readLineString(
-        reader: JsonReader,
-        readCoordinatesJsonKey: Boolean
-    ): LineString {
-        if (readCoordinatesJsonKey) {
-            reader.nextName(
-                "coordinates",
-                BEGIN_ARRAY
-            )
-        }
-
-        return gf.createLineString(readCoordinates(reader))
+    private fun readMultiPoint(coordinates: List<List<Double>>): MultiPoint {
+        return gf.createMultiPointFromCoords(readCoordinates(coordinates))
     }
 
     @Throws(
         IOException::class,
         IllegalStateException::class
     )
-    private fun readMultiLineString(reader: JsonReader): MultiLineString {
-        reader.nextName(
-            "coordinates",
-            BEGIN_ARRAY
-        )
-
-        val lineStrings = ArrayList<LineString>()
-
-        reader.beginArray()
-
-        while (reader.hasNext()) {
-            lineStrings.add(
-                readLineString(
-                    reader,
-                    false
-                )
-            )
-        }
-
-        reader.endArray()
-
-        return gf.createMultiLineString(lineStrings.toTypedArray())
+    private fun readLineString(coordinates: List<List<Double>>): LineString {
+        return gf.createLineString(readCoordinates(coordinates))
     }
 
     @Throws(
         IOException::class,
         IllegalStateException::class
     )
-    private fun readPolygon(
-        reader: JsonReader,
-        readCoordinatesJsonKey: Boolean
-    ): Polygon {
-        if (readCoordinatesJsonKey) {
-            reader.nextName(
-                "coordinates",
-                BEGIN_ARRAY
-            )
+    private fun readMultiLineString(coordinates: List<List<List<Double>>>): MultiLineString {
+        return gf.createMultiLineString(coordinates.map {
+            readLineString(it)
         }
+            .toTypedArray())
+    }
 
-        val linearRings = ArrayList<LinearRing>()
-
-        reader.beginArray()
-
-        while (reader.hasNext()) {
-            linearRings.add(gf.createLinearRing(readCoordinates(reader)))
+    @Throws(
+        IOException::class,
+        IllegalStateException::class
+    )
+    private fun readPolygon(coordinates: List<List<List<Double>>>): Polygon {
+        val linearRings = coordinates.map {
+            gf.createLinearRing(readCoordinates(it))
         }
-
-        reader.endArray()
 
         if (linearRings.isEmpty()) {
             throw IOException("No coordinates defined for polygon")
@@ -565,97 +507,46 @@ class GeoJsonReader {
         IOException::class,
         IllegalStateException::class
     )
-    private fun readMultiPolygon(reader: JsonReader): MultiPolygon {
-        reader.nextName(
-            "coordinates",
-            BEGIN_ARRAY
-        )
+    private fun readMultiPolygon(coordinates: List<List<List<List<Double>>>>): MultiPolygon {
+        return gf.createMultiPolygon(coordinates.map {
+            readPolygon(it)
+        }
+            .toTypedArray())
+    }
 
-        val polygons = ArrayList<Polygon>()
+    @Throws(
+        IOException::class,
+        IllegalStateException::class
+    )
+    private fun readGeometryCollection(geometries: List<Map<String, Any?>>): GeometryCollection {
+        return gf.createGeometryCollection(geometries.map { readGeometry(it) }
+            .toTypedArray())
+    }
 
-        reader.beginArray()
+    @Throws(
+        IOException::class,
+        IllegalStateException::class
+    )
+    private fun readCoordinates(coordinates: List<List<Double>>): Array<Coordinate> {
+        return coordinates.map {
+            readCoordinate(it)
+        }
+            .toTypedArray()
+    }
 
-        while (reader.hasNext()) {
-            polygons.add(
-                readPolygon(
-                    reader,
-                    false
+    @Throws(
+        IOException::class,
+        IllegalStateException::class
+    )
+    private fun readCoordinate(coordinates: List<Double>): Coordinate {
+        return Coordinate().apply {
+            coordinates.forEachIndexed { index, d ->
+                setOrdinate(
+                    index,
+                    d
                 )
-            )
-        }
-
-        reader.endArray()
-
-        return gf.createMultiPolygon(polygons.toTypedArray())
-    }
-
-    @Throws(
-        IOException::class,
-        IllegalStateException::class
-    )
-    private fun readGeometryCollection(reader: JsonReader): GeometryCollection {
-        reader.nextName(
-            "geometries",
-            BEGIN_ARRAY
-        )
-
-        val geometries = ArrayList<Geometry>()
-
-        reader.beginArray()
-
-        while (reader.hasNext()) {
-            geometries.add(readGeometry(reader))
-        }
-
-        reader.endArray()
-
-        return gf.createGeometryCollection(geometries.toTypedArray())
-    }
-
-    @Throws(
-        IOException::class,
-        IllegalStateException::class
-    )
-    private fun readCoordinates(reader: JsonReader): Array<Coordinate> {
-        val coordinates = ArrayList<Coordinate>()
-
-        reader.beginArray()
-
-        while (reader.hasNext()) {
-            coordinates.add(readCoordinate(reader))
-        }
-
-        reader.endArray()
-
-        return coordinates.toTypedArray()
-    }
-
-    @Throws(
-        IOException::class,
-        IllegalStateException::class
-    )
-    private fun readCoordinate(reader: JsonReader): Coordinate {
-        val coordinate = Coordinate()
-        var ordinateIndex = 0
-
-        reader.beginArray()
-
-        while (reader.hasNext()) {
-            when (val jsonToken = reader.peek()) {
-                NUMBER -> if (ordinateIndex < 3) {
-                    coordinate.setOrdinate(
-                        ordinateIndex,
-                        reader.nextDouble()
-                    )
-                    ordinateIndex++
-                }
-                else -> throw IOException("Invalid coordinate JSON token $jsonToken")
             }
         }
-
-        reader.endArray()
-
-        return coordinate
     }
 
     @Throws(
@@ -675,9 +566,11 @@ class GeoJsonReader {
                     STRING -> if (!key.isNullOrBlank()) {
                         properties[key] = reader.nextString()
                     }
+
                     BOOLEAN -> if (!key.isNullOrBlank()) {
                         properties[key] = reader.nextBoolean()
                     }
+
                     NUMBER -> if (!key.isNullOrBlank()) {
                         val rawValue = reader.nextString()
 
@@ -687,12 +580,14 @@ class GeoJsonReader {
                                 key?.also { k -> properties[k] = v }
                             }
                     }
+
                     BEGIN_OBJECT -> if (!key.isNullOrBlank()) {
                         readProperties(reader).takeIf { it.isNotEmpty() }
                             ?.also { v ->
                                 key?.also { k -> properties[k] = v }
                             }
                     }
+
                     else -> {
                         key = null
                         reader.skipValue()
