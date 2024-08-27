@@ -6,6 +6,7 @@ import fr.geonature.maps.layer.data.ILayerLocalDataSource
 import fr.geonature.maps.layer.data.ISelectedLayersLocalDataSource
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import org.tinylog.Logger
 
 /**
  * Default implementation of [ILayerRepository].
@@ -69,7 +70,12 @@ class LayerRepositoryImpl(
     }
 
     override suspend fun addLayerFromURI(uri: Uri): Result<LayerSettings> {
-        return runCatching { localLayerDataSource.buildLocalLayerFromUri(uri) }.onSuccess {
+        return runCatching { localLayerDataSource.buildLocalLayerFromUri(uri) }.onFailure {
+            Logger.error {
+                it.message
+                    ?: "failed to load local layer from URI '${uri}'"
+            }
+        }.onSuccess {
             layers.add(it)
         }
     }
