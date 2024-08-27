@@ -52,9 +52,9 @@ class FeatureCollectionOverlayTest {
         )
         assertArrayEquals(arrayOf(
             "34",
+            "42",
             "id1",
             "id3",
-            "id4",
             "id5"
         ),
             featureCollectionOverlay.getFeatureOverlays().map { it.id }.sorted().toTypedArray()

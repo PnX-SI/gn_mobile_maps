@@ -11,7 +11,6 @@ import android.util.JsonToken.STRING
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
-import fr.geonature.maps.util.nextStringOrNull
 import fr.geonature.maps.util.readObject
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Geometry
@@ -105,7 +104,7 @@ class GeoJsonReader {
 
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
-                        "id" -> id = reader.nextStringOrNull()
+                        "id" -> id = runCatching { reader.nextString() }.getOrNull()
                         "type" -> type = reader.nextString()
                         "geometry" -> geometry = readGeometry(reader)
                         "properties" -> properties = readProperties(reader)
@@ -113,7 +112,7 @@ class GeoJsonReader {
                             reader.beginArray()
 
                             while (reader.hasNext()) {
-                                runCatching { readFeature(reader) }.onFailure { it.message?.also { m-> Logger.warn(it) { m } } }
+                                runCatching { readFeature(reader) }.onFailure { it.message?.also { m -> Logger.warn(it) { m } } }
                                     .getOrNull()
                                     ?.also {
                                         features.add(it)
@@ -237,7 +236,7 @@ class GeoJsonReader {
 
         while (reader.hasNext()) {
             when (reader.nextName()) {
-                "id" -> id = reader.nextStringOrNull()
+                "id" -> id = runCatching { reader.nextString() }.getOrNull()
                 "type" -> type = reader.nextString()
                 "geometry" -> geometry = readGeometry(reader)
                 "properties" -> properties = readProperties(reader)
@@ -426,7 +425,7 @@ class GeoJsonReader {
     private fun readGeometry(map: Map<String, Any?>): Geometry {
         return when (val type = map["type"] as String) {
             "Point" -> readPoint((map["coordinates"] as List<*>).map { (it as Number).toDouble() })
-            "MultiPoint" -> readMultiPoint((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { (it as Number).toDouble()} })
+            "MultiPoint" -> readMultiPoint((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { (it as Number).toDouble() } })
             "LineString" -> readLineString((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { (it as Number).toDouble() } })
             "MultiLineString" -> readMultiLineString((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { c1 -> (c1 as List<*>).map { (it as Number).toDouble() } } })
             "Polygon" -> readPolygon((map["coordinates"] as List<*>).map { c0 -> (c0 as List<*>).map { c1 -> (c1 as List<*>).map { (it as Number).toDouble() } } })

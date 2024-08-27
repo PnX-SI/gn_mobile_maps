@@ -16,23 +16,6 @@ import android.util.JsonToken.STRING
  */
 
 /**
- * Returns the string value of the next token and consuming it.
- * If the next token is not a string returns `null`.
- */
-fun JsonReader.nextStringOrNull(): String? {
-    return when (peek()) {
-        STRING -> {
-            nextString()
-        }
-
-        else -> {
-            skipValue()
-            null
-        }
-    }
-}
-
-/**
  * Returns a Map representation of this JsonReader as JSON object.
  */
 fun JsonReader.readObject(): Map<String, Any?>? {

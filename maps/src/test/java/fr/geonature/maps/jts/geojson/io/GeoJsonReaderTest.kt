@@ -89,9 +89,9 @@ class GeoJsonReaderTest {
     }
 
     @Test
-    fun testReadFeaturesFromPointWithPropertyId() {
+    fun `should read feature as Point with property id as String`() {
         // given a JSON Feature as Point
-        val json = getFixture("feature_point_property_id.json")
+        val json = getFixture("feature_point_property_id_as_string.json")
 
         // when read the JSON as Feature
         val features = geoJsonReader.read(json)
@@ -104,6 +104,26 @@ class GeoJsonReaderTest {
         )
         assertEquals(
             "id2",
+            features[0].id
+        )
+    }
+
+    @Test
+    fun `should read feature as Point with property id as numeric value`() {
+        // given a JSON Feature as Point
+        val json = getFixture("feature_point_property_id_as_numeric.json")
+
+        // when read the JSON as Feature
+        val features = geoJsonReader.read(json)
+
+        // then
+        assertNotNull(features)
+        assertEquals(
+            1,
+            features.size
+        )
+        assertEquals(
+            "42",
             features[0].id
         )
     }
@@ -167,7 +187,7 @@ class GeoJsonReaderTest {
             features[0].id
         )
         assertEquals(
-            "id2",
+            "42",
             features[1].id
         )
         assertEquals(
@@ -193,7 +213,7 @@ class GeoJsonReaderTest {
         assertNotNull(features.firstOrNull { it.id == "id1" })
         assertNotNull(features.firstOrNull { it.id == "34" })
         assertNotNull(features.firstOrNull { it.id == "id3" })
-        assertNotNull(features.firstOrNull { it.id == "id4" })
+        assertNotNull(features.firstOrNull { it.id == "42" })
         assertNotNull(features.firstOrNull { it.id == "id5" })
     }
 
@@ -746,7 +766,7 @@ class GeoJsonReaderTest {
         assertTrue(featureCollection.hasFeature("id1"))
         assertTrue(featureCollection.hasFeature("34"))
         assertTrue(featureCollection.hasFeature("id3"))
-        assertTrue(featureCollection.hasFeature("id4"))
+        assertTrue(featureCollection.hasFeature("42"))
         assertTrue(featureCollection.hasFeature("id5"))
         assertFalse(featureCollection.hasFeature("no_such_feature"))
 
@@ -833,12 +853,12 @@ class GeoJsonReaderTest {
             )
         }
 
-        val feature4 = featureCollection.getFeature("id4")
+        val feature4 = featureCollection.getFeature("42")
         assertNotNull(feature4)
 
         if (feature4 != null) {
             assertEquals(
-                "id4",
+                "42",
                 feature4.id
             )
             assertEquals(

@@ -1,14 +1,8 @@
 package fr.geonature.maps.util
 
 import android.util.JsonReader
-import fr.geonature.maps.FixtureHelper
 import fr.geonature.maps.FixtureHelper.getFixture
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -21,63 +15,6 @@ import java.io.StringReader
  */
 @RunWith(RobolectricTestRunner::class)
 class JsonHelperTest {
-
-    @Test
-    fun `should read string value from JSON property`() {
-        val jsonReader = JsonReader(StringReader("{\"key\":\"value\"}"))
-        var value: String? = null
-
-        jsonReader.beginObject()
-
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "key" -> value = jsonReader.nextStringOrNull()
-            }
-        }
-
-        jsonReader.endObject()
-
-        assertEquals(
-            "value",
-            value
-        )
-    }
-
-    @Test
-    fun `should read null value from JSON property with null value`() {
-        val jsonReader = JsonReader(StringReader("{\"key\":null}"))
-        var value: String? = "no_such_value"
-
-        jsonReader.beginObject()
-
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "key" -> value = jsonReader.nextStringOrNull()
-            }
-        }
-
-        jsonReader.endObject()
-
-        assertNull(value)
-    }
-
-    @Test
-    fun `should read null value from JSON property with no string value`() {
-        val jsonReader = JsonReader(StringReader("{\"key\":42}"))
-        var value: String? = "no_such_value"
-
-        jsonReader.beginObject()
-
-        while (jsonReader.hasNext()) {
-            when (jsonReader.nextName()) {
-                "key" -> value = jsonReader.nextStringOrNull()
-            }
-        }
-
-        jsonReader.endObject()
-
-        assertNull(value)
-    }
 
     @Test
     fun `should read object as Map from JSON simple point with properties`() {
