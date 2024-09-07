@@ -51,6 +51,7 @@ class MapSettingsReaderTest {
                         "Nantes (Data)",
                         listOf("nantes.wkt"),
                         LayerPropertiesSettings(
+                            shownByDefault = true,
                             style = LayerStyleSettings.Builder.newInstance()
                                 .stroke(true)
                                 .color("#FF0000")
@@ -60,6 +61,23 @@ class MapSettingsReaderTest {
                                 .opacity(0.9f)
                                 .fill(true)
                                 .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
+                    ),
+                    LayerSettings(
+                        "Nantes (Other data)",
+                        listOf("nantes.geojson"),
+                        LayerPropertiesSettings(
+                            style = LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#BB8000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#BB8000")
                                 .fillOpacity(0.2f)
                                 .build()
                         )

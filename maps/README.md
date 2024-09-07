@@ -207,14 +207,15 @@ Base URLs:
 
 ### Layer properties
 
-| Parameter        | Type   | Default value | Description                                                                                                                             |
-|------------------|--------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `min_zoom`       | Number | -1            | The minimum zoom level                                                                                                                  |
-| `max_zoom`       | Number | -1            | The maximum zoom level                                                                                                                  |
-| `tile_size`      | Number | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
-| `tile_mime_type` | Number | `image/png`   | The MIME type used for tiles (only applicable to tiles layers).                                                                         |
-| `attribution`    | String | `null`        | Describe the layer data and is often a legal obligation towards copyright holders and tile providers (only applicable to tiles layers). |
-| `style`          | Object | `null`        | Define the layer style (only applicable to vector layers).                                                                              |
+| Parameter          | Type    | Default value | Description                                                                                                                             |
+|--------------------|---------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `shown_by_default` | Boolean | false         | Whether to show this layer by default (default: `false`)                                                                                |
+| `min_zoom`         | Number  | -1            | The minimum zoom level where the layer is visible                                                                                       |
+| `max_zoom`         | Number  | -1            | The maximum zoom level where the layer is visible                                                                                       |
+| `tile_size`        | Number  | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
+| `tile_mime_type`   | Number  | `image/png`   | The MIME type used for tiles (only applicable to tiles layers).                                                                         |
+| `attribution`      | String  | `null`        | Describe the layer data and is often a legal obligation towards copyright holders and tile providers (only applicable to tiles layers). |
+| `style`            | Object  | `null`        | Define the layer style (only applicable to vector layers).                                                                              |
 
 If an online tile layer is active but no attribution is defined, it will automatically be set to
 its default value according to this layer:

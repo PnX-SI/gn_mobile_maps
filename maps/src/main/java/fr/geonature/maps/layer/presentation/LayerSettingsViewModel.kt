@@ -79,7 +79,7 @@ class LayerSettingsViewModel @Inject constructor(
                 mapSettings.layersSettings.joinToString(
                     separator = "\n",
                     postfix = ",\nusing online layers: ${mapSettings.useOnlineLayers}"
-                ) { "\t'${it.label}': ${it.source}' (active: ${it.properties.active})" }
+                ) { "\t'${it.label}': ${it.source} (active: ${it.properties.active})" }
             }..."
         }
 
@@ -92,16 +92,12 @@ class LayerSettingsViewModel @Inject constructor(
                 .getOrDefault(emptyList())
 
             // loads selected layers to show on the map or use the first eligible layer
-            layerRepository.getSelectedLayers()
-                .getOrDefault(emptyList())
-                .also {
-                    if (it.isEmpty() && mapSettings.useOnlineLayers) {
-                        listOfNotNull((allLayers.firstOrNull { layer -> layer.isOnline() }
-                            ?: allLayers.firstOrNull { layer -> !layer.isOnline() })?.also { layer ->
-                            layerRepository.setSelectedLayers(listOf(layer))
-                        })
-                    }
-                }
+            ((if (mapSettings.useOnlineLayers) listOfNotNull(allLayers.firstOrNull { layer -> layer.isOnline() && layer.properties.shownByDefault }
+                ?: allLayers.firstOrNull { layer -> layer.isOnline() }) else emptyList()) + (allLayers.filter { layer -> !layer.isOnline() && layer.properties.shownByDefault }
+                .takeIf { layers -> layers.isNotEmpty() }
+                ?: listOfNotNull(allLayers.firstOrNull { layer -> !layer.isOnline() }))).also { layerSettingsList ->
+                layerRepository.setSelectedLayers(layerSettingsList)
+            }
         }
     }
 
@@ -109,10 +105,12 @@ class LayerSettingsViewModel @Inject constructor(
      * Load and show selected layers on the map.
      */
     fun load(selectedLayersSettings: List<LayerSettings>) {
-        Logger.info {
-            "loading selected layers:\n${
-                selectedLayersSettings.joinToString("\n") { "\t'${it.label}': ${it.source} (active: ${it.properties.active})" }
-            }"
+        if (selectedLayersSettings.isNotEmpty()) {
+            Logger.info {
+                "loading selected layers:\n${
+                    selectedLayersSettings.joinToString("\n") { "\t'${it.label}': ${it.source} (active: ${it.properties.active})" }
+                }"
+            }
         }
 
         viewModelScope.launch {
@@ -281,8 +279,7 @@ class LayerSettingsViewModel @Inject constructor(
                     it.second.isNotEmpty()
                 }
                 .map {
-                    Triple(
-                        it.first,
+                    Triple(it.first,
                         it.second.map { file ->
                             when (file.extension) {
                                 "geojson", "json" -> runCatching {

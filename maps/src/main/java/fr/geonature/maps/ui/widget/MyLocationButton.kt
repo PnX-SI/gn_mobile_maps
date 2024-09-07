@@ -2,6 +2,7 @@ package fr.geonature.maps.ui.widget
 
 import android.Manifest
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.location.Location
@@ -61,6 +62,7 @@ class MyLocationButton(
             )
             drawable?.setTint(Color.DKGRAY)
             setImageDrawable(drawable)
+            imageTintList = ColorStateList.valueOf(Color.DKGRAY)
 
             myLocationState = MyLocationState.ACTIVE
         }
@@ -134,13 +136,15 @@ class MyLocationButton(
                         location
                     )
                     drawable?.setTint(ThemeUtils.getAccentColor(context))
+                    setImageDrawable(drawable)
+                    imageTintList = ColorStateList.valueOf(ThemeUtils.getAccentColor(context))
                     MyLocationState.ACTIVE_TRACKER
                 } else {
                     drawable?.setTint(Color.DKGRAY)
+                    setImageDrawable(drawable)
+                    imageTintList = ColorStateList.valueOf(Color.DKGRAY)
                     MyLocationState.ACTIVE
                 }
-
-                setImageDrawable(drawable)
             }
 
             override fun onLocationOutsideBoundaries(location: Location?) {
@@ -187,6 +191,7 @@ class MyLocationButton(
                 )
                 drawable?.setTint(ThemeUtils.getAccentColor(context))
                 setImageDrawable(drawable)
+                imageTintList = ColorStateList.valueOf(ThemeUtils.getAccentColor(context))
 
                 myLocationState = MyLocationState.ACTIVE_TRACKER
             }

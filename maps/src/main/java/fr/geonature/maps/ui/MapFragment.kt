@@ -110,7 +110,6 @@ open class MapFragment : Fragment() {
                     }
 
                     Logger.info { "new layer to add from URI '$uri'" }
-
                     layerSettingsViewModel.addLayer(uri)
                 }
             }
@@ -211,6 +210,7 @@ open class MapFragment : Fragment() {
         myLocationFab.onResume()
 
         context?.also { context ->
+            Logger.debug { "onResume, with context" }
             showCompass(context).also {
                 rotateCompassFab.setMapView(mapView)
                 rotateCompassFab.visibility = if (it) View.VISIBLE else View.GONE
@@ -296,9 +296,8 @@ open class MapFragment : Fragment() {
         CoroutineScope(Main).launch {
             val selectedLayers = layerSettingsViewModel.getSelectedLayers()
                 .ifEmpty {
-                    if (useOnlineLayers(context)) listOfNotNull(
-                        layerSettingsViewModel.getAllLayers()
-                            .firstOrNull { it.isOnline() }) else emptyList()
+                    if (useOnlineLayers(context)) listOfNotNull(layerSettingsViewModel.getAllLayers()
+                        .firstOrNull { it.isOnline() }) else emptyList()
                 }
 
             layerSettingsViewModel.load(selectedLayers)

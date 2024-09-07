@@ -246,6 +246,7 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
 
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
+                        "shown_by_default" -> builder.shownByDefault(reader.nextBoolean())
                         "min_zoom" -> builder.minZoomLevel(reader.nextInt())
                         "max_zoom" -> builder.maxZoomLevel(reader.nextInt())
                         "tile_size" -> builder.tileSizePixels(reader.nextInt())

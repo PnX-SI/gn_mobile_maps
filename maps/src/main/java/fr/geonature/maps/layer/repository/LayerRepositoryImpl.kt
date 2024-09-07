@@ -46,7 +46,12 @@ class LayerRepositoryImpl(
                             layerSettings,
                             basePath
                         )
-                    }.getOrNull() ?: LayerSettings.Builder()
+                    }.onFailure {
+                        Logger.error {
+                            it.message ?: "failed to load layer from source ${layerSettings.source}"
+                        }
+                    }
+                        .getOrNull() ?: LayerSettings.Builder()
                         .from(layerSettings)
                         .properties(
                             LayerPropertiesSettings.Builder.newInstance()
@@ -70,14 +75,14 @@ class LayerRepositoryImpl(
     }
 
     override suspend fun addLayerFromURI(uri: Uri): Result<LayerSettings> {
+        Logger.info { "loading layer from URI '${uri}'..." }
+
         return runCatching { localLayerDataSource.buildLocalLayerFromUri(uri) }.onFailure {
-            Logger.error {
-                it.message
-                    ?: "failed to load local layer from URI '${uri}'"
-            }
-        }.onSuccess {
-            layers.add(it)
+            Logger.error { it.message ?: "failed to load local layer from URI '${uri}'" }
         }
+            .onSuccess {
+                layers.add(it)
+            }
     }
 
     override suspend fun getSelectedLayers(): Result<List<LayerSettings>> {
