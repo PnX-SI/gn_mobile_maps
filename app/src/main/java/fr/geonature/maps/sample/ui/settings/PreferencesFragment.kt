@@ -4,9 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import androidx.core.os.BundleCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.util.PreferencesUtils.updatePreferences
 import fr.geonature.maps.settings.MapSettings
@@ -22,7 +22,13 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setDefaultPreferences(arguments?.getParcelableCompat(ARG_MAP_SETTINGS))
+        setDefaultPreferences(arguments?.let {
+            BundleCompat.getParcelable(
+                it,
+                ARG_MAP_SETTINGS,
+                MapSettings::class.java
+            )
+        })
         updatePreferences(preferenceScreen)
         configurePermissions()
     }
@@ -50,8 +56,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     }
 
     private fun configurePermissions() {
-        preferenceScreen
-            .findPreference<Preference>(getString(R.string.preference_category_permissions_configure_key))
+        preferenceScreen.findPreference<Preference>(getString(R.string.preference_category_permissions_configure_key))
             ?.apply {
                 onPreferenceClickListener = Preference.OnPreferenceClickListener {
                     startActivity(

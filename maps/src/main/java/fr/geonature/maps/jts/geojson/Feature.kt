@@ -2,7 +2,7 @@ package fr.geonature.maps.jts.geojson
 
 import android.os.Parcel
 import android.os.Parcelable
-import fr.geonature.compat.os.readSerializableCompat
+import androidx.core.os.ParcelCompat
 import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
 import org.locationtech.jts.geom.Geometry
 
@@ -17,12 +17,19 @@ data class Feature(
     val properties: HashMap<String, Any> = hashMapOf()
 ) : AbstractGeoJson(), Parcelable {
 
-    constructor(parcel: Parcel) : this(
-        parcel.readString(),
-        parcel.readSerializableCompat<Geometry>()!!,
-        parcel.readSerializableCompat<HashMap<String, Any>>()?: hashMapOf()
-    ) {
-    }
+    constructor(parcel: Parcel) : this(parcel.readString(),
+        ParcelCompat.readSerializable(
+            parcel,
+            Geometry::class.java.classLoader,
+            Geometry::class.java
+        )!!,
+        ParcelCompat.readSerializable(
+            parcel,
+            HashMap::class.java.classLoader,
+            HashMap::class.java
+        )
+            ?.map { it.key as String to it.value }
+            ?.let { hashMapOf(*it.toTypedArray()) } ?: hashMapOf())
 
     override fun describeContents(): Int {
         return 0

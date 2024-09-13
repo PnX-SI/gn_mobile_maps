@@ -11,8 +11,8 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.os.BundleCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
@@ -89,11 +89,16 @@ class MyLocationButton(
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
-            myLocationState =
-                if (state.getByte("locationState") == Integer.valueOf(1)
-                        .toByte()
-                ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
-            super.onRestoreInstanceState(state.getParcelableCompat("superState"))
+            myLocationState = if (state.getByte("locationState") == Integer.valueOf(1)
+                    .toByte()
+            ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+            super.onRestoreInstanceState(
+                BundleCompat.getParcelable(
+                    state,
+                    "superState",
+                    Parcelable::class.java
+                )
+            )
 
             return
         }

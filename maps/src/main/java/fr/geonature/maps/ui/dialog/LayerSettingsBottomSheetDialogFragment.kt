@@ -7,12 +7,12 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils.loadAnimation
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import fr.geonature.compat.os.getParcelableArrayCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.settings.LayerSettings
 
@@ -124,14 +124,22 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         super.onResume()
 
         adapter?.also {
-            it.setItems(
-                arguments?.getParcelableArrayCompat<LayerSettings>(ARG_LAYERS)
-                    ?.asList() ?: emptyList()
-            )
-            it.setSelectedLayers(
-                arguments?.getParcelableArrayCompat<LayerSettings>(ARG_LAYERS_SELECTION)
-                    ?.asList() ?: emptyList()
-            )
+            it.setItems(arguments?.let { bundle ->
+                BundleCompat.getParcelableArray(
+                    bundle,
+                    ARG_LAYERS,
+                    LayerSettings::class.java
+                )
+            }
+                ?.map { p -> p as LayerSettings } ?: emptyList())
+            it.setSelectedLayers(arguments?.let { bundle ->
+                BundleCompat.getParcelableArray(
+                    bundle,
+                    ARG_LAYERS_SELECTION,
+                    LayerSettings::class.java
+                )
+            }
+                ?.map { p -> p as LayerSettings } ?: emptyList())
         }
     }
 

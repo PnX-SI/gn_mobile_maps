@@ -12,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.viewModels
@@ -22,7 +23,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import fr.geonature.compat.os.getParcelableCompat
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.presentation.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
@@ -273,7 +273,13 @@ open class MapFragment : Fragment() {
     private fun getMapSettings(context: Context): MapSettings {
         // read map settings from arguments or build the default one
         val mapSettingsBuilder = MapSettings.Builder()
-            .from(arguments?.getParcelableCompat(ARG_MAP_SETTINGS))
+            .from(arguments?.let {
+                BundleCompat.getParcelable(
+                    it,
+                    ARG_MAP_SETTINGS,
+                    MapSettings::class.java
+                )
+            })
 
         setDefaultPreferences(
             context,

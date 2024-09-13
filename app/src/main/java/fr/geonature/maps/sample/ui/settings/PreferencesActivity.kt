@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import fr.geonature.compat.content.getParcelableExtraCompat
+import androidx.core.content.IntentCompat
 import fr.geonature.maps.settings.MapSettings
 
 /**
@@ -22,15 +22,19 @@ class PreferencesActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val mapSettings: MapSettings? = intent.getParcelableExtraCompat(EXTRA_MAP_SETTINGS)
+        val mapSettings: MapSettings? = IntentCompat.getParcelableExtra(
+            intent,
+            EXTRA_MAP_SETTINGS,
+            MapSettings::class.java
+        )
 
-        // Display the fragment as the main content.
-        supportFragmentManager.beginTransaction()
-            .replace(
-                android.R.id.content,
-                PreferencesFragment.newInstance(mapSettings)
-            )
-            .commit()
+        // display the fragment as the main content
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(
+            android.R.id.content,
+            PreferencesFragment.newInstance(mapSettings)
+        )
+        transaction.commit()
     }
 
     override fun finish() {
@@ -44,6 +48,7 @@ class PreferencesActivity : AppCompatActivity() {
                 finish()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -52,7 +57,10 @@ class PreferencesActivity : AppCompatActivity() {
 
         private const val EXTRA_MAP_SETTINGS = "extra_map_settings"
 
-        fun newIntent(context: Context, mapSettings: MapSettings? = null): Intent {
+        fun newIntent(
+            context: Context,
+            mapSettings: MapSettings? = null
+        ): Intent {
             return Intent(
                 context,
                 PreferencesActivity::class.java

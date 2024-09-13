@@ -11,9 +11,9 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import fr.geonature.compat.content.getParcelableExtraCompat
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.MapSettings
@@ -61,7 +61,11 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        mapSettings = intent.getParcelableExtraCompat(EXTRA_MAP_SETTINGS)
+        mapSettings = IntentCompat.getParcelableExtra(
+            intent,
+            EXTRA_MAP_SETTINGS,
+            MapSettings::class.java
+        )
 
         if (mapSettings == null) {
             Toast.makeText(
@@ -81,13 +85,13 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
             }
 
         mapSettings?.also {
-            // Display the fragment as the main content.
-            supportFragmentManager.beginTransaction()
-                .replace(
-                    android.R.id.content,
-                    CustomMapFragment.newInstance(it)
-                )
-                .commit()
+            // display the fragment as the main content
+            val transaction = supportFragmentManager.beginTransaction()
+            transaction.replace(
+                android.R.id.content,
+                CustomMapFragment.newInstance(it)
+            )
+            transaction.commit()
         }
     }
 
