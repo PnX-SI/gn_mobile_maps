@@ -1,9 +1,7 @@
 package fr.geonature.maps.jts.geojson
 
-import android.os.Bundle
 import android.os.Parcel
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
-import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before

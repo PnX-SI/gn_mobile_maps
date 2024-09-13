@@ -3,9 +3,9 @@
 buildscript {
     ext.klint_version = '11.3.1'
     ext.androidx_hilt_version = '1.2.0'
-    ext.hilt_version = '2.44'
+    ext.hilt_version = '2.52'
     ext.kotlin_version = '1.8.0'
-    ext.tinylog_version = '2.4.1'
+    ext.tinylog_version = '2.7.0'
 
     repositories {
         google()
@@ -35,8 +35,8 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
 }
 
 private File loadVersionPropertiesFile(String moduleName) {
