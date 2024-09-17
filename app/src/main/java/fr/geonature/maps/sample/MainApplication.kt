@@ -44,10 +44,14 @@ class MainApplication : Application() {
             "tinylog.directory",
             directoryForLogs.absolutePath
         )
+        System.setProperty(
+            "tinylog.level",
+            if (BuildConfig.DEBUG) "debug" else "info"
+        )
 
         Thread.setDefaultUncaughtExceptionHandler(TinylogUncaughtExceptionHandler())
 
-        Logger.info { "starting ${BuildConfig.APPLICATION_ID}..." }
+        Logger.info { "starting ${BuildConfig.APPLICATION_ID} (version ${BuildConfig.VERSION_NAME})..." }
         Logger.info { "logs directory: '$directoryForLogs'" }
     }
 

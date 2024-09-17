@@ -23,6 +23,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.presentation.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
@@ -119,6 +120,10 @@ open class MapFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         val context = context ?: return
+
+        Logger.debug { "configure User-Agent for osmdroid: '${BuildConfig.LIBRARY_PACKAGE_NAME}/${BuildConfig.VERSION_NAME}'" }
+        Configuration.getInstance().userAgentValue =
+            "${BuildConfig.LIBRARY_PACKAGE_NAME}/${BuildConfig.VERSION_NAME}"
 
         mapSettings = getMapSettings(context)
         layerSettingsViewModel.init(mapSettings)
