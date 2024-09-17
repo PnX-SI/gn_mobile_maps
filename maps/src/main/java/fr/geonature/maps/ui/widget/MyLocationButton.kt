@@ -2,6 +2,7 @@ package fr.geonature.maps.ui.widget
 
 import android.Manifest
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.location.Location
@@ -10,12 +11,12 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.os.BundleCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import fr.geonature.maps.R
 import fr.geonature.maps.ui.overlay.MyLocationListener
 import fr.geonature.maps.ui.overlay.MyLocationOverlay
 import fr.geonature.maps.util.ThemeUtils
-import fr.geonature.maps.util.getParcelableCompat
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -61,6 +62,7 @@ class MyLocationButton(
             )
             drawable?.setTint(Color.DKGRAY)
             setImageDrawable(drawable)
+            imageTintList = ColorStateList.valueOf(Color.DKGRAY)
 
             myLocationState = MyLocationState.ACTIVE
         }
@@ -87,11 +89,16 @@ class MyLocationButton(
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
-            myLocationState =
-                if (state.getByte("locationState") == Integer.valueOf(1)
-                        .toByte()
-                ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
-            super.onRestoreInstanceState(state.getParcelableCompat("superState"))
+            myLocationState = if (state.getByte("locationState") == Integer.valueOf(1)
+                    .toByte()
+            ) MyLocationState.ACTIVE else MyLocationState.INACTIVE
+            super.onRestoreInstanceState(
+                BundleCompat.getParcelable(
+                    state,
+                    "superState",
+                    Parcelable::class.java
+                )
+            )
 
             return
         }
@@ -134,13 +141,15 @@ class MyLocationButton(
                         location
                     )
                     drawable?.setTint(ThemeUtils.getAccentColor(context))
+                    setImageDrawable(drawable)
+                    imageTintList = ColorStateList.valueOf(ThemeUtils.getAccentColor(context))
                     MyLocationState.ACTIVE_TRACKER
                 } else {
                     drawable?.setTint(Color.DKGRAY)
+                    setImageDrawable(drawable)
+                    imageTintList = ColorStateList.valueOf(Color.DKGRAY)
                     MyLocationState.ACTIVE
                 }
-
-                setImageDrawable(drawable)
             }
 
             override fun onLocationOutsideBoundaries(location: Location?) {
@@ -187,6 +196,7 @@ class MyLocationButton(
                 )
                 drawable?.setTint(ThemeUtils.getAccentColor(context))
                 setImageDrawable(drawable)
+                imageTintList = ColorStateList.valueOf(ThemeUtils.getAccentColor(context))
 
                 myLocationState = MyLocationState.ACTIVE_TRACKER
             }

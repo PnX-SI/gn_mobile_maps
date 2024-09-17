@@ -1,6 +1,7 @@
 package fr.geonature.maps.sample
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 import fr.geonature.mountpoint.model.MountPoint
 import fr.geonature.mountpoint.util.FileUtils
 import fr.geonature.mountpoint.util.MountPointUtils
@@ -13,6 +14,7 @@ import kotlin.system.exitProcess
  *
  * @author S. Grimault
  */
+@HiltAndroidApp
 class MainApplication : Application() {
 
     override fun onCreate() {
@@ -42,10 +44,14 @@ class MainApplication : Application() {
             "tinylog.directory",
             directoryForLogs.absolutePath
         )
+        System.setProperty(
+            "tinylog.level",
+            if (BuildConfig.DEBUG) "debug" else "info"
+        )
 
         Thread.setDefaultUncaughtExceptionHandler(TinylogUncaughtExceptionHandler())
 
-        Logger.info { "starting ${BuildConfig.APPLICATION_ID}..." }
+        Logger.info { "starting ${BuildConfig.APPLICATION_ID} (version ${BuildConfig.VERSION_NAME})..." }
         Logger.info { "logs directory: '$directoryForLogs'" }
     }
 

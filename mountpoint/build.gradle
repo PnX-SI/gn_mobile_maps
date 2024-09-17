@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-parcelize'
+    id 'org.jetbrains.kotlin.android'
+}
+
+version = "0.1.2"
+
+android {
+    namespace 'fr.geonature.mountpoint'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    defaultConfig {
+        compileSdk 34
+        minSdkVersion 19
+        targetSdkVersion 34
+        versionCode updateVersionCode(project.name)
+        versionName version
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    publishNonDefault true
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.annotation:annotation:1.8.2'
+
+    // Logging
+    implementation "org.tinylog:tinylog-api-kotlin:$tinylog_version"
+    runtimeOnly "org.tinylog:tinylog-impl:$tinylog_version"
+
+    // Testing dependencies
+    testImplementation 'androidx.test:core:1.6.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.13'
+}

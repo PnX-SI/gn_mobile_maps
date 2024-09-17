@@ -40,19 +40,17 @@ class FeatureCollectionTest {
     fun testParcelable() {
         // given a FeatureCollection
         val featureCollection = FeatureCollection().apply {
-            addFeature(Feature(
-                "1234",
-                createPoint(
-                    gf,
-                    47.225782,
-                    -1.554476
+            addFeature(
+                Feature(
+                    "1234",
+                    createPoint(
+                        gf,
+                        47.225782,
+                        -1.554476
+                    ),
+                    hashMapOf("name" to "feature1")
                 )
-            ).apply {
-                properties.putString(
-                    "name",
-                    "feature1"
-                )
-            })
+            )
             addFeature(
                 Feature(
                     "1235",

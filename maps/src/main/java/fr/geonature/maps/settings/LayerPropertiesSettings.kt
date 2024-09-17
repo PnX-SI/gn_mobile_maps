@@ -10,17 +10,52 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class LayerPropertiesSettings(
+
+    /**
+     * Whether this layer is ready to be displayed on the map (default: `true`).
+     */
     val active: Boolean = Builder.newInstance().active,
+
+    /**
+     * Whether to show this layer by default (default: `false`).
+     */
+    val shownByDefault: Boolean = Builder.newInstance().shownByDefault,
+
+    /**
+     * The minimum zoom level where the layer is visible (default: -1, ie. no restriction).
+     */
     val minZoomLevel: Int = Builder.newInstance().minZoomLevel,
+
+    /**
+     * The maximum zoom level where the layer is visible (default: -1, ie. no restriction).
+     */
     val maxZoomLevel: Int = Builder.newInstance().maxZoomLevel,
+
+    /**
+     * The tile size in pixels (only applicable to tiles layers, default: 256).
+     */
     val tileSizePixels: Int = Builder.newInstance().tileSizePixels,
+
+    /**
+     * The MIME type used for tiles (only applicable to tiles layers, default: `image/png`).
+     */
     val tileMimeType: String? = Builder.newInstance().tileMimeType,
+
+    /**
+     * Describe the layer data and is often a legal obligation towards copyright holders and tile
+     * providers (only applicable to tiles layers).
+     */
     val attribution: String? = Builder.newInstance().attribution,
+
+    /**
+     * Define the layer style (only applicable to vector layers).
+     */
     val style: LayerStyleSettings? = Builder.newInstance().style
 ) : Parcelable {
 
     private constructor(builder: Builder) : this(
         builder.active,
+        builder.shownByDefault,
         builder.minZoomLevel,
         builder.maxZoomLevel,
         builder.tileSizePixels,
@@ -31,6 +66,9 @@ data class LayerPropertiesSettings(
 
     class Builder {
         internal var active: Boolean = true
+            private set
+
+        internal var shownByDefault: Boolean = false
             private set
 
         internal var minZoomLevel: Int = -1
@@ -56,6 +94,7 @@ data class LayerPropertiesSettings(
                 if (layerPropertiesSettings == null) return@apply
 
                 active(layerPropertiesSettings.active)
+                shownByDefault(layerPropertiesSettings.shownByDefault)
                 if (layerPropertiesSettings.minZoomLevel >= 0) minZoomLevel(layerPropertiesSettings.minZoomLevel)
                 if (layerPropertiesSettings.maxZoomLevel > 0) maxZoomLevel(layerPropertiesSettings.maxZoomLevel)
                 if (layerPropertiesSettings.tileSizePixels > 0) tileSizePixels(layerPropertiesSettings.tileSizePixels)
@@ -66,6 +105,10 @@ data class LayerPropertiesSettings(
 
         fun active(active: Boolean = true) = apply {
             this.active = active
+        }
+
+        fun shownByDefault(shownByDefault: Boolean = false) = apply {
+            this.shownByDefault = shownByDefault
         }
 
         fun minZoomLevel(minZoomLevel: Int = 0) =

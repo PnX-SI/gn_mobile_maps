@@ -17,7 +17,7 @@ import kotlin.math.sin
 /**
  * Helper class about [Geometry] instances.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 object GeometryUtils {
 
@@ -93,32 +93,36 @@ object GeometryUtils {
                 when (toGeometry.geometryType) {
                     "Point" -> distance =
                         fromGeoPoint.distanceToAsDouble(fromPoint(toGeometry as Point))
+
                     "LineString", "LinearRing" -> for (i in 0 until toGeometry.numPoints) {
-                        val distanceFromPoint =
-                            fromGeoPoint.distanceToAsDouble(
-                                fromPoint(
-                                    (toGeometry as LineString).getPointN(
-                                        i
-                                    )
+                        val distanceFromPoint = fromGeoPoint.distanceToAsDouble(
+                            fromPoint(
+                                (toGeometry as LineString).getPointN(
+                                    i
                                 )
                             )
+                        )
 
                         if (distance > distanceFromPoint) {
                             distance = distanceFromPoint
                         }
                     }
+
                     "Polygon" -> distance = distanceTo(
                         fromGeometry,
                         (toGeometry as Polygon).exteriorRing
                     )
+
                     else -> Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
                 }
             }
+
             "LineString", "LinearRing" -> when (toGeometry.geometryType) {
                 "Point" -> distance = distanceTo(
                     toGeometry,
                     fromGeometry
                 )
+
                 "LineString", "LinearRing" -> for (i in 0 until fromGeometry.numPoints) {
                     for (j in 0 until toGeometry.numPoints) {
                         val distanceFromPoint =
@@ -131,28 +135,34 @@ object GeometryUtils {
                         }
                     }
                 }
+
                 "Polygon" -> distance = distanceTo(
                     fromGeometry,
                     (toGeometry as Polygon).exteriorRing
                 )
+
                 else -> Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
             }
+
             "Polygon" -> when (toGeometry.geometryType) {
                 "Point" -> distance = distanceTo(
                     toGeometry,
                     fromGeometry
                 )
+
                 "LineString", "LinearRing" -> distance = distanceTo(
                     toGeometry,
                     fromGeometry
                 )
+
                 "Polygon" -> distance = distanceTo(
                     (toGeometry as Polygon).exteriorRing,
                     (fromGeometry as Polygon).exteriorRing
                 )
-                else ->
-                    Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
+
+                else -> Logger.warn { "distanceTo: no implementation found for geometry '" + toGeometry.geometryType + "'" }
             }
+
             else -> Logger.warn { "distanceTo: geometry " + fromGeometry.geometryType + " not implemented" }
         }
 
@@ -176,6 +186,7 @@ object GeometryUtils {
                     )
                 }
             }
+
             "Polygon" -> {
                 val exteriorRing = (geometry as Polygon).exteriorRing
 
@@ -190,6 +201,7 @@ object GeometryUtils {
                     )
                 }
             }
+
             else -> Logger.warn { "getGeodesicLength: no implementation found for geometry '" + geometry.geometryType + "'" }
         }
 
@@ -201,9 +213,9 @@ object GeometryUtils {
      *
      * **Note:** The `LineString` may be closed or not and seen as a `LinearRing`.
      *
-     * @return the approximate geodesic area in square meters.
-     * @see [http://trs-new.jpl.nasa.gov/dspace/handle/2014/40409](http://trs-new.jpl.nasa.gov/dspace/handle/2014/40409)
+     * @return the approximate geodesic area in square meters
      *
+     * @see <a href="https://dataverse.jpl.nasa.gov/dataset.xhtml?persistentId=hdl:2014/41271">Chamberlain, Robert G.; Duquette, William H., 2007, "Some algorithms for polygons on a sphere.", Association of American Geographers Annual Meeting, San Francisco, California, April 17-21, 2007., JPL Open Repository</a>
      * @see GeoPoint.distanceToAsDouble
      */
     fun getGeodesicArea(lineString: LineString): Double {
@@ -227,12 +239,12 @@ object GeometryUtils {
     /**
      * Calculates the approximate area of this `Polygon` were it projected onto the Earth.
      *
-     * @param checkHoles also check if this `Polygon` contains holes and subtract the areas of
-     * all these internal holes
-     * @return the approximate geodesic area in square meters.
-     * @see [http://trs-new.jpl.nasa.gov/dspace/handle/2014/40409](http://trs-new.jpl.nasa.gov/dspace/handle/2014/40409)
+     * @param checkHoles also check if this `Polygon` contains holes and subtract the areas of all
+     * these internal holes
+     * @return the approximate geodesic area in square meters
      *
-     * @see .getGeodesicArea
+     * @see <a href="https://dataverse.jpl.nasa.gov/dataset.xhtml?persistentId=hdl:2014/41271">Chamberlain, Robert G.; Duquette, William H., 2007, "Some algorithms for polygons on a sphere.", Association of American Geographers Annual Meeting, San Francisco, California, April 17-21, 2007., JPL Open Repository</a>
+     * @see GeometryUtils.getGeodesicArea(LineString)
      */
     fun getGeodesicArea(
         polygon: Polygon,

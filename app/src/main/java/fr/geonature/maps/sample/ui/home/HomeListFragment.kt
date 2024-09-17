@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.ui.widget.EditFeatureButton
 
 /**
  * A fragment representing a list of [MenuItem].
@@ -75,24 +76,25 @@ class HomeListFragment : Fragment() {
             listOf(
                 MenuItem(
                     getString(R.string.home_menu_entry_default),
-                    MapSettings.Builder.newInstance()
+                    MapSettings.Builder()
                         .minZoomLevel(3.0)
                         .zoom(6.0)
+                        .editMode(EditFeatureButton.EditMode.SINGLE)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : plan v2")
-                                .addSource("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
+                                .label("IGN: plan v2")
+                                .addSource("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
                                 .build()
                         )
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : ortho")
+                                .label("IGN: ortho")
                                 .addSource("https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS")
                                 .build()
                         )
                         .addLayer(
                             LayerSettings.Builder.newInstance()
-                                .label("IGN : cadastre")
+                                .label("IGN: cadastral")
                                 .addSource("https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS")
                                 .build()
                         )

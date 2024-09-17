@@ -16,7 +16,7 @@ import fr.geonature.maps.settings.LayerType
 /**
  * Default [RecyclerView.Adapter] for [LayerSettings].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerViewAdapterListener) :
     RecyclerView.Adapter<LayerSettingsRecyclerViewAdapter.AbstractViewHolder>() {

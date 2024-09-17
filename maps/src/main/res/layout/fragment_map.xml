@@ -63,20 +63,32 @@
 
     </LinearLayout>
 
+    <FrameLayout
+        android:id="@+id/bottom_sheet"
+        style="?attr/bottomSheetStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/fabs_bottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_gravity="top"
         android:orientation="vertical"
+        android:padding="@dimen/padding_default"
+        app:layout_anchor="@+id/bottom_sheet"
+        android:clipToPadding="false"
+        android:gravity="end"
+        app:layout_anchorGravity="top|end"
         app:layout_dodgeInsetEdges="bottom">
 
         <fr.geonature.maps.ui.widget.MyLocationButton
             android:id="@+id/fab_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/fab_margin"
-            android:layout_marginBottom="@dimen/fab_margin"
+            android:layout_margin="@dimen/padding_default"
             android:clickable="true"
             android:focusable="true"
             app:backgroundTint="@android:color/background_light"
@@ -87,8 +99,7 @@
             android:id="@+id/fab_poi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/fab_margin"
-            android:layout_marginBottom="@dimen/fab_margin"
+            android:layout_margin="@dimen/padding_default"
             android:clickable="true"
             android:focusable="true"
             app:backgroundTint="?attr/colorAccent"

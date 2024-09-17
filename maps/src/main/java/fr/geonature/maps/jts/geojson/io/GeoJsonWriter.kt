@@ -1,6 +1,5 @@
 package fr.geonature.maps.jts.geojson.io
 
-import android.os.Bundle
 import android.util.JsonWriter
 import fr.geonature.maps.jts.geojson.AbstractGeoJson
 import fr.geonature.maps.jts.geojson.Feature
@@ -22,9 +21,9 @@ import java.io.Writer
 /**
  * Default `JsonWriter` about writing an [AbstractGeoJson] as `JSON`.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  *
- * @see [https://tools.ietf.org/html/rfc7946](https://tools.ietf.org/html/rfc7946)
+ * @see <a href="https://tools.ietf.org/html/rfc7946">https://tools.ietf.org/html/rfc7946</a>
  *
  * @see GeoJsonReader
  */
@@ -192,26 +191,32 @@ class GeoJsonWriter {
                 writer,
                 geometry as Point
             )
+
             "MultiPoint" -> writeMultiPoint(
                 writer,
                 geometry as MultiPoint
             )
+
             "LineString" -> writeLineString(
                 writer,
                 geometry as LineString
             )
+
             "MultiLineString" -> writeMultiLineString(
                 writer,
                 geometry as MultiLineString
             )
+
             "Polygon" -> writePolygon(
                 writer,
                 geometry as Polygon
             )
+
             "MultiPolygon" -> writeMultiPolygon(
                 writer,
                 geometry as MultiPolygon
             )
+
             "GeometryCollection" -> {
                 writer.beginObject()
                 writer.name("type")
@@ -371,10 +376,12 @@ class GeoJsonWriter {
                     writer,
                     (geometry as Point).coordinateSequence
                 )
+
                 "LineString" -> writeCoordinateSequence(
                     writer,
                     (geometry as LineString).coordinateSequence
                 )
+
                 "Polygon" -> writePolygonCoordinates(
                     writer,
                     geometry as Polygon
@@ -431,24 +438,24 @@ class GeoJsonWriter {
     @Throws(IOException::class)
     private fun writeProperties(
         writer: JsonWriter,
-        properties: Bundle
+        properties: Map<String, Any>
     ) {
         writer.name("properties")
-        writeBundle(
+        writeProperty(
             writer,
             properties
         )
     }
 
     @Throws(IOException::class)
-    private fun writeBundle(
+    private fun writeProperty(
         writer: JsonWriter,
-        bundle: Bundle
+        properties: Map<String, Any>
     ) {
         writer.beginObject()
 
-        for (key in bundle.keySet()) {
-            val value = bundle.get(key)
+        for (key in properties.keys) {
+            val value = properties[key]
 
             if (value is String) {
                 writer.name(key)
@@ -465,11 +472,11 @@ class GeoJsonWriter {
                     .value(value)
             }
 
-            if (value is Bundle) {
+            if (value is Map<*, *>) {
                 writer.name(key)
-                writeBundle(
+                @Suppress("UNCHECKED_CAST") writeProperty(
                     writer,
-                    value
+                    value as Map<String, Any>
                 )
             }
         }

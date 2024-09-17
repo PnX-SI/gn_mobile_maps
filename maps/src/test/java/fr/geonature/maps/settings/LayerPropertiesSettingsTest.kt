@@ -43,13 +43,14 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                2,
-                19,
-                512,
-                "image/jpg",
-                "Some attribution",
-                LayerStyleSettings(
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 2,
+                maxZoomLevel = 19,
+                tileSizePixels = 512,
+                tileMimeType = "image/jpg",
+                attribution = "Some attribution",
+                style = LayerStyleSettings(
                     true,
                     ColorUtils.setAlphaComponent(
                         Color.RED,
@@ -100,6 +101,7 @@ class LayerPropertiesSettingsTest {
         // when applying new properties
         val fromExistingLayerPropertiesSettings = LayerPropertiesSettings.Builder.newInstance()
             .from(layerPropertiesSettings)
+            .shownByDefault(true)
             .minZoomLevel(7)
             .maxZoomLevel(8)
             .tileSizePixels(256)
@@ -110,13 +112,14 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                7,
-                8,
-                256,
-                "image/png",
-                "Some other attribution",
-                LayerStyleSettings.Builder.newInstance()
+                active = true,
+                shownByDefault = true,
+                minZoomLevel = 7,
+                maxZoomLevel = 8,
+                tileSizePixels = 256,
+                tileMimeType = "image/png",
+                attribution = "Some other attribution",
+                style = LayerStyleSettings.Builder.newInstance()
                     .stroke(true)
                     .color("#FF0000")
                     .weight(10)
@@ -157,12 +160,13 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                2,
-                19,
-                512,
-                "image/jpg",
-                "Some attribution",
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 2,
+                maxZoomLevel = 19,
+                tileSizePixels = 512,
+                tileMimeType = "image/jpg",
+                attribution = "Some attribution",
             ),
             layerPropertiesSettings
         )
@@ -179,9 +183,10 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                0,
-                19
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 0,
+                maxZoomLevel = 19
             ),
             LayerPropertiesSettings.Builder.newInstance()
                 .minZoomLevel(-2)
@@ -191,9 +196,10 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                8,
-                9
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 8,
+                maxZoomLevel = 9
             ),
             LayerPropertiesSettings.Builder.newInstance()
                 .maxZoomLevel(7)
@@ -203,9 +209,10 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                19,
-                19
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 19,
+                maxZoomLevel = 19
             ),
             LayerPropertiesSettings.Builder.newInstance()
                 .maxZoomLevel(19)
@@ -215,9 +222,10 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                true,
-                7,
-                19
+                active = true,
+                shownByDefault = false,
+                minZoomLevel = 7,
+                maxZoomLevel = 19
             ),
             LayerPropertiesSettings.Builder.newInstance()
                 .minZoomLevel(7)
@@ -229,13 +237,14 @@ class LayerPropertiesSettingsTest {
     fun testParcelable() {
         // given a layer properties settings
         val layerPropertiesSettings = LayerPropertiesSettings(
-            true,
-            2,
-            19,
-            512,
-            "image/jpg",
-            "Some attribution",
-            LayerStyleSettings(
+            active = true,
+            shownByDefault = false,
+            minZoomLevel = 2,
+            maxZoomLevel = 19,
+            tileSizePixels = 512,
+            tileMimeType = "image/jpg",
+            attribution = "Some attribution",
+            style = LayerStyleSettings(
                 true,
                 ColorUtils.setAlphaComponent(
                     Color.RED,

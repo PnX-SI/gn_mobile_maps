@@ -31,7 +31,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun `should read map settings from json string`() {
+    fun `should read map settings from JSON string`() {
         // given a JSON settings
         val json = getFixture("map_settings.json")
 
@@ -51,8 +51,8 @@ class MapSettingsReaderTest {
                         "Nantes (Data)",
                         listOf("nantes.wkt"),
                         LayerPropertiesSettings(
-                            style =
-                            LayerStyleSettings.Builder.newInstance()
+                            shownByDefault = true,
+                            style = LayerStyleSettings.Builder.newInstance()
                                 .stroke(true)
                                 .color("#FF0000")
                                 .weight(
@@ -61,6 +61,23 @@ class MapSettingsReaderTest {
                                 .opacity(0.9f)
                                 .fill(true)
                                 .fillColor("#FF8000")
+                                .fillOpacity(0.2f)
+                                .build()
+                        )
+                    ),
+                    LayerSettings(
+                        "Nantes (Other data)",
+                        listOf("nantes.geojson"),
+                        LayerPropertiesSettings(
+                            style = LayerStyleSettings.Builder.newInstance()
+                                .stroke(true)
+                                .color("#BB8000")
+                                .weight(
+                                    8
+                                )
+                                .opacity(0.9f)
+                                .fill(true)
+                                .fillColor("#BB8000")
                                 .fillOpacity(0.2f)
                                 .build()
                         )
@@ -97,7 +114,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun `should read map settings from json string with invalid properties`() {
+    fun `should read map settings from JSON string with invalid properties`() {
         // given a JSON settings with some invalid layers settings
         val json = getFixture("map_settings_with_invalid_properties.json")
 
@@ -113,8 +130,7 @@ class MapSettingsReaderTest {
                         "Nantes (Data)",
                         listOf("nantes.wkt"),
                         LayerPropertiesSettings(
-                            style =
-                            LayerStyleSettings.Builder.newInstance()
+                            style = LayerStyleSettings.Builder.newInstance()
                                 .stroke(true)
                                 .color("#FF0000")
                                 .weight(
@@ -159,7 +175,7 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun `should read map settings from json string with invalid layers`() {
+    fun `should read map settings from JSON string with invalid layers`() {
         // given a JSON settings with some invalid layers settings
         val json = getFixture("map_settings_with_invalid_layers.json")
 
@@ -214,11 +230,111 @@ class MapSettingsReaderTest {
     }
 
     @Test
-    fun `should read map settings from invalid json string`() {
+    fun `should read map settings from invalid JSON string`() {
         // when read an invalid JSON as MapSettings
         val mapSettings = mapSettingsReader.read("")
 
         // then
         assertNull(mapSettings)
+    }
+
+    @Test
+    fun `should override existing map settings from partial JSON string`() {
+        // given an existing MapSettings
+        val existingMapSettings = MapSettings(
+            arrayListOf(
+                LayerSettings(
+                    "Nantes (Base)",
+                    listOf("nantes.mbtiles")
+                ),
+                LayerSettings(
+                    "Nantes (Data)",
+                    listOf("nantes.wkt"),
+                    LayerPropertiesSettings(
+                        style = LayerStyleSettings.Builder.newInstance()
+                            .stroke(true)
+                            .color("#FF0000")
+                            .weight(
+                                8
+                            )
+                            .opacity(0.9f)
+                            .fill(true)
+                            .fillColor("#FF8000")
+                            .fillOpacity(0.2f)
+                            .build()
+                    )
+                )
+            ),
+            "/mnt/sdcard/osmdroid",
+            showScale = false,
+            showCompass = false,
+            showZoom = true,
+            rotationGesture = true,
+            zoom = 8.0,
+            minZoomLevel = 7.0,
+            maxZoomLevel = 12.0,
+            minZoomEditing = 10.0,
+            maxBounds = BoundingBox.fromGeoPoints(
+                arrayListOf(
+                    GeoPoint(
+                        47.253369,
+                        -1.605721
+                    ),
+                    GeoPoint(
+                        47.173845,
+                        -1.482811
+                    )
+                )
+            ),
+            center = GeoPoint(
+                47.225827,
+                -1.554470
+            )
+        )
+
+        // and a partial JSON settings
+        val json = getFixture("map_settings_partial_layers.json")
+
+        // when read the JSON as MapSettings
+        val mapSettings = MapSettingsReader(existingMapSettings).read(json)
+
+        // then
+        assertNotNull(mapSettings)
+        assertEquals(
+            MapSettings(
+                arrayListOf(
+                    LayerSettings.Builder.newInstance()
+                        .label("OSM")
+                        .addSource("https://a.tile.openstreetmap.org")
+                        .build()
+                ),
+                "/mnt/sdcard/osmdroid",
+                showScale = false,
+                showCompass = false,
+                showZoom = true,
+                rotationGesture = true,
+                zoom = 8.0,
+                minZoomLevel = 7.0,
+                maxZoomLevel = 12.0,
+                minZoomEditing = 10.0,
+                maxBounds = BoundingBox.fromGeoPoints(
+                    arrayListOf(
+                        GeoPoint(
+                            47.253369,
+                            -1.605721
+                        ),
+                        GeoPoint(
+                            47.173845,
+                            -1.482811
+                        )
+                    )
+                ),
+                center = GeoPoint(
+                    47.225827,
+                    -1.554470
+                )
+            ),
+            mapSettings
+        )
     }
 }

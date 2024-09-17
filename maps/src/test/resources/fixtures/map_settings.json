@@ -31,6 +31,7 @@
       "label": "Nantes (Data)",
       "source": "nantes.wkt",
       "properties": {
+        "shown_by_default": true,
         "style": {
           "stroke": true,
           "color": "#FF0000",
@@ -38,6 +39,21 @@
           "opacity": 0.9,
           "fill": true,
           "fillColor": "#FF8000",
+          "fillOpacity": 0.2
+        }
+      }
+    },
+    {
+      "label": "Nantes (Other data)",
+      "source": "nantes.geojson",
+      "properties": {
+        "style": {
+          "stroke": true,
+          "color": "#BB8000",
+          "weight": 8,
+          "opacity": 0.9,
+          "fill": true,
+          "fillColor": "#BB8000",
           "fillOpacity": 0.2
         }
       }

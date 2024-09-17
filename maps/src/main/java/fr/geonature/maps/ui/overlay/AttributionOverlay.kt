@@ -21,7 +21,7 @@ import org.osmdroid.views.overlay.Overlay
  */
 class AttributionOverlay(context: Context) : Overlay() {
     private var textPaint: TextPaint
-    private var dm: DisplayMetrics
+    private var dm: DisplayMetrics = context.resources.displayMetrics
 
     private var xOffset = 8
     private var yOffset = 8
@@ -30,7 +30,6 @@ class AttributionOverlay(context: Context) : Overlay() {
     private var attribution: String? = null
 
     init {
-        dm = context.resources.displayMetrics
         textPaint = TextPaint().apply {
             isAntiAlias = true
             textSize = dm.density * 12

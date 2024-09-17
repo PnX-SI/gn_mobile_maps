@@ -19,7 +19,7 @@ import java.io.Reader
  *
  * @author S. Grimault
  */
-class MapSettingsReader {
+class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null) {
 
     /**
      * parse a `JSON` string to convert as [MapSettings].
@@ -71,7 +71,7 @@ class MapSettingsReader {
      */
     @Throws(Exception::class)
     fun read(reader: JsonReader): MapSettings {
-        val builder = MapSettings.Builder.newInstance()
+        val builder = MapSettings.Builder().from(fromExistingMapSettings)
 
         reader.beginObject()
 
@@ -113,6 +113,7 @@ class MapSettingsReader {
 
                     builder.maxBounds(maxBounds)
                 }
+
                 "center" -> {
                     val tokens = mutableListOf<Double>()
                     reader.beginArray()
@@ -132,6 +133,7 @@ class MapSettingsReader {
                         )
                     }
                 }
+
                 "start_zoom", "zoom" -> builder.zoom(reader.nextDouble())
                 "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
                 "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
@@ -140,6 +142,7 @@ class MapSettingsReader {
                     reader,
                     builder
                 )
+
                 else -> reader.skipValue()
             }
         }
@@ -154,6 +157,10 @@ class MapSettingsReader {
         reader: JsonReader,
         builder: MapSettings.Builder
     ) {
+        if ((fromExistingMapSettings?.layersSettings?: emptyList()).isNotEmpty()) {
+            builder.layersSettings.clear()
+        }
+
         reader.beginArray()
 
         while (reader.hasNext()) {
@@ -200,9 +207,11 @@ class MapSettingsReader {
                 reader.nextNull()
                 emptyList()
             }
+
             STRING -> {
                 listOf(reader.nextString())
             }
+
             JsonToken.BEGIN_ARRAY -> {
                 reader.beginArray()
                 val source = mutableListOf<String>()
@@ -215,6 +224,7 @@ class MapSettingsReader {
 
                 source
             }
+
             else -> {
                 reader.skipValue()
                 emptyList()
@@ -228,6 +238,7 @@ class MapSettingsReader {
                 reader.nextNull()
                 null
             }
+
             BEGIN_OBJECT -> {
                 reader.beginObject()
 
@@ -235,6 +246,7 @@ class MapSettingsReader {
 
                 while (reader.hasNext()) {
                     when (reader.nextName()) {
+                        "shown_by_default" -> builder.shownByDefault(reader.nextBoolean())
                         "min_zoom" -> builder.minZoomLevel(reader.nextInt())
                         "max_zoom" -> builder.maxZoomLevel(reader.nextInt())
                         "tile_size" -> builder.tileSizePixels(reader.nextInt())
@@ -249,6 +261,7 @@ class MapSettingsReader {
 
                 builder.build()
             }
+
             else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
     }
@@ -259,6 +272,7 @@ class MapSettingsReader {
                 reader.nextNull()
                 null
             }
+
             BEGIN_OBJECT -> {
                 reader.beginObject()
 
@@ -273,12 +287,14 @@ class MapSettingsReader {
                             reader.nextDouble()
                                 .toFloat()
                         )
+
                         "fill" -> builder.fill(reader.nextBoolean())
                         "fillColor" -> builder.fillColor(reader.nextString())
                         "fillOpacity" -> builder.fillOpacity(
                             reader.nextDouble()
                                 .toFloat()
                         )
+
                         else -> reader.skipValue()
                     }
                 }
@@ -287,6 +303,7 @@ class MapSettingsReader {
 
                 builder.build()
             }
+
             else -> throw IOException("Invalid object properties JSON token $jsonToken")
         }
     }

@@ -1,5 +1,6 @@
 package fr.geonature.maps.settings
 
+import android.net.Uri
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
@@ -26,7 +27,9 @@ data class LayerSettings(
             this == other -> 0
             this.getType() != other.getType() -> this.getType().ordinal - other.getType().ordinal
             this.getType() == other.getType() && this.isOnline() != other.isOnline() -> if (this.isOnline()) -1 else 1
-            this.getType() == other.getType() && this.source != other.source -> this.getPrimarySource().compareTo(other.getPrimarySource())
+            this.getType() == other.getType() && this.source != other.source -> this.getPrimarySource()
+                .compareTo(other.getPrimarySource())
+
             this.getType() == other.getType() && this.source == other.source && this.label != other.label -> this.label.compareTo(other.label)
             this.getType() == other.getType() && this.source == other.source && this.label == other.label -> this.properties.active.compareTo(other.properties.active)
             else -> -1
@@ -43,6 +46,15 @@ data class LayerSettings(
 
     fun isOnline(): Boolean {
         return Builder.isOnline(source.firstOrNull())
+    }
+
+    /**
+     * Gets all sources defined as valid URI. May returns an empty list if none is eligible as valid
+     * URI.
+     */
+    fun getSourcesAsUri() = source.mapNotNull { path ->
+        Uri.parse(path)
+            ?.takeIf { !it.scheme.isNullOrBlank() && (if (isOnline()) Builder.isOnline(path) else true) && getType() == Builder.layerType(path) }
     }
 
     class Builder {
@@ -133,6 +145,7 @@ data class LayerSettings(
                         ".json",
                         ".wkt"
                     ).any { source?.endsWith(it) == true } -> LayerType.VECTOR
+
                     else -> LayerType.NOT_IMPLEMENTED
                 }
             }

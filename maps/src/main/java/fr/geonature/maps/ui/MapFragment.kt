@@ -1,25 +1,35 @@
 package fr.geonature.maps.ui
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.LayerSettingsViewModel
+import fr.geonature.maps.layer.presentation.LayerSettingsViewModel
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.dialog.LayerSettingsDialogFragment
+import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
@@ -33,7 +43,6 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
-import fr.geonature.maps.util.getSerializableCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
@@ -50,6 +59,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import org.tinylog.Logger
 
 /**
  * Simple [Fragment] embedding a [MapView] instance.
@@ -58,30 +68,65 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
  *
  * @author S. Grimault
  */
-open class MapFragment : Fragment(),
-    LayerSettingsDialogFragment.OnLayerSettingsDialogFragmentListener {
+@AndroidEntryPoint
+open class MapFragment : Fragment() {
+
+    private val layerSettingsViewModel: LayerSettingsViewModel by viewModels()
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
+    var onConfigureBottomSheetListener: (parent: ViewGroup, bottomSheetBehavior: BottomSheetBehavior<ViewGroup>) -> Unit =
+        { _, _ -> }
+    var onConfigureBottomFabsListener: (parent: ViewGroup) -> Unit = {}
 
-    private var layerSettingsViewModel: LayerSettingsViewModel? = null
+    lateinit var mapView: MapView
+        private set
+
     private var listener: OnMapFragmentPermissionsListener? = null
 
     private lateinit var container: View
-    private lateinit var mapView: MapView
+
     private lateinit var editFeatureFab: EditFeatureButton
     private lateinit var myLocationFab: MyLocationButton
     private lateinit var rotateCompassFab: RotateCompassButton
     private lateinit var layersFab: FloatingActionButton
     private lateinit var zoomFab: ZoomButton
     private lateinit var mapSettings: MapSettings
+    private lateinit var bottomSheet: FrameLayout
+
+    private var loadLocalLayerResultLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            when (result.resultCode) {
+                AppCompatActivity.RESULT_CANCELED -> {
+                    // nothing to do...
+                    Logger.info { "choose layer to add on the map aborted by user" }
+                }
+
+                AppCompatActivity.RESULT_OK -> {
+                    val uri = result.data?.data
+
+                    if (uri == null) {
+                        Logger.warn { "failed to load layer" }
+                        return@registerForActivityResult
+                    }
+
+                    Logger.info { "new layer to add from URI '$uri'" }
+                    layerSettingsViewModel.addLayer(uri)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val context = context ?: return
 
+        Logger.debug { "configure User-Agent for osmdroid: '${BuildConfig.LIBRARY_PACKAGE_NAME}/${BuildConfig.VERSION_NAME}'" }
+        Configuration.getInstance().userAgentValue =
+            "${BuildConfig.LIBRARY_PACKAGE_NAME}/${BuildConfig.VERSION_NAME}"
+
         mapSettings = getMapSettings(context)
+        layerSettingsViewModel.init(mapSettings)
     }
 
     override fun onCreateView(
@@ -113,17 +158,19 @@ open class MapFragment : Fragment(),
         this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
+        this.bottomSheet = view.findViewById<FrameLayout?>(R.id.bottom_sheet)
+            .apply {
+                onConfigureBottomSheetListener(this,
+                    BottomSheetBehavior.from(this as ViewGroup)
+                        .apply { state = BottomSheetBehavior.STATE_HIDDEN })
+            }
+        view.findViewById<LinearLayout>(R.id.fabs_bottom)
+            .apply {
+                onConfigureBottomFabsListener(this)
+            }
 
         // check permissions and configure MapView
         activity?.also {
-            layerSettingsViewModel = ViewModelProvider(it,
-                LayerSettingsViewModel.Factory {
-                    LayerSettingsViewModel(
-                        it.application,
-                        mapSettings.baseTilesPath
-                    )
-                })[LayerSettingsViewModel::class.java]
-
             lifecycleScope.launch {
                 val granted = listener?.onStoragePermissionsGranted() ?: false
 
@@ -168,6 +215,7 @@ open class MapFragment : Fragment(),
         myLocationFab.onResume()
 
         context?.also { context ->
+            Logger.debug { "onResume, with context" }
             showCompass(context).also {
                 rotateCompassFab.setMapView(mapView)
                 rotateCompassFab.visibility = if (it) View.VISIBLE else View.GONE
@@ -183,19 +231,15 @@ open class MapFragment : Fragment(),
                         mapView.overlays.add(it)
                     }).let { it.isEnabled = isEnabled }
             }
-        }
 
-        loadLayersSettings()
+            loadLayersSettings(context)
+        }
     }
 
     override fun onPause() {
         super.onPause()
 
         mapView.onPause()
-    }
-
-    override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-        layerSettingsViewModel?.load(layersSettings)
     }
 
     fun getSelectedPOIs(): List<GeoPoint> {
@@ -208,6 +252,14 @@ open class MapFragment : Fragment(),
 
     fun clearActiveSelection() {
         editFeatureFab.clearActiveSelection()
+    }
+
+    fun addOverlay(overlay: Overlay) {
+        mapView.overlays.add(overlay)
+    }
+
+    fun removeOverlay(overlay: Overlay) {
+        mapView.overlays.remove(overlay)
     }
 
     /**
@@ -225,8 +277,14 @@ open class MapFragment : Fragment(),
 
     private fun getMapSettings(context: Context): MapSettings {
         // read map settings from arguments or build the default one
-        val mapSettingsBuilder = MapSettings.Builder.newInstance()
-            .from(arguments?.getParcelable(ARG_MAP_SETTINGS))
+        val mapSettingsBuilder = MapSettings.Builder()
+            .from(arguments?.let {
+                BundleCompat.getParcelable(
+                    it,
+                    ARG_MAP_SETTINGS,
+                    MapSettings::class.java
+                )
+            })
 
         setDefaultPreferences(
             context,
@@ -245,9 +303,15 @@ open class MapFragment : Fragment(),
             .build()
     }
 
-    private fun loadLayersSettings() {
-        layerSettingsViewModel?.also { vm ->
-            vm.load(vm.getSelectedLayers(mapSettings))
+    private fun loadLayersSettings(context: Context) {
+        CoroutineScope(Main).launch {
+            val selectedLayers = layerSettingsViewModel.getSelectedLayers()
+                .ifEmpty {
+                    if (useOnlineLayers(context)) listOfNotNull(layerSettingsViewModel.getAllLayers()
+                        .firstOrNull { it.isOnline() }) else emptyList()
+                }
+
+            layerSettingsViewModel.load(selectedLayers)
         }
     }
 
@@ -317,11 +381,11 @@ open class MapFragment : Fragment(),
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
-        configureLayersSelector()
-
         activity?.also {
             configureLayers(it)
         }
+
+        configureLayersSelector()
     }
 
     private fun configureScaleBarOverlay(enabled: Boolean = mapSettings.showScale) {
@@ -345,8 +409,7 @@ open class MapFragment : Fragment(),
             }
 
             override fun getEditMode(): EditFeatureButton.EditMode {
-                return arguments?.getSerializableCompat(ARG_EDIT_MODE)
-                    ?: EditFeatureButton.EditMode.SINGLE
+                return mapSettings.editMode
             }
 
             override fun getMinZoom(): Double {
@@ -404,15 +467,44 @@ open class MapFragment : Fragment(),
     }
 
     private fun configureLayersSelector() {
-        layerSettingsViewModel?.also { vm ->
-            val layerSettings = mapSettings.layersSettings.takeIf { it.isNotEmpty() } ?: return@also
+        with(layersFab) {
+            setOnClickListener {
+                lifecycleScope.launch {
+                    val allLayers = layerSettingsViewModel.getAllLayers()
+                    val selectedLayers = layerSettingsViewModel.getSelectedLayers()
 
-            with(layersFab) {
-                setOnClickListener {
-                    LayerSettingsDialogFragment.newInstance(
-                        layerSettings,
-                        vm.getSelectedLayers(mapSettings)
+                    LayerSettingsBottomSheetDialogFragment.newInstance(
+                        allLayers,
+                        selectedLayers
                     )
+                        .apply {
+                            setOnLayerSettingsDialogFragmentListener(object :
+                                LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
+                                override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
+                                    layerSettingsViewModel.load(layersSettings)
+                                }
+
+                                override fun onAddLayer() {
+                                    loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                                        addCategory(Intent.CATEGORY_OPENABLE)
+                                        type = "application/*"
+                                        putExtra(
+                                            Intent.EXTRA_MIME_TYPES,
+                                            arrayOf(
+                                                "application/geo+json",
+                                                "application/json",
+                                                "application/octet-stream",
+                                                "application/vnd.sqlite3",
+                                                "application/x-binary",
+                                                "application/x-sqlite3",
+                                                "text/plain"
+                                            )
+                                        )
+                                    })
+                                }
+                            })
+
+                        }
                         .also { dialogFragment ->
                             dialogFragment.show(
                                 childFragmentManager,
@@ -420,13 +512,13 @@ open class MapFragment : Fragment(),
                             )
                         }
                 }
-                show()
             }
+            show()
         }
     }
 
     private fun configureLayers(activity: FragmentActivity) {
-        layerSettingsViewModel?.also { vm ->
+        layerSettingsViewModel.also { vm ->
             mapView.addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
                     return true
@@ -435,11 +527,13 @@ open class MapFragment : Fragment(),
                 override fun onZoom(event: ZoomEvent?): Boolean {
                     val zoomLevel = event?.zoomLevel ?: return true
 
-                    val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
+                    CoroutineScope(Main).launch {
+                        val selectedLayers = vm.getActiveLayersOnZoomLevel(zoomLevel)
 
-                    getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
-                        (overlay as FeatureCollectionOverlay).isEnabled =
-                            selectedLayers.any { it.label == overlay.name }
+                        getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
+                            (overlay as FeatureCollectionOverlay).isEnabled =
+                                selectedLayers.any { it.label == overlay.name }
+                        }
                     }
 
                     return true
@@ -472,15 +566,18 @@ open class MapFragment : Fragment(),
                     }
 
                     val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
+                    val vectorLayers = vm.getAllLayers()
+                        .filter { it.getType() == LayerType.VECTOR }
 
                     mapView.overlays.asSequence()
-                        .filter { it is FeatureCollectionOverlay || it is FeatureOverlay }
+                        .filter { (it is FeatureCollectionOverlay) && vectorLayers.any { vectorLayer -> vectorLayer.label == it.name } || it is FeatureOverlay }
                         .forEach {
                             mapView.overlays.remove(it)
                         }
 
                     val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
                         .coerceAtLeast(0)
+
                     it.forEach { overlay ->
                         mapView.overlays.add(markerOverlaysFirstIndex,
                             (overlay as FeatureCollectionOverlay).apply {
@@ -494,6 +591,14 @@ open class MapFragment : Fragment(),
                     delay(100)
 
                     onVectorLayersChangedListener(it)
+                }
+            }
+            vm.zoomToBoundingBox.observe(activity) {
+                it?.also {
+                    mapView.zoomToBoundingBox(
+                        it,
+                        true
+                    )
                 }
             }
         }
@@ -527,10 +632,8 @@ open class MapFragment : Fragment(),
     companion object {
 
         const val ARG_MAP_SETTINGS = "arg_map_settings"
-        const val ARG_EDIT_MODE = "arg_edit_mode"
 
         private const val LAYER_SETTINGS_DIALOG_FRAGMENT = "layer_settings_dialog_fragment"
-
         private val DEFAULT_OVERLAY_FILTER: (overlay: Overlay) -> Boolean = { true }
 
         /**
@@ -539,18 +642,11 @@ open class MapFragment : Fragment(),
          * @return A new instance of [MapFragment]
          */
         @JvmStatic
-        fun newInstance(
-            mapSettings: MapSettings,
-            editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.SINGLE
-        ) = MapFragment().apply {
+        fun newInstance(mapSettings: MapSettings) = MapFragment().apply {
             arguments = Bundle().apply {
                 putParcelable(
                     ARG_MAP_SETTINGS,
                     mapSettings
-                )
-                putSerializable(
-                    ARG_EDIT_MODE,
-                    editMode
                 )
             }
         }

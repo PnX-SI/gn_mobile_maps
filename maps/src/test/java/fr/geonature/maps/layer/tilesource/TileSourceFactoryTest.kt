@@ -1,11 +1,8 @@
-package fr.geonature.maps.layer
+package fr.geonature.maps.layer.tilesource
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import fr.geonature.maps.layer.tilesource.GeoportailWMTSOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OSMOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.OpenTopoMapOnlineLayerTileSource
-import fr.geonature.maps.layer.tilesource.WikimediaOnlineLayerTileSource
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -35,8 +32,8 @@ internal class TileSourceFactoryTest {
             TileSourceFactory.getOnlineTileSource(
                 application,
                 LayerSettings(
-                    label = "Plan v2 IGN",
-                    source = listOf("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+                    label = "IGN: Plan v2",
+                    source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
                 )
             ) is GeoportailWMTSOnlineLayerTileSource
         )
@@ -87,7 +84,7 @@ internal class TileSourceFactoryTest {
 
     @Test
     fun `should throw NotFoundException if the given layer settings is not eligible`() {
-        assertThrows(LayerException.NotFoundException::class.java) {
+        assertThrows(LayerException.NotSupportedException::class.java) {
             TileSourceFactory.getOnlineTileSource(
                 application,
                 LayerSettings(

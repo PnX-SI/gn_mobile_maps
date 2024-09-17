@@ -1,44 +1,32 @@
 package fr.geonature.maps.jts.geojson.io
 
 import fr.geonature.maps.FixtureHelper.getFixtureAsFile
-import fr.geonature.maps.MockitoKotlinHelper.any
-import fr.geonature.maps.MockitoKotlinHelper.capture
-import fr.geonature.maps.MockitoKotlinHelper.eq
-import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
+import io.mockk.MockKAnnotations.init
+import io.mockk.impl.annotations.RelaxedMockK
+import io.mockk.slot
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests about [WKTFileReader].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class WKTFileReaderTest {
 
-    @Captor
-    private lateinit var featureCollectionArgumentCaptor: ArgumentCaptor<FeatureCollection>
-
-    @Mock
+    @RelaxedMockK
     private lateinit var onWKTFileReaderListener: WKTFileReader.OnWKTFileReaderListener
 
     @Before
-    @Throws(Exception::class)
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
+        init(this)
     }
 
     @Test
@@ -52,23 +40,21 @@ class WKTFileReaderTest {
             onWKTFileReaderListener
         )
 
-        // then
-        verify(onWKTFileReaderListener).onStart(4)
-        verify(
-            onWKTFileReaderListener,
-            never()
-        ).onError(any(Throwable::class.java))
-        verify(
-            onWKTFileReaderListener,
-            times(4)
-        ).onProgress(
-            anyInt(),
-            eq(4),
-            any(Feature::class.java)
-        )
-        verify(onWKTFileReaderListener).onFinish(capture(featureCollectionArgumentCaptor))
+        val capturingSlotFeatureCollection = slot<FeatureCollection>()
 
-        val featureCollection = featureCollectionArgumentCaptor.value
+        // then
+        verify { onWKTFileReaderListener.onStart(4) }
+        verify(inverse = true) { onWKTFileReaderListener.onError(any()) }
+        verify(exactly = 4) {
+            onWKTFileReaderListener.onProgress(
+                any(),
+                4,
+                any()
+            )
+        }
+        verify { onWKTFileReaderListener.onFinish(capture(capturingSlotFeatureCollection)) }
+
+        val featureCollection = capturingSlotFeatureCollection.captured
         assertNotNull(featureCollection)
         assertEquals(
             4,

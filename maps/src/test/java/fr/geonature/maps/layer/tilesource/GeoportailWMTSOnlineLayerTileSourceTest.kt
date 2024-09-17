@@ -3,7 +3,7 @@ package fr.geonature.maps.layer.tilesource
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.LayerException
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import org.junit.Assert
@@ -32,8 +32,8 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
     fun `should build GeoportailWMTSOnlineLayerTileSource from valid layer settings`() {
         // given a valid layer settings
         val layerSettings = LayerSettings(
-            label = "Plan v2 IGN",
-            source = listOf("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+            label = "IGN: Plan v2",
+            source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
         )
 
         // when trying to build the corresponding tile source
@@ -68,7 +68,7 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
             onlineLayerTileSource.copyrightNotice
         )
         assertEquals(
-            "https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image%2Fpng&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX=0&TILEROW=0&TILECOL=0",
+            "https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image%2Fpng&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX=0&TILEROW=0&TILECOL=0",
             onlineLayerTileSource.getTileURLString(0)
         )
     }
@@ -77,8 +77,8 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
     fun `should set the right min and max zoom level from valid layer settings`() {
         // given a valid layer settings
         val layerSettings = LayerSettings(
-            label = "Plan v2 IGN",
-            source = listOf("https://wxs.ign.fr/cartes/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+            label = "IGN: Plan v2",
+            source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
             properties = LayerPropertiesSettings(
                 minZoomLevel = 5,
                 maxZoomLevel = 22

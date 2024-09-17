@@ -1,44 +1,35 @@
 package fr.geonature.maps.jts.geojson
 
-import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.core.os.ParcelCompat
 import fr.geonature.maps.jts.geojson.filter.IFeatureFilterVisitor
 import org.locationtech.jts.geom.Geometry
 
 /**
  * `GeoJSON` [Feature] object.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
-class Feature : AbstractGeoJson, Parcelable {
+data class Feature(
+    val id: String?,
+    val geometry: Geometry,
+    val properties: HashMap<String, Any> = hashMapOf()
+) : AbstractGeoJson(), Parcelable {
 
-    val id: String?
-    val geometry: Geometry
-    var properties: Bundle = Bundle()
-
-    constructor(
-        id: String,
-        geometry: Geometry
-    ) {
-        this.id = id
-        this.geometry = geometry
-    }
-
-    private constructor(source: Parcel) {
-        id = source.readString()
-        geometry = source.readSerializable() as Geometry
-        properties.putAll(source.readBundle(Bundle::class.java.classLoader))
-    }
-
-    /**
-     * Performs an operation on a given [Feature].
-     *
-     * @param filter the filter to apply to this [Feature]
-     */
-    fun apply(filter: IFeatureFilterVisitor) {
-        filter.filter(this)
-    }
+    constructor(parcel: Parcel) : this(parcel.readString(),
+        ParcelCompat.readSerializable(
+            parcel,
+            Geometry::class.java.classLoader,
+            Geometry::class.java
+        )!!,
+        ParcelCompat.readSerializable(
+            parcel,
+            HashMap::class.java.classLoader,
+            HashMap::class.java
+        )
+            ?.map { it.key as String to it.value }
+            ?.let { hashMapOf(*it.toTypedArray()) } ?: hashMapOf())
 
     override fun describeContents(): Int {
         return 0
@@ -50,7 +41,7 @@ class Feature : AbstractGeoJson, Parcelable {
     ) {
         dest.writeString(id)
         dest.writeSerializable(geometry)
-        dest.writeBundle(properties)
+        dest.writeSerializable(properties)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -61,8 +52,11 @@ class Feature : AbstractGeoJson, Parcelable {
 
         if (id != other.id) return false
         if (geometry != other.geometry) return false
-        if (properties.keySet() != other.properties.keySet()) return false
-        if (!properties.keySet().all { key -> properties[key] == other.properties[key] }) return false
+        if (properties.size != other.properties.size) return false
+
+        for (key in properties.keys) {
+            if (properties[key] != other.properties[key]) return false
+        }
 
         return true
     }
@@ -73,6 +67,15 @@ class Feature : AbstractGeoJson, Parcelable {
         result = 31 * result + properties.hashCode()
 
         return result
+    }
+
+    /**
+     * Performs an operation on a given [Feature].
+     *
+     * @param filter the filter to apply to this [Feature]
+     */
+    fun apply(filter: IFeatureFilterVisitor) {
+        filter.filter(this)
     }
 
     companion object CREATOR : Parcelable.Creator<Feature> {
