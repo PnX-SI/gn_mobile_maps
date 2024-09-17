@@ -6,7 +6,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-version = "0.7.0"
+version = "0.8.0"
 
 android {
 
@@ -31,11 +31,19 @@ android {
         archivesBaseName = project.name + "-" + versionName
     }
 
+    signingConfigs {
+        release {
+            readKeystoreProperties(project.name)
+        }
+    }
+
     buildTypes {
         debug {
             versionNameSuffix ".${defaultConfig.versionCode}-DEV"
         }
         release {
+            signingConfig signingConfigs.release
+            versionNameSuffix ".${defaultConfig.versionCode}"
             debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
