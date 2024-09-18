@@ -1,10 +1,11 @@
 package fr.geonature.maps.sample
 
 import android.app.Application
+import android.os.Environment
 import dagger.hilt.android.HiltAndroidApp
-import fr.geonature.mountpoint.model.MountPoint
-import fr.geonature.mountpoint.util.FileUtils
+import fr.geonature.mountpoint.util.FileUtils.getRelativeSharedPath
 import fr.geonature.mountpoint.util.MountPointUtils
+import fr.geonature.mountpoint.util.getFile
 import org.tinylog.Logger
 import java.io.File
 import kotlin.system.exitProcess
@@ -31,14 +32,14 @@ class MainApplication : Application() {
     }
 
     private fun configureLogger() {
-        val directoryForLogs: File = FileUtils.getFile(
-            FileUtils.getRootFolder(
-                this,
-                MountPoint.StorageType.INTERNAL,
-            ),
-            "logs"
-        )
-            .also { it.mkdirs() }
+        val directoryForLogs: File = Environment.getExternalStorageDirectory()
+            .getFile(
+                getRelativeSharedPath(applicationContext.packageName),
+                "logs"
+            )
+            .also {
+                it.mkdirs()
+            }
 
         System.setProperty(
             "tinylog.directory",

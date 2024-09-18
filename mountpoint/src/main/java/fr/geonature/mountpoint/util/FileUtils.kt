@@ -16,31 +16,6 @@ import java.io.File
 object FileUtils {
 
     /**
-     * Construct a file from the set of name elements.
-     *
-     * @param directory the parent directory
-     * @param names the name elements
-     *
-     * @return the corresponding file
-     */
-    fun getFile(
-        directory: File,
-        vararg names: String
-    ): File {
-
-        var file = directory
-
-        for (name in names) {
-            file = File(
-                file,
-                name
-            )
-        }
-
-        return file
-    }
-
-    /**
      * Gets the relative path used by given package ID.
      *
      * @param packageId the package ID
@@ -99,10 +74,8 @@ object FileUtils {
         storageType: MountPoint.StorageType,
         packageId: String? = null
     ): File {
-
-        return getFile(
-            if (storageType === MountPoint.StorageType.EXTERNAL) getExternalStorageDirectory(context)
-            else getInternalStorage(context).mountPath,
+        return (if (storageType === MountPoint.StorageType.EXTERNAL) getExternalStorageDirectory(context)
+        else getInternalStorage(context).mountPath).getFile(
             getRelativeSharedPath(if (packageId.isNullOrBlank()) context.packageName else packageId)
         )
     }

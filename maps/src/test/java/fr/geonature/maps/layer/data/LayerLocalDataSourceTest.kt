@@ -10,8 +10,8 @@ import fr.geonature.maps.CoroutineTestRule
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
-import fr.geonature.mountpoint.util.FileUtils.getFile
 import fr.geonature.mountpoint.util.MountPointUtils
+import fr.geonature.mountpoint.util.getFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -59,14 +59,11 @@ internal class LayerLocalDataSourceTest {
         // given some existing valid file from external storage
         val externalRootPath = getExternalStorageDirectory(application).apply {
             getFile(
-                this,
                 "Downloads",
                 "osmdroid"
-            )
-                .mkdirs()
+            ).mkdirs()
         }
-        val expectedLocalFile = getFile(
-            externalRootPath,
+        val expectedLocalFile = externalRootPath.getFile(
             "Downloads",
             "osmdroid",
             "nantes_pois.geojson"
@@ -101,23 +98,18 @@ internal class LayerLocalDataSourceTest {
             // given some existing valid file from internal storage
             val externalRootPath = getExternalStorageDirectory(application).apply {
                 getFile(
-                    this,
                     "Downloads",
                     "osmdroid"
-                )
-                    .mkdirs()
+                ).mkdirs()
             }
             val internalRootPath = MountPointUtils.getInternalStorage(application).mountPath.apply {
                 getFile(
-                    this,
                     "Downloads",
                     "osmdroid"
-                )
-                    .mkdirs()
+                ).mkdirs()
             }
 
-            val expectedLocalFile = getFile(
-                internalRootPath,
+            val expectedLocalFile = internalRootPath.getFile(
                 "Downloads",
                 "osmdroid",
                 "nantes_pois.geojson"
@@ -176,19 +168,15 @@ internal class LayerLocalDataSourceTest {
             // given no local file found from from storage
             val externalRootPath = getExternalStorageDirectory(application).apply {
                 getFile(
-                    this,
                     "Downloads",
                     "osmdroid"
-                )
-                    .mkdirs()
+                ).mkdirs()
             }
             MountPointUtils.getInternalStorage(application).mountPath.apply {
                 getFile(
-                    this,
                     "Downloads",
                     "osmdroid"
-                )
-                    .mkdirs()
+                ).mkdirs()
             }
 
             // when trying to resolves local layer using external storage
@@ -204,15 +192,9 @@ internal class LayerLocalDataSourceTest {
     @Test
     fun `should create layer settings from valid content URI`() = runTest {
         // given some existing valid file from external storage
-        val externalRootPath = getExternalStorageDirectory(application).apply {
-            getFile(
-                this,
-                "osmdroid"
-            )
-                .mkdirs()
-        }
-        val expectedLocalFile = getFile(
-            externalRootPath,
+        val externalRootPath = getExternalStorageDirectory(application).getFile("osmdroid")
+            .apply { mkdirs() }
+        val expectedLocalFile = externalRootPath.getFile(
             "osmdroid",
             "nantes_pois.geojson"
         )
@@ -243,14 +225,11 @@ internal class LayerLocalDataSourceTest {
         // given some existing valid file from external storage
         val externalRootPath = getExternalStorageDirectory(application).apply {
             getFile(
-                this,
                 "osmdroid"
-            )
-                .mkdirs()
+            ).mkdirs()
 
         }
-        val expectedLocalFile = getFile(
-            externalRootPath,
+        val expectedLocalFile = externalRootPath.getFile(
             "osmdroid",
             "nantes_pois.geojson"
         )
@@ -289,47 +268,42 @@ internal class LayerLocalDataSourceTest {
     }
 
     @Test(expected = LayerException.NotSupportedException::class)
-    fun `should throw NotSupportedException if local file is not valid or not supported`() = runTest {
-        // given some existing valid file from external storage
-        val externalRootPath = getExternalStorageDirectory(application).apply {
-            getFile(
-                this,
-                "osmdroid"
-            )
-                .mkdirs()
+    fun `should throw NotSupportedException if local file is not valid or not supported`() =
+        runTest {
+            // given some existing valid file from external storage
+            val externalRootPath = getExternalStorageDirectory(application).apply {
+                getFile(
+                    "osmdroid"
+                ).mkdirs()
 
-        }
-        val expectedLocalFile = getFile(
-            externalRootPath,
-            "osmdroid",
-            "nantes_pois.xml"
-        )
-            .apply {
-                createNewFile()
-                setReadable(true)
             }
+            val expectedLocalFile = externalRootPath.getFile(
+                "osmdroid",
+                "nantes_pois.xml"
+            )
+                .apply {
+                    createNewFile()
+                    setReadable(true)
+                }
 
-        // when trying to build the corresponding layer from URI
-        localLayerDataSource.buildLocalLayerFromUri(Uri.parse("file://${expectedLocalFile.absolutePath}"))
-    }
+            // when trying to build the corresponding layer from URI
+            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("file://${expectedLocalFile.absolutePath}"))
+        }
 
     @Test(expected = LayerException.NotFoundException::class)
     fun `should throw NotFoundException if local file was not found`() = runTest {
         // given some non existing file from external storage
         val externalRootPath = getExternalStorageDirectory(application).apply {
             getFile(
-                this,
                 "osmdroid"
-            )
-                .mkdirs()
+            ).mkdirs()
         }
 
         // when trying to build the corresponding layer from URI
         localLayerDataSource.buildLocalLayerFromUri(
             Uri.parse(
                 "file://${
-                    getFile(
-                        externalRootPath,
+                    externalRootPath.getFile(
                         "osmdroid",
                         "no_such_file.json"
                     )
