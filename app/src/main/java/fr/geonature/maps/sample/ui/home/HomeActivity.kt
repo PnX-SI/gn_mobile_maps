@@ -40,7 +40,9 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
             .getFile("osmdroid")
 
         Logger.debug {
-            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}, ${
+            "${osmdroidFile.absolutePath}: (exists: ${osmdroidFile.exists()}${
+                if (osmdroidFile.exists()) "," else ""
+            }${
                 if (osmdroidFile.canRead()) "r" else ""
             }${
                 if (osmdroidFile.canWrite()) "w" else ""
