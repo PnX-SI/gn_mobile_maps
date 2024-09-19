@@ -6,7 +6,6 @@ import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
 import fr.geonature.maps.R
-import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.MapSettings
 
 /**
@@ -15,8 +14,6 @@ import fr.geonature.maps.settings.MapSettings
  * @author S. Grimault
  */
 object MapSettingsPreferencesUtils {
-
-    private const val KEY_SELECTED_LAYERS = "key_selected_layers"
 
     /**
      * Sets default preferences settings values from [MapSettings].
@@ -97,7 +94,7 @@ object MapSettingsPreferencesUtils {
      */
     fun useOnlineLayers(
         context: Context,
-        defaultValue: Boolean = MapSettings.Builder.newInstance().useOnlineLayers
+        defaultValue: Boolean = MapSettings.Builder().useOnlineLayers
     ): Boolean {
         return getDefaultSharedPreferences(context)
             .getBoolean(
@@ -124,36 +121,6 @@ object MapSettingsPreferencesUtils {
     }
 
     /**
-     * Returns the current selected layers.
-     *
-     * @return a list of selected [LayerSettings] or an empty list if no selection was made.
-     */
-    fun getSelectedLayers(context: Context, mapSettings: MapSettings): List<LayerSettings> {
-        return getDefaultSharedPreferences(context).getStringSet(
-            KEY_SELECTED_LAYERS,
-            emptySet()
-        )
-            ?.asSequence()
-            ?.map { mapSettings.layersSettings.firstOrNull { layerSettings -> layerSettings.label == it } }
-            ?.filterNotNull()
-            ?.toList() ?: emptyList()
-    }
-
-    /**
-     * Updates selected layers preference.
-     */
-    fun setSelectedLayers(context: Context, selectedLayers: List<LayerSettings>) {
-        getDefaultSharedPreferences(context).edit()
-            .putStringSet(
-                KEY_SELECTED_LAYERS,
-                selectedLayers.asSequence()
-                    .map { it.label }
-                    .toSet()
-            )
-            .apply()
-    }
-
-    /**
      * Whether to show north compass during map rotation (default: [MapSettings.Builder.showCompass]).
      *
      * @param context the current context
@@ -164,7 +131,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_compass_key),
-                MapSettings.Builder.newInstance().showCompass
+                MapSettings.Builder().showCompass
             )
     }
 
@@ -179,7 +146,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_scale_key),
-                MapSettings.Builder.newInstance().showScale
+                MapSettings.Builder().showScale
             )
     }
 
@@ -194,7 +161,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_show_zoom_key),
-                MapSettings.Builder.newInstance().showZoom
+                MapSettings.Builder().showZoom
             )
     }
 
@@ -209,7 +176,7 @@ object MapSettingsPreferencesUtils {
         return getDefaultSharedPreferences(context)
             .getBoolean(
                 context.getString(R.string.preference_category_map_rotation_key),
-                MapSettings.Builder.newInstance().rotationGesture
+                MapSettings.Builder().rotationGesture
             )
     }
 }

@@ -1,0 +1,18 @@
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -1.5545135,
+      47.2256258
+    ]
+  },
+  "properties": {
+    "id": 42,
+    "name": "Ile de Versailles",
+    "year": 1831,
+    "double_attribute": 3.14,
+    "boolean_attribute_false": false,
+    "boolean_attribute_true": true
+  }
+}

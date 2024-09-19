@@ -13,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [Feature].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class FeatureTest {
@@ -26,7 +26,7 @@ class FeatureTest {
     }
 
     @Test
-    fun testType() {
+    fun `should have the right type`() {
         // given a Feature
         val feature = Feature(
             "1234",
@@ -36,10 +36,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            properties.putString(
-                "name",
-                "feature1"
-            )
+            properties["name"] = "feature1"
         }
 
         // then
@@ -50,7 +47,7 @@ class FeatureTest {
     }
 
     @Test
-    fun testEquals() {
+    fun `should be the same`() {
         assertEquals(Feature(
             "1234",
             createPoint(
@@ -59,12 +56,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "feature1"
-                )
-            }
+            properties["name"] = "feature1"
         },
             Feature(
                 "1234",
@@ -74,12 +66,7 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                }
+                properties["name"] = "feature1"
             })
 
         assertNotEquals(Feature(
@@ -90,12 +77,7 @@ class FeatureTest {
                 -1.554476
             )
         ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "feature1"
-                )
-            }
+            properties["name"] = "feature1"
         },
             Feature(
                 "1234",
@@ -105,16 +87,8 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                    putBoolean(
-                        "some_boolean_attribute",
-                        true
-                    )
-                }
+                properties["name"] = "feature1"
+                properties["some_boolean_attribute"] = true
             })
 
         assertNotEquals(Feature(
@@ -133,17 +107,12 @@ class FeatureTest {
                     -1.554476
                 )
             ).apply {
-                with(properties) {
-                    putString(
-                        "name",
-                        "feature1"
-                    )
-                }
+                properties["name"] = "feature1"
             })
     }
 
     @Test
-    fun testParcelable() {
+    fun `should obtain feature instance from parcelable`() {
         // given a Feature
         val feature = Feature(
             "1234",
@@ -151,13 +120,9 @@ class FeatureTest {
                 gf,
                 47.225782,
                 -1.554476
-            )
-        ).apply {
-            properties.putString(
-                "name",
-                "feature1"
-            )
-        }
+            ),
+            hashMapOf("name" to "feature1")
+        )
 
         // when we obtain a Parcel object to write the Feature instance to it
         val parcel = Parcel.obtain()

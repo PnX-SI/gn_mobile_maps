@@ -2,9 +2,12 @@ package fr.geonature.maps.util
 
 import android.util.JsonReader
 import android.util.JsonToken
-import android.util.JsonToken.NAME
+import android.util.JsonToken.BEGIN_ARRAY
+import android.util.JsonToken.BEGIN_OBJECT
+import android.util.JsonToken.BOOLEAN
+import android.util.JsonToken.NULL
+import android.util.JsonToken.NUMBER
 import android.util.JsonToken.STRING
-import java.io.IOException
 
 /**
  * Utility functions about JsonReader.
@@ -13,36 +16,117 @@ import java.io.IOException
  */
 
 /**
- * Returns the next token, a property name, consumes it and check if its value matches the given `JsonToken`.
+ * Returns a Map representation of this JsonReader as JSON object.
  */
-fun JsonReader.nextName(name: String, expected: JsonToken): JsonReader {
-    return if (peek() == NAME) {
-        val nextName = nextName()
+fun JsonReader.readObject(): Map<String, Any?>? {
+    return when (peek()) {
+        BEGIN_OBJECT -> {
+            val map = hashMapOf<String, Any?>()
 
-        if (nextName != name) {
-            throw IOException("Expected a property name '$name' but was '${peek().name}'")
+            beginObject()
+
+            while (hasNext()) {
+                val name: String = nextName()
+                val token: JsonToken = peek()
+
+                when (token) {
+                    STRING -> {
+                        map[name] = nextString()
+                    }
+
+                    NUMBER -> {
+                        map[name] =
+                            nextString().let { rawValue -> runCatching { rawValue.toLong() }.getOrElse { rawValue.toDouble() } }
+                    }
+
+                    NULL -> {
+                        map[name] = null
+                    }
+
+                    BOOLEAN -> {
+                        map[name] = nextBoolean()
+                    }
+
+                    BEGIN_OBJECT -> {
+                        map[name] = readObject()
+                    }
+
+                    BEGIN_ARRAY -> {
+                        map[name] = readArray()
+                    }
+
+                    else -> {
+                        skipValue()
+                    }
+                }
+            }
+
+            endObject()
+
+            map
         }
 
-        if (peek() != expected) {
-            throw IOException("Expected a property name '$name' to be '${expected.name}' but was '${peek().name}'")
+        else -> {
+            skipValue()
+            null
         }
-
-        this
-    } else {
-        throw IOException("Missing '$name' property")
     }
 }
 
 /**
- * Returns the string value of the next token and consuming it.
- * If the next token is not a string returns `null`.
+ * Returns a List representation of this JsonReader as JSON array object.
  */
-fun JsonReader.nextStringOrNull(): String? {
+fun JsonReader.readArray(): List<Any?>? {
     return when (peek()) {
-        STRING -> {
-            nextString()
+        BEGIN_ARRAY -> {
+            val list = mutableListOf<Any?>()
+
+            beginArray()
+
+            while (hasNext()) {
+                val token: JsonToken = peek()
+                when (token) {
+                    STRING -> {
+                        list.add(nextString())
+                    }
+
+                    NUMBER -> {
+                        list.add(runCatching { nextLong() }.getOrElse { nextDouble() })
+                    }
+
+                    NULL -> {
+                        list.add(null)
+                    }
+
+                    BOOLEAN -> {
+                        list.add(nextBoolean())
+                    }
+
+                    BEGIN_OBJECT -> {
+                        readObject()?.also {
+                            list.add(it)
+                        }
+                    }
+
+                    BEGIN_ARRAY -> {
+                        readArray()?.also {
+                            list.add(it)
+                        }
+                    }
+
+                    else -> {
+                        skipValue()
+                    }
+                }
+            }
+
+            endArray()
+
+            list
         }
+
         else -> {
+            skipValue()
             null
         }
     }

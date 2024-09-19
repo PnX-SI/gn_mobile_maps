@@ -3,7 +3,7 @@ package fr.geonature.maps.layer.tilesource
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.LayerException
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import org.junit.Assert.assertEquals

@@ -1,6 +1,7 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
+import fr.geonature.maps.ui.widget.EditFeatureButton
 import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -31,12 +32,13 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
             .showZoom(true)
             .rotationGesture(true)
+            .editMode(EditFeatureButton.EditMode.SINGLE)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -79,6 +81,7 @@ class MapSettingsTest {
                 showCompass = false,
                 showZoom = true,
                 rotationGesture = true,
+                editMode = EditFeatureButton.EditMode.SINGLE,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -110,7 +113,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)
@@ -145,7 +148,7 @@ class MapSettingsTest {
         // then
         assertEquals(
             mapSettings,
-            MapSettings.Builder.newInstance()
+            MapSettings.Builder()
                 .from(mapSettings)
                 .build()
         )
@@ -163,7 +166,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -252,7 +255,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -316,7 +319,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -369,7 +372,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .zoom(8.0)
             .minZoomLevel(7.0)
@@ -447,7 +450,7 @@ class MapSettingsTest {
         )
 
         // given map settings instance from its builder
-        val mapSettings = MapSettings.Builder.newInstance()
+        val mapSettings = MapSettings.Builder()
             .baseTilesPath("/mnt/sdcard")
             .showScale(false)
             .showCompass(false)

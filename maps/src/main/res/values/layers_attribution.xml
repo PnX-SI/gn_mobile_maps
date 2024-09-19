@@ -2,7 +2,7 @@
 <resources>
 
     <string name="layer_geoportail_attribution">© IGN Geoportail</string>
-    <string name="layer_osm_attribution">© OpenStreetMap contributors</string>
+    <string name="layer_osm_attribution">© OpenStreetMap contributors under ODbL licence</string>
     <string name="layer_otm_attribution">Map data: © OpenStreetMap contributors, SRTM | Map display: © OpenTopoMap (CC-BY-SA)</string>
     <string name="layer_wikimedia_attribution">Wikimedia maps | Map data © OpenStreetMap contributors</string>
 

@@ -11,14 +11,15 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.menu.MenuBuilder
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.MapFragment
 import fr.geonature.maps.util.CheckPermissionLifecycleObserver
 import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
-import fr.geonature.maps.util.getParcelableExtraCompat
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -29,6 +30,7 @@ import kotlin.coroutines.resume
  * @author S. Grimault
  * @see MapFragment
  */
+@AndroidEntryPoint
 class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsListener {
 
     private var manageExternalStoragePermissionLifecycleObserver: ManageExternalStoragePermissionLifecycleObserver? =
@@ -59,7 +61,11 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        mapSettings = intent.getParcelableExtraCompat(EXTRA_MAP_SETTINGS)
+        mapSettings = IntentCompat.getParcelableExtra(
+            intent,
+            EXTRA_MAP_SETTINGS,
+            MapSettings::class.java
+        )
 
         if (mapSettings == null) {
             Toast.makeText(
@@ -79,13 +85,13 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
             }
 
         mapSettings?.also {
-            // Display the fragment as the main content.
-            supportFragmentManager.beginTransaction()
-                .replace(
-                    android.R.id.content,
-                    MapFragment.newInstance(it)
-                )
-                .commit()
+            // display the fragment as the main content
+            val transaction = supportFragmentManager.beginTransaction()
+            transaction.replace(
+                android.R.id.content,
+                CustomMapFragment.newInstance(it)
+            )
+            transaction.commit()
         }
     }
 
@@ -109,6 +115,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
                 finish()
                 true
             }
+
             R.id.menu_settings -> {
                 startActivity(
                     PreferencesActivity.newIntent(
@@ -118,6 +125,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
                 )
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -139,8 +147,7 @@ class MapActivity : AppCompatActivity(), MapFragment.OnMapFragmentPermissionsLis
         suspendCancellableCoroutine { continuation ->
             lifecycleScope.launch {
                 continuation.resume(
-                    locationPermissionLifecycleObserver?.invoke(this@MapActivity)
-                        ?: false
+                    locationPermissionLifecycleObserver?.invoke(this@MapActivity) ?: false
                 )
             }
         }

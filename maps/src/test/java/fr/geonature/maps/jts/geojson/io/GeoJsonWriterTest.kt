@@ -11,6 +11,8 @@ import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPolygon
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPolygon
+import io.mockk.every
+import io.mockk.mockkClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -19,14 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests about [GeoJsonWriter].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class GeoJsonWriterTest {
@@ -45,11 +45,13 @@ class GeoJsonWriterTest {
     @Test
     fun testWriteInvalidFeature() {
         // given an invalid Feature (e.g. with no geometry defined)
-        val feature = mock(Feature::class.java)
-        doReturn("id1").`when`(feature)
-            .id
-        doReturn(mock(Geometry::class.java)).`when`(feature)
-            .geometry
+        val feature = mockkClass(Feature::class)
+        val geometry = mockkClass(Geometry::class)
+
+        every { feature.id } returns "id1"
+        every { feature.type } returns Geometry.TYPENAME_POINT
+        every { feature.geometry } returns geometry
+        every { geometry.geometryType } returns ""
 
         // when write this Feature as JSON string
         val json = geoJsonWriter.write(feature)
@@ -67,31 +69,15 @@ class GeoJsonWriterTest {
                 gf,
                 47.2256258,
                 -1.5545135
+            ),
+            hashMapOf(
+                "name" to "Ile de Versailles",
+                "year" to 1831,
+                "double_attribute" to 3.14,
+                "boolean_attribute_false" to false,
+                "boolean_attribute_true" to true
             )
-        ).apply {
-            with(properties) {
-                putString(
-                    "name",
-                    "Ile de Versailles"
-                )
-                putInt(
-                    "year",
-                    1831
-                )
-                putDouble(
-                    "double_attribute",
-                    3.14
-                )
-                putBoolean(
-                    "boolean_attribute_false",
-                    false
-                )
-                putBoolean(
-                    "boolean_attribute_true",
-                    true
-                )
-            }
-        }
+        )
 
         // when write this Feature as JSON string
         val json = geoJsonWriter.write(feature)
@@ -620,15 +606,17 @@ class GeoJsonWriterTest {
     @Test
     fun testWriteInvalidFeatureCollection() {
         // given an invalid Feature (e.g. with no geometry defined)
-        val feature1 = mock(Feature::class.java)
-        doReturn("id1").`when`(feature1)
-            .id
-        doReturn(mock(Geometry::class.java)).`when`(feature1)
-            .geometry
+        val feature = mockkClass(Feature::class)
+        val geometry = mockkClass(Geometry::class)
+
+        every { feature.id } returns "id1"
+        every { feature.type } returns Geometry.TYPENAME_POINT
+        every { feature.geometry } returns geometry
+        every { geometry.geometryType } returns ""
 
         // and a FeatureCollection
         val featureCollection = FeatureCollection().apply {
-            addFeature(feature1)
+            addFeature(feature)
         }
 
         // when write this FeatureCollection as JSON string

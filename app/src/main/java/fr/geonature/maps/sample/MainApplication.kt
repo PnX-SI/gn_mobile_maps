@@ -1,9 +1,11 @@
 package fr.geonature.maps.sample
 
 import android.app.Application
-import fr.geonature.mountpoint.model.MountPoint
-import fr.geonature.mountpoint.util.FileUtils
+import android.os.Environment
+import dagger.hilt.android.HiltAndroidApp
+import fr.geonature.mountpoint.util.FileUtils.getRelativeSharedPath
 import fr.geonature.mountpoint.util.MountPointUtils
+import fr.geonature.mountpoint.util.getFile
 import org.tinylog.Logger
 import java.io.File
 import kotlin.system.exitProcess
@@ -13,6 +15,7 @@ import kotlin.system.exitProcess
  *
  * @author S. Grimault
  */
+@HiltAndroidApp
 class MainApplication : Application() {
 
     override fun onCreate() {
@@ -29,23 +32,27 @@ class MainApplication : Application() {
     }
 
     private fun configureLogger() {
-        val directoryForLogs: File = FileUtils.getFile(
-            FileUtils.getRootFolder(
-                this,
-                MountPoint.StorageType.INTERNAL,
-            ),
-            "logs"
-        )
-            .also { it.mkdirs() }
+        val directoryForLogs: File = Environment.getExternalStorageDirectory()
+            .getFile(
+                getRelativeSharedPath(applicationContext.packageName),
+                "logs"
+            )
+            .also {
+                it.mkdirs()
+            }
 
         System.setProperty(
             "tinylog.directory",
             directoryForLogs.absolutePath
         )
+        System.setProperty(
+            "tinylog.level",
+            if (BuildConfig.DEBUG) "debug" else "info"
+        )
 
         Thread.setDefaultUncaughtExceptionHandler(TinylogUncaughtExceptionHandler())
 
-        Logger.info { "starting ${BuildConfig.APPLICATION_ID}..." }
+        Logger.info { "starting ${BuildConfig.APPLICATION_ID} (version ${BuildConfig.VERSION_NAME})..." }
         Logger.info { "logs directory: '$directoryForLogs'" }
     }
 

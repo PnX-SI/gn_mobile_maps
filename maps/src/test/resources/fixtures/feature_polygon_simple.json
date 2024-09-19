@@ -2,7 +2,6 @@
   "id": "id1",
   "type": "Feature",
   "geometry": {
-    "type": "Polygon",
     "coordinates": [
       [
         [
@@ -26,7 +25,8 @@
           47.226219
         ]
       ]
-    ]
+    ],
+    "type": "Polygon"
   },
   "properties": {}
 }

@@ -18,7 +18,7 @@
     }
   },
   {
-    "id": "id2",
+    "id": 42,
     "type": "Feature",
     "geometry": {
       "type": "LineString",

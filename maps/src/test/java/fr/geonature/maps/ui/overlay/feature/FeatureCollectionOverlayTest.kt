@@ -18,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [FeatureCollectionOverlay].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class FeatureCollectionOverlayTest {
@@ -52,9 +52,9 @@ class FeatureCollectionOverlayTest {
         )
         assertArrayEquals(arrayOf(
             "34",
+            "42",
             "id1",
             "id3",
-            "id4",
             "id5"
         ),
             featureCollectionOverlay.getFeatureOverlays().map { it.id }.sorted().toTypedArray()

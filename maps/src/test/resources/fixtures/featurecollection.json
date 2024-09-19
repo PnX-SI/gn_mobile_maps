@@ -51,7 +51,7 @@
       "properties": {}
     },
     {
-      "id": "id4",
+      "id": 42,
       "type": "Feature",
       "geometry": {
         "type": "MultiLineString",
