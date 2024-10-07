@@ -34,16 +34,16 @@ Example:
   "min_zoom_editing": 10.0,
   "layers": [
     {
-      "label": "IGN plan v2",
-      "source": "https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"
+      "label": "Plan IGN v2",
+      "source": "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2"
     },
     {
-      "label": "IGN ortho",
-      "source": "https://wxs.ign.fr/ortho/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS"
+      "label": "Ortho 20cm",
+      "source": "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS"
     },
     {
-      "label": "IGN cadastre",
-      "source": "https://wxs.ign.fr/parcellaire/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS"
+      "label": "Parcelles cadastrales",
+      "source": "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS"
     },
     {
       "label": "OpenStreetMap",
@@ -124,7 +124,7 @@ Example:
 **Supported sources:**
 
 - Online tiles source (URLs), supported online sources are:
-  - [IGN Geoportail WMTS](https://www.geoportail.gouv.fr)
+  - [IGN Géoplateforme](https://geoservices.ign.fr)
   - [OpenStreetMap](https://www.openstreetmap.org)
   - [OpenTopoMap](https://www.opentopomap.org)
   - [Wikimedia Maps](https://maps.wikimedia.org)
@@ -167,20 +167,17 @@ cache could potentially resolve tiles outside of the geographic range of the cur
 tiles source (for example, if an online tiles source has already been displayed on the requested
 area).
 
-#### IGN Geoportail
+#### IGN Géoplateforme
 
 Through [WMTS](http://www.opengeospatial.org/standards/wmts) protocol.
 
 Examples of available layer sources:
 
-- **IGN plan v2**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2
-- **Ortho photo**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS
-- **Cadastral map**: https://wxs.ign.fr/API_KEY/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS
+- **IGN plan v2**: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2
+- **Ortho photo 20cm**: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS
+- **Cadastral map**: https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS
 
-Where `API_KEY` parameter must be replaced by a valid API key or by the one defined in an open
-access URL to web services (e.g. `essentiels` or `ortho`).
-
-See https://geoservices.ign.fr/documentation/services/api-et-services-ogc/images-tuilees-wmts-ogc
+See https://geoservices.ign.fr/documentation/services/services-geoplateforme/diffusion
 for more information (in French).
 
 #### OpenStreetMap

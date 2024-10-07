@@ -33,7 +33,7 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
         // given a valid layer settings
         val layerSettings = LayerSettings(
             label = "IGN: Plan v2",
-            source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+            source = listOf("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
         )
 
         // when trying to build the corresponding tile source
@@ -68,7 +68,7 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
             onlineLayerTileSource.copyrightNotice
         )
         assertEquals(
-            "https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image%2Fpng&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX=0&TILEROW=0&TILECOL=0",
+            "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image%2Fpng&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX=0&TILEROW=0&TILECOL=0",
             onlineLayerTileSource.getTileURLString(0)
         )
     }
@@ -78,7 +78,7 @@ internal class GeoportailWMTSOnlineLayerTileSourceTest {
         // given a valid layer settings
         val layerSettings = LayerSettings(
             label = "IGN: Plan v2",
-            source = listOf("https://wxs.ign.fr/essentiels/geoportail/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
+            source = listOf("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}"),
             properties = LayerPropertiesSettings(
                 minZoomLevel = 5,
                 maxZoomLevel = 22
