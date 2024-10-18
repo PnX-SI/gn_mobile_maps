@@ -92,8 +92,8 @@ class LayerSettingsViewModel @Inject constructor(
                 .getOrDefault(emptyList())
 
             // loads selected layers to show on the map or use the first eligible layer
-            ((if (mapSettings.useOnlineLayers) listOfNotNull(allLayers.firstOrNull { layer -> layer.isOnline() && layer.properties.shownByDefault }
-                ?: allLayers.firstOrNull { layer -> layer.isOnline() }) else emptyList()) + (allLayers.filter { layer -> !layer.isOnline() && layer.properties.shownByDefault }
+            ((if (mapSettings.useOnlineLayers) listOfNotNull(allLayers.firstOrNull { layer -> layer.isOnline() })
+            else emptyList()) + (allLayers.filter { layer -> !layer.isOnline() && (if (layer.getType() == LayerType.VECTOR) layer.properties.shownByDefault else false)}
                 .takeIf { layers -> layers.isNotEmpty() }
                 ?: listOfNotNull(allLayers.firstOrNull { layer -> !layer.isOnline() }))).also { layerSettingsList ->
                 layerRepository.setSelectedLayers(layerSettingsList)

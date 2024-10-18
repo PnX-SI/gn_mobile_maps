@@ -17,7 +17,7 @@ data class LayerPropertiesSettings(
     val active: Boolean = Builder.newInstance().active,
 
     /**
-     * Whether to show this layer by default (default: `false`).
+     * Whether to show this layer by default (default: `true`, only applicable to vector layers).
      */
     val shownByDefault: Boolean = Builder.newInstance().shownByDefault,
 
@@ -68,7 +68,7 @@ data class LayerPropertiesSettings(
         internal var active: Boolean = true
             private set
 
-        internal var shownByDefault: Boolean = false
+        internal var shownByDefault: Boolean = true
             private set
 
         internal var minZoomLevel: Int = -1
@@ -107,7 +107,7 @@ data class LayerPropertiesSettings(
             this.active = active
         }
 
-        fun shownByDefault(shownByDefault: Boolean = false) = apply {
+        fun shownByDefault(shownByDefault: Boolean = true) = apply {
             this.shownByDefault = shownByDefault
         }
 

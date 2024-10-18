@@ -206,7 +206,7 @@ Base URLs:
 
 | Parameter          | Type    | Default value | Description                                                                                                                             |
 |--------------------|---------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `shown_by_default` | Boolean | false         | Whether to show this layer by default (default: `false`)                                                                                |
+| `shown_by_default` | Boolean | true          | Whether to show this layer by default (default: `true`, only applicable to vector layers)                                               |
 | `min_zoom`         | Number  | -1            | The minimum zoom level where the layer is visible                                                                                       |
 | `max_zoom`         | Number  | -1            | The maximum zoom level where the layer is visible                                                                                       |
 | `tile_size`        | Number  | 256           | The tile size in pixels (only applicable to tiles layers).                                                                              |
