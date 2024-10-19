@@ -46,12 +46,7 @@ class ZoomButton(
             return true
         }
 
-        zoomTextButton.text =
-            NumberFormat.getInstance().apply {
-                minimumFractionDigits = 1
-                maximumFractionDigits = 1
-            }.format(event.zoomLevel)
-        zoomTextButton.visibility = View.VISIBLE
+        setZoomLabel(event.zoomLevel)
 
         zoomInButton.isEnabled = event.source.canZoomIn()
         zoomOutButton.isEnabled = event.source.canZoomOut()
@@ -62,6 +57,7 @@ class ZoomButton(
     fun setMapView(mapView: MapView) {
         mapView.removeMapListener(this)
         mapView.addMapListener(this)
+        setZoomLabel(mapView.zoomLevelDouble)
 
         zoomInButton.setOnClickListener {
             mapView.controller.zoomIn()
@@ -69,5 +65,13 @@ class ZoomButton(
         zoomOutButton.setOnClickListener {
             mapView.controller.zoomOut()
         }
+    }
+
+    private fun setZoomLabel(zoomLevel: Double) {
+        zoomTextButton.text =  NumberFormat.getInstance().apply {
+            minimumFractionDigits = 1
+            maximumFractionDigits = 1
+        }.format(zoomLevel)
+        zoomTextButton.visibility = View.VISIBLE
     }
 }
