@@ -1,10 +1,14 @@
 package fr.geonature.maps.ui.overlay
 
+import android.animation.ValueAnimator
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.location.Location
+import android.view.animation.LinearInterpolator
+import androidx.core.animation.doOnEnd
 import fr.geonature.maps.R
 import fr.geonature.maps.util.DrawableUtils
 import org.osmdroid.util.BoundingBox
@@ -22,10 +26,10 @@ import org.tinylog.kotlin.Logger
 /**
  * Shows on the map the current user position.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class MyLocationOverlay(
-    mapView: MapView,
+    private val mapView: MapView,
     private var maxBounds: BoundingBox? = null
 ) : Overlay(), MyLocationListener, IOrientationConsumer {
 
@@ -36,6 +40,34 @@ class MyLocationOverlay(
     private var location: Location? = null
     private var compassOrientationProviderEnabled = false
     private var compassOrientation = 0f
+    private var compassOrientationOffset = 0f
+        set(value) {
+            field = value
+            invalidate(true)
+        }
+    private var compassOrientationValueAnimator: ValueAnimator? = null
+
+    // in ms, if the previous rendering was less than this value ago, we don't render again
+    private var lastRender = 0L
+    private val lastRenderDelay = 500
+
+    private val radius: (Location, Projection) -> Float = { location, projection ->
+        (location.accuracy / TileSystem.GroundResolution(
+            location.latitude,
+            projection.zoomLevel
+        )).toFloat()
+    }
+
+    private val toPoint: (Location, Projection) -> Pair<Float, Float> = { location, projection ->
+        val point = projection.toPixels(
+            GeoPoint(location),
+            null
+        )
+        Pair(
+            point.x.toFloat(),
+            point.y.toFloat()
+        )
+    }
 
     init {
         myLocationProvider = GpsMyLocationProvider(mapView.context).apply {
@@ -75,6 +107,8 @@ class MyLocationOverlay(
             pCanvas,
             pProjection
         )
+
+        lastRender = System.currentTimeMillis()
     }
 
     override fun onDetach(mapView: MapView?) {
@@ -103,6 +137,7 @@ class MyLocationOverlay(
         }
 
         this.location = location
+        invalidate()
 
         this.myLocationListener?.onLocationChanged(
             location,
@@ -118,6 +153,26 @@ class MyLocationOverlay(
         orientation: Float,
         source: IOrientationProvider?
     ) {
+        if (compassOrientationValueAnimator != null) return
+        if (orientation.toInt() == compassOrientation.toInt()) return
+
+        compassOrientationValueAnimator = ValueAnimator.ofFloat(
+            compassOrientation,
+            orientation
+        )
+            .apply {
+                duration = 500 // in ms
+                interpolator = LinearInterpolator()
+                addUpdateListener {
+                    compassOrientationOffset = it.animatedValue as Float
+                }
+                doOnEnd {
+                    compassOrientationOffset = compassOrientation
+                    compassOrientationValueAnimator = null
+                }
+                start()
+            }
+
         this.compassOrientation = orientation
     }
 
@@ -136,7 +191,7 @@ class MyLocationOverlay(
         compassOrientationProviderEnabled =
             compassOrientationProvider.startOrientationProvider(this)
 
-        Logger.debug { "enableMyLocation: $isEnabled" }
+        Logger.debug { "location provider: $isEnabled, orientation provider: $compassOrientationProviderEnabled" }
 
         onLocationChanged(
             myLocationProvider.lastKnownLocation,
@@ -151,6 +206,7 @@ class MyLocationOverlay(
         compassOrientationProvider.stopOrientationProvider()
         isEnabled = false
         compassOrientationProviderEnabled = false
+        invalidate(true)
     }
 
     private fun drawMyLocation(
@@ -159,29 +215,17 @@ class MyLocationOverlay(
     ) {
         val location = location ?: return
 
-        val radius: (Location) -> Float = {
-            (it.accuracy / TileSystem.GroundResolution(
-                it.latitude,
-                projection.zoomLevel
-            )).toFloat()
-        }
-
-        val toPoint: (Location) -> Pair<Float, Float> = {
-            val point = projection.toPixels(
-                GeoPoint(it),
-                null
-            )
-            Pair(
-                point.x.toFloat(),
-                point.y.toFloat()
-            )
-        }
-
-        val locationPoint = toPoint(location)
+        val locationPoint = toPoint(
+            location,
+            projection
+        )
 
         drawLocation(
             canvas,
-            radius(location),
+            radius(
+                location,
+                projection
+            ),
             locationPoint.first,
             locationPoint.second
         )
@@ -258,10 +302,9 @@ class MyLocationOverlay(
         if (compassOrientationProviderEnabled) {
             val compassPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             compassPaint.color = Color.BLUE
-            compassPaint.alpha = 128
-
+            compassPaint.alpha = (Math.min(compassOrientationOffset, compassOrientation) / Math.max(compassOrientationOffset, compassOrientation) * 128).toInt()
             canvas.rotate(
-                compassOrientation,
+                compassOrientationOffset,
                 x,
                 y
             )
@@ -270,12 +313,41 @@ class MyLocationOverlay(
                 canvas.drawBitmap(
                     it,
                     x - compassBitmap.width / 2,
-                    y - compassBitmap.height + 8,
+                    y - compassBitmap.height + 4, // add some padding between the compass bitmap and the main circle
                     compassPaint
                 )
             }
 
             canvas.restore()
         }
+    }
+
+    /**
+     * Invalidate the current view.
+     */
+    private fun invalidate(force: Boolean = false) {
+        if (!force && (lastRender + lastRenderDelay > System.currentTimeMillis())) return
+
+        val location = location ?: return
+        val compassBitmap = compassBitmap ?: return
+
+        val screenRect: Rect = mapView.getProjection().screenRect
+        val center = toPoint(
+            location,
+            mapView.projection
+        )
+
+        val frameLeft: Int = (screenRect.left + center.first - compassBitmap.width).toInt()
+        val frameTop: Int = (screenRect.top + center.second - compassBitmap.height).toInt()
+        val frameRight: Int = (screenRect.left + center.first + compassBitmap.width).toInt()
+        val frameBottom: Int = (screenRect.top + center.first + compassBitmap.height).toInt()
+
+        // add padding by 2
+        mapView.invalidateMapCoordinates(
+            frameLeft - 2,
+            frameTop - 2,
+            frameRight + 2,
+            frameBottom + 2
+        )
     }
 }
