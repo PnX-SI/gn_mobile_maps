@@ -21,7 +21,7 @@ class GeoportailWMTSOnlineLayerTileSource(
     layerSettings.let {
         if (BASE_URLS.none { url -> layerSettings.source.any { source -> source.startsWith(url) } }) {
             throw LayerException.InvalidLayerException(
-                layerSettings.source,
+                layerSettings,
                 GeoportailWMTSOnlineLayerTileSource::class.java.simpleName
             )
         }

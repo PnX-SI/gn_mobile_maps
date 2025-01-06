@@ -209,7 +209,6 @@ class MapSettingsTest {
                     label = "OSM",
                     source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
-                        active = true,
                         minZoomLevel = 0,
                         maxZoomLevel = 19,
                         tileSizePixels = 256,
@@ -220,7 +219,6 @@ class MapSettingsTest {
                     label = "OTM",
                     source = listOf("https://a.tile.opentopomap.org"),
                     properties = LayerPropertiesSettings(
-                        active = true,
                         minZoomLevel = 0,
                         maxZoomLevel = 19,
                         tileSizePixels = 256,
@@ -294,7 +292,6 @@ class MapSettingsTest {
                     label = "OSM",
                     source = listOf("https://a.tile.openstreetmap.org"),
                     properties = LayerPropertiesSettings(
-                        active = true,
                         minZoomLevel = 0,
                         maxZoomLevel = 19,
                         tileSizePixels = 256,

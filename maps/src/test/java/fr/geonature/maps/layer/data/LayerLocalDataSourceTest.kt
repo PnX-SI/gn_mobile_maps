@@ -7,6 +7,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import fr.geonature.maps.CoroutineTestRule
+import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
@@ -73,22 +74,22 @@ internal class LayerLocalDataSourceTest {
                 setReadable(true)
             }
 
+        // and some layer settings
+        val layerSettings = LayerSettings.Builder()
+            .label("Nantes POIs")
+            .addSource("osmdroid/nantes_pois.geojson")
+            .build()
+
         // when trying to resolves local layer
-        val layerSettings = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
-            LayerSettings.Builder()
-                .label("Nantes POIs")
-                .addSource("osmdroid/nantes_pois.geojson")
-                .build(),
+        val uris = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
+            layerSettings,
             externalRootPath.absolutePath
         )
 
         // then
         assertEquals(
-            LayerSettings.Builder()
-                .label("Nantes POIs")
-                .addSource("file://${expectedLocalFile.absolutePath}")
-                .build(),
-            layerSettings
+            listOf(Uri.parse("file://${expectedLocalFile.absolutePath}")),
+            uris
         )
     }
 
@@ -108,7 +109,6 @@ internal class LayerLocalDataSourceTest {
                     "osmdroid"
                 ).mkdirs()
             }
-
             val expectedLocalFile = internalRootPath.getFile(
                 "Downloads",
                 "osmdroid",
@@ -119,22 +119,22 @@ internal class LayerLocalDataSourceTest {
                     setReadable(true)
                 }
 
+            // and some layer settings
+            val layerSettings = LayerSettings.Builder()
+                .label("Nantes POIs")
+                .addSource("osmdroid/nantes_pois.geojson")
+                .build()
+
             // when trying to resolves local layer using external storage
-            val layerSettings = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
-                LayerSettings.Builder()
-                    .label("Nantes POIs")
-                    .addSource("osmdroid/nantes_pois.geojson")
-                    .build(),
+            val uris = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
+                layerSettings,
                 externalRootPath.absolutePath
             )
 
             // then
             assertEquals(
-                LayerSettings.Builder()
-                    .label("Nantes POIs")
-                    .addSource("file://${expectedLocalFile.absolutePath}")
-                    .build(),
-                layerSettings
+                listOf(Uri.parse("file://${expectedLocalFile.absolutePath}")),
+                uris
             )
         }
 
@@ -204,19 +204,22 @@ internal class LayerLocalDataSourceTest {
             }
 
         // when trying to build the corresponding layer from URI
-        val layerSettingsFromUri =
+        val layerFromUri =
             localLayerDataSource.buildLocalLayerFromUri(Uri.parse("content://com.android.externalstorage.documents/document/${externalRootPath.name}%3Aosmdroid%2Fnantes_pois.geojson"))
 
         // then
         assertEquals(
-            LayerSettings.Builder()
-                .label("Nantes pois")
-                .addSource(
-                    expectedLocalFile.toUri()
-                        .toString()
-                )
-                .build(),
-            layerSettingsFromUri
+            LayerState.Layer(
+                LayerSettings.Builder()
+                    .label("Nantes pois")
+                    .addSource(
+                        expectedLocalFile.toUri()
+                            .toString()
+                    )
+                    .build(),
+                listOf(expectedLocalFile.toUri())
+            ),
+            layerFromUri
         )
     }
 
@@ -239,59 +242,87 @@ internal class LayerLocalDataSourceTest {
             }
 
         // when trying to build the corresponding layer from URI
-        val layerSettingsFromUri =
+        val layerFromUri =
             localLayerDataSource.buildLocalLayerFromUri(Uri.parse("file://${expectedLocalFile.absolutePath}"))
 
         // then
         assertEquals(
-            LayerSettings.Builder()
-                .label("Nantes pois")
-                .addSource(
-                    expectedLocalFile.toUri()
-                        .toString()
-                )
-                .build(),
-            layerSettingsFromUri
+            LayerState.Layer(
+                LayerSettings.Builder()
+                    .label("Nantes pois")
+                    .addSource(
+                        expectedLocalFile.toUri()
+                            .toString()
+                    )
+                    .build(),
+                listOf(expectedLocalFile.toUri())
+            ),
+            layerFromUri
         )
     }
 
-    @Test(expected = LayerException.InvalidFileLayerException::class)
-    fun `should throw InvalidFileLayerException if URI scheme is not specified`() = runTest {
+    fun `should get InvalidFileLayerException if URI scheme is not specified`() = runTest {
         // when trying to build the corresponding layer from invalid URI
-        localLayerDataSource.buildLocalLayerFromUri(Uri.parse("osmdroid/nantes_pois.geojson"))
+        assertEquals(
+            LayerState.Error(
+                LayerException.InvalidFileLayerException(
+                    LayerSettings(
+                        label = "Nantes pois",
+                        source = listOf("osmdroid/nantes_pois.geojson")
+                    )
+                )
+            ),
+            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("osmdroid/nantes_pois.geojson"))
+        )
     }
 
-    @Test(expected = LayerException.InvalidFileLayerException::class)
-    fun `should throw InvalidFileLayerException if URI is an URL`() = runTest {
+    fun `should get InvalidFileLayerException if URI is an URL`() = runTest {
         // when trying to build the corresponding layer from invalid URI
-        localLayerDataSource.buildLocalLayerFromUri(Uri.parse("https://a.tile.openstreetmap.org"))
+        assertEquals(
+            LayerState.Error(
+                LayerException.InvalidFileLayerException(
+                    LayerSettings(
+                        label = "Openstreetmap",
+                        source = listOf("https://a.tile.openstreetmap.org")
+                    )
+                )
+            ),
+            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("https://a.tile.openstreetmap.org"))
+        )
     }
 
-    @Test(expected = LayerException.NotSupportedException::class)
-    fun `should throw NotSupportedException if local file is not valid or not supported`() =
-        runTest {
-            // given some existing valid file from external storage
-            val externalRootPath = getExternalStorageDirectory(application).apply {
-                getFile(
-                    "osmdroid"
-                ).mkdirs()
+    fun `should get NotSupportedException if local file is not valid or not supported`() = runTest {
+        // given some existing valid file from external storage
+        val externalRootPath = getExternalStorageDirectory(application).apply {
+            getFile(
+                "osmdroid"
+            ).mkdirs()
 
-            }
-            val expectedLocalFile = externalRootPath.getFile(
-                "osmdroid",
-                "nantes_pois.xml"
-            )
-                .apply {
-                    createNewFile()
-                    setReadable(true)
-                }
-
-            // when trying to build the corresponding layer from URI
-            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("file://${expectedLocalFile.absolutePath}"))
         }
+        val expectedLocalFile = externalRootPath.getFile(
+            "osmdroid",
+            "nantes_pois.xml"
+        )
+            .apply {
+                createNewFile()
+                setReadable(true)
+            }
 
-    @Test(expected = LayerException.NotFoundException::class)
-    fun `should throw NotFoundException if local file was not found`() = runTest {
+        // when trying to build the corresponding layer from URI
+        assertEquals(
+            LayerState.Error(
+                LayerException.NotSupportedException(
+                    LayerSettings(
+                        label = "Nantes pois",
+                        source = listOf("file://${expectedLocalFile.absolutePath}")
+                    )
+                )
+            ),
+            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("file://${expectedLocalFile.absolutePath}"))
+        )
+    }
+
+    fun `should get NotFoundException if local file was not found`() = runTest {
         // given some non existing file from external storage
         val externalRootPath = getExternalStorageDirectory(application).apply {
             getFile(
@@ -300,14 +331,31 @@ internal class LayerLocalDataSourceTest {
         }
 
         // when trying to build the corresponding layer from URI
-        localLayerDataSource.buildLocalLayerFromUri(
-            Uri.parse(
-                "file://${
-                    externalRootPath.getFile(
-                        "osmdroid",
-                        "no_such_file.json"
+        assertEquals(
+            LayerState.Error(
+                LayerException.NotFoundException(
+                    LayerSettings(
+                        label = "No such file",
+                        source = listOf(
+                            "file://${
+                                externalRootPath.getFile(
+                                    "osmdroid",
+                                    "no_such_file.json"
+                                )
+                            }"
+                        )
                     )
-                }"
+                )
+            ),
+            localLayerDataSource.buildLocalLayerFromUri(
+                Uri.parse(
+                    "file://${
+                        externalRootPath.getFile(
+                            "osmdroid",
+                            "no_such_file.json"
+                        )
+                    }"
+                )
             )
         )
     }

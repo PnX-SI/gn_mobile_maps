@@ -1,32 +1,33 @@
 package fr.geonature.maps.layer.repository
 
 import android.net.Uri
+import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.settings.LayerSettings
 
 /**
- * [LayerSettings] repository.
+ * [LayerState] repository.
  *
  * @author S. Grimault
  */
 interface ILayerRepository {
 
     /**
-     * Loads and prepare given layers with given base path.
+     * Loads and prepare given [LayerSettings] from given base path.
      */
     suspend fun prepareLayers(
         layersSettings: List<LayerSettings>,
         basePath: String? = null
-    ): Result<List<LayerSettings>>
+    ): List<LayerState>
 
     /**
      * Gets all layers.
      */
-    suspend fun getAllLayers(): Result<List<LayerSettings>>
+    suspend fun getAllLayers(): List<LayerState>
 
     /**
-     * Creates and add [LayerSettings] from given URI.
+     * Creates and add layer from given URI.
      */
-    suspend fun addLayerFromURI(uri: Uri): Result<LayerSettings>
+    suspend fun addLayerFromURI(uri: Uri): LayerState
 
     /**
      * Returns the current selected layers.
@@ -34,10 +35,10 @@ interface ILayerRepository {
      * @return a list of selected layers using primary source or an empty list if no selection was
      * made.
      */
-    suspend fun getSelectedLayers(): Result<List<LayerSettings>>
+    suspend fun getSelectedLayers(): List<LayerState.SelectedLayer>
 
     /**
      * Updates the layers selection.
      */
-    suspend fun setSelectedLayers(selectedLayers: List<LayerSettings>)
+    suspend fun setSelectedLayers(selectedLayers: List<LayerState.SelectedLayer>)
 }

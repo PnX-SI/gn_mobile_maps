@@ -1,10 +1,10 @@
 package fr.geonature.maps.layer.repository
 
 import android.net.Uri
-import androidx.core.net.toFile
 import fr.geonature.maps.layer.data.ILayerLocalDataSource
 import fr.geonature.maps.layer.data.ISelectedLayersLocalDataSource
-import fr.geonature.maps.settings.LayerPropertiesSettings
+import fr.geonature.maps.layer.domain.LayerState
+import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 import org.tinylog.Logger
 
@@ -18,87 +18,77 @@ class LayerRepositoryImpl(
     private val selectedLayersLocalDataSource: ISelectedLayersLocalDataSource
 ) : ILayerRepository {
 
-    private val layers = mutableSetOf<LayerSettings>()
+    private val layers = mutableSetOf<LayerState>()
 
     override suspend fun prepareLayers(
         layersSettings: List<LayerSettings>,
         basePath: String?
-    ): Result<List<LayerSettings>> {
-        return runCatching {
-            layersSettings.filter { it.isOnline() } + layersSettings.filterNot { it.isOnline() }
-                .map { layerSettings ->
-                    // if local sources are already resolved, returns the current layer settings
-                    if (layerSettings.getSourcesAsUri()
-                            .mapNotNull { runCatching { it.toFile() }.getOrNull() }
-                            .isNotEmpty()
-                    ) return@map LayerSettings.Builder()
-                        .from(layerSettings)
-                        .properties(
-                            LayerPropertiesSettings.Builder.newInstance()
-                                .from(layerSettings.properties)
-                                .active(true)
-                                .build()
-                        )
-                        .build()
-
-                    runCatching {
-                        localLayerDataSource.resolvesLocalLayerFromLayerSettings(
-                            layerSettings,
-                            basePath
-                        )
-                    }.onFailure {
-                        Logger.error {
-                            it.message ?: "failed to load layer from source ${layerSettings.source}"
-                        }
-                    }
-                        .getOrNull() ?: LayerSettings.Builder()
-                        .from(layerSettings)
-                        .properties(
-                            LayerPropertiesSettings.Builder.newInstance()
-                                .from(layerSettings.properties)
-                                // something goes wrong: deactivate this layer settings
-                                .active(false)
-                                .build()
-                        )
-                        .build()
+    ): List<LayerState> {
+        return (layersSettings.filter { it.isOnline() }
+            .map {
+                LayerState.Layer(
+                    settings = it,
+                    source = it.getSourcesAsUri(),
+                )
+            } + layersSettings.filterNot { it.isOnline() }
+            .map { layerSettings ->
+                val result = runCatching {
+                    localLayerDataSource.resolvesLocalLayerFromLayerSettings(
+                        layerSettings,
+                        basePath
+                    )
                 }
-        }.onSuccess {
+
+                result.getOrNull()
+                    ?.let {
+                        LayerState.Layer(
+                            layerSettings,
+                            it
+                        )
+                    } ?: LayerState.Error(result.exceptionOrNull()
+                    ?.takeIf { it is LayerException }
+                    ?.let { it as LayerException }
+                    ?: LayerException.NotSupportedException(layerSettings))
+            }).also { results ->
             with(layers) {
                 clear()
-                addAll(it)
+                addAll(results)
             }
         }
     }
 
-    override suspend fun getAllLayers(): Result<List<LayerSettings>> {
-        return runCatching { layers.toList() }
+    override suspend fun getAllLayers(): List<LayerState> {
+        return layers.toList()
     }
 
-    override suspend fun addLayerFromURI(uri: Uri): Result<LayerSettings> {
+    override suspend fun addLayerFromURI(uri: Uri): LayerState {
         Logger.info { "loading layer from URI '${uri}'..." }
 
-        return runCatching { localLayerDataSource.buildLocalLayerFromUri(uri) }.onFailure {
-            Logger.error { it.message ?: "failed to load local layer from URI '${uri}'" }
-        }
-            .onSuccess {
-                layers.add(it)
+        return localLayerDataSource.buildLocalLayerFromUri(uri)
+            .also {
+                when (it) {
+                    is LayerState.Error -> Logger.error {
+                        it.error.message ?: "failed to load local layer from URI '${uri}'"
+                    }
+
+                    else -> layers.add(it)
+                }
             }
     }
 
-    override suspend fun getSelectedLayers(): Result<List<LayerSettings>> {
-        return runCatching {
-            selectedLayersLocalDataSource.getSelectedLayers()
-                .mapNotNull { uri ->
-                    layers.firstOrNull { it.getPrimarySource() == uri.toString() }
-                }
-        }
+    override suspend fun getSelectedLayers(): List<LayerState.SelectedLayer> {
+        return selectedLayersLocalDataSource.getSelectedLayers()
+            .mapNotNull { uri ->
+                layers.filterIsInstance<LayerState.Layer>()
+                    .firstOrNull { it.source.contains(uri) }
+                    ?.select()
+            }
     }
 
-    override suspend fun setSelectedLayers(selectedLayers: List<LayerSettings>) {
+    override suspend fun setSelectedLayers(selectedLayers: List<LayerState.SelectedLayer>) {
         selectedLayersLocalDataSource.setSelectedLayers(
             selectedLayers.mapNotNull { layer ->
-                layer.getSourcesAsUri()
-                    .firstOrNull { it.toString() == layer.getPrimarySource() }
+                layer.source.firstOrNull()
             }
                 .toSet(),
         )

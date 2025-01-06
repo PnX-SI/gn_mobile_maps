@@ -25,9 +25,9 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import fr.geonature.maps.BuildConfig
 import fr.geonature.maps.R
-import fr.geonature.maps.layer.presentation.LayerSettingsViewModel
-import fr.geonature.maps.settings.LayerSettings
-import fr.geonature.maps.settings.LayerType
+import fr.geonature.maps.layer.domain.LayerState
+import fr.geonature.maps.layer.error.LayerException
+import fr.geonature.maps.layer.presentation.LayerViewModel
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
@@ -43,9 +43,9 @@ import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showScale
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showZoom
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.useOnlineLayers
+import fr.geonature.maps.util.observeOnce
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
@@ -71,7 +71,7 @@ import org.tinylog.Logger
 @AndroidEntryPoint
 open class MapFragment : Fragment() {
 
-    private val layerSettingsViewModel: LayerSettingsViewModel by viewModels()
+    private val layerViewModel: LayerViewModel by viewModels()
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
@@ -111,7 +111,36 @@ open class MapFragment : Fragment() {
                     }
 
                     Logger.info { "new layer to add from URI '$uri'" }
-                    layerSettingsViewModel.addLayer(uri)
+                    layerViewModel.addLayer(uri)
+                        .observeOnce(this) { it ->
+                            it?.takeIf { it is LayerState.Error }
+                                ?.let { it as LayerState.Error }
+                                ?.let { e ->
+                                    showSnackbar(
+                                        when (e.error) {
+                                            is LayerException.InvalidFileLayerException -> getString(
+                                                R.string.snackbar_add_layer_error_invalid_file,
+                                                e.getLayerSettings().label
+                                            )
+
+                                            is LayerException.NotSupportedException -> getString(
+                                                R.string.snackbar_add_layer_error_not_supported,
+                                                e.getLayerSettings().label
+                                            )
+
+                                            is LayerException.NotFoundException -> getString(
+                                                R.string.snackbar_add_layer_error_not_found,
+                                                e.getLayerSettings().label
+                                            )
+
+                                            else -> getString(
+                                                R.string.snackbar_add_layer_error,
+                                                e.getLayerSettings().label
+                                            )
+                                        }
+                                    )
+                                }
+                        }
                 }
             }
         }
@@ -126,7 +155,7 @@ open class MapFragment : Fragment() {
             "${BuildConfig.LIBRARY_PACKAGE_NAME}/${BuildConfig.VERSION_NAME}"
 
         mapSettings = getMapSettings(context)
-        layerSettingsViewModel.init(mapSettings)
+        layerViewModel.init(mapSettings)
     }
 
     override fun onCreateView(
@@ -305,13 +334,20 @@ open class MapFragment : Fragment() {
 
     private fun loadLayersSettings(context: Context) {
         CoroutineScope(Main).launch {
-            val selectedLayers = layerSettingsViewModel.getSelectedLayers()
+            val selectedLayers = layerViewModel.getSelectedLayers()
                 .ifEmpty {
-                    if (useOnlineLayers(context)) listOfNotNull(layerSettingsViewModel.getAllLayers()
-                        .firstOrNull { it.isOnline() }) else emptyList()
+                    if (useOnlineLayers(context)) listOfNotNull(layerViewModel.getAllLayers()
+                        .filterIsInstance<LayerState.SelectedLayer>()
+                        .firstOrNull { it.settings.isOnline() }) else emptyList()
                 }
 
-            layerSettingsViewModel.load(selectedLayers)
+            Logger.debug {
+                "selected layer from onResume:\n${
+                    selectedLayers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
+                }"
+            }
+
+            layerViewModel.load(selectedLayers)
         }
     }
 
@@ -470,18 +506,28 @@ open class MapFragment : Fragment() {
         with(layersFab) {
             setOnClickListener {
                 lifecycleScope.launch {
-                    val allLayers = layerSettingsViewModel.getAllLayers()
-                    val selectedLayers = layerSettingsViewModel.getSelectedLayers()
+                    val allLayers = layerViewModel.getAllLayers()
 
                     LayerSettingsBottomSheetDialogFragment.newInstance(
                         allLayers,
-                        selectedLayers
+                        mapSettings.useOnlineLayers
                     )
                         .apply {
                             setOnLayerSettingsDialogFragmentListener(object :
                                 LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
-                                override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-                                    layerSettingsViewModel.load(layersSettings)
+                                override fun onSelectedLayers(
+                                    layers: List<LayerState.SelectedLayer>,
+                                    useOnlineLayers: Boolean
+                                ) {
+                                    Logger.debug {
+                                        "selected layer from LayerSettingsBottomSheetDialogFragment:\n${
+                                            layers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
+                                        }"
+                                    }
+
+                                    lifecycleScope.launch {
+                                        layerViewModel.load(layers.filter { it.active })
+                                    }
                                 }
 
                                 override fun onAddLayer() {
@@ -518,7 +564,7 @@ open class MapFragment : Fragment() {
     }
 
     private fun configureLayers(activity: FragmentActivity) {
-        layerSettingsViewModel.also { vm ->
+        layerViewModel.also { vm ->
             mapView.addMapListener(object : MapListener {
                 override fun onScroll(event: ScrollEvent?): Boolean {
                     return true
@@ -532,7 +578,7 @@ open class MapFragment : Fragment() {
 
                         getOverlays { it is FeatureCollectionOverlay }.forEach { overlay ->
                             (overlay as FeatureCollectionOverlay).isEnabled =
-                                selectedLayers.any { it.label == overlay.name }
+                                selectedLayers.any { it.settings.label == overlay.name }
                         }
                     }
 
@@ -559,38 +605,35 @@ open class MapFragment : Fragment() {
             vm.vectorOverlays.removeObservers(activity)
             vm.vectorOverlays.observe(
                 activity
-            ) {
+            ) { selectedLayers ->
                 CoroutineScope(Main).launch {
                     if (!isResumed) {
                         return@launch
                     }
 
-                    val selectedLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
-                    val vectorLayers = vm.getAllLayers()
-                        .filter { it.getType() == LayerType.VECTOR }
+                    val activeLayers = vm.getActiveLayersOnZoomLevel(mapView.zoomLevelDouble)
 
-                    mapView.overlays.asSequence()
-                        .filter { (it is FeatureCollectionOverlay) && vectorLayers.any { vectorLayer -> vectorLayer.label == it.name } || it is FeatureOverlay }
-                        .forEach {
-                            mapView.overlays.remove(it)
-                        }
+                    mapView.overlays.removeAll {
+                        it is FeatureOverlay || (it is FeatureCollectionOverlay && selectedLayers.filterIsInstance<FeatureCollectionOverlay>()
+                            .none { vectorLayer -> vectorLayer.name == it.name })
+                    }
 
                     val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
                         .coerceAtLeast(0)
 
-                    it.forEach { overlay ->
-                        mapView.overlays.add(markerOverlaysFirstIndex,
-                            (overlay as FeatureCollectionOverlay).apply {
-                                isEnabled =
-                                    selectedLayers.any { selectedLayer -> selectedLayer.label == name }
+                    mapView.overlays.addAll(markerOverlaysFirstIndex,
+                        selectedLayers.filterIsInstance<FeatureCollectionOverlay>()
+                            .filter { layer -> mapView.overlays.none { o -> o is FeatureCollectionOverlay && o.name == layer.name } }
+                            .map { layer ->
+                                layer.apply {
+                                    isEnabled =
+                                        activeLayers.any { selectedLayer -> selectedLayer.settings.label == name }
+                                }
                             })
-                    }
 
                     mapView.invalidate()
 
-                    delay(100)
-
-                    onVectorLayersChangedListener(it)
+                    onVectorLayersChangedListener(selectedLayers)
                 }
             }
             vm.zoomToBoundingBox.observe(activity) {

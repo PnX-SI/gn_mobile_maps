@@ -14,11 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import fr.geonature.maps.R
-import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.layer.domain.LayerState
 
 /**
- * Custom [DialogFragment] to show a bottom sheet to let the user to select [LayerSettings] to show
- * on the map.
+ * Custom [DialogFragment] to show a bottom sheet to let the user to select [LayerState.Layer] to
+ * show on the map.
  *
  * @author S. Grimault
  */
@@ -73,8 +73,14 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         adapter = LayerSettingsRecyclerViewAdapter(object :
             LayerSettingsRecyclerViewAdapter.OnLayerRecyclerViewAdapterListener {
 
-            override fun onSelectedLayersSettings(layersSettings: List<LayerSettings>) {
-                listener?.onSelectedLayersSettings(layersSettings)
+            override fun onSelectedLayers(
+                layers: List<LayerState.SelectedLayer>,
+                useOnlineLayers: Boolean
+            ) {
+                listener?.onSelectedLayers(
+                    layers,
+                    useOnlineLayers
+                )
             }
 
             override fun showEmptyTextView(show: Boolean) {
@@ -124,22 +130,16 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         super.onResume()
 
         adapter?.also {
-            it.setItems(arguments?.let { bundle ->
-                BundleCompat.getParcelableArray(
-                    bundle,
-                    ARG_LAYERS,
-                    LayerSettings::class.java
-                )
-            }
-                ?.map { p -> p as LayerSettings } ?: emptyList())
-            it.setSelectedLayers(arguments?.let { bundle ->
-                BundleCompat.getParcelableArray(
-                    bundle,
-                    ARG_LAYERS_SELECTION,
-                    LayerSettings::class.java
-                )
-            }
-                ?.map { p -> p as LayerSettings } ?: emptyList())
+            it.setItems(
+                arguments?.let { bundle ->
+                    BundleCompat.getParcelableArray(
+                        bundle,
+                        ARG_LAYERS,
+                        LayerState::class.java
+                    )
+                }
+                    ?.map { p -> p as LayerState } ?: emptyList(),
+            )
         }
     }
 
@@ -149,11 +149,14 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     interface OnLayerSettingsDialogFragmentListener {
 
         /**
-         * Called when a list of [LayerSettings] were been selected.
+         * Called when a list of [LayerState.SelectedLayer] were been selected.
          *
-         * @param layersSettings the selected list of [LayerSettings]
+         * @param layers the selected list of [LayerState.SelectedLayer]
          */
-        fun onSelectedLayersSettings(layersSettings: List<LayerSettings>)
+        fun onSelectedLayers(
+            layers: List<LayerState.SelectedLayer>,
+            useOnlineLayers: Boolean
+        )
 
         /**
          * Called when we want to add a layer.
@@ -163,7 +166,6 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val ARG_LAYERS = "arg_layers"
-        const val ARG_LAYERS_SELECTION = "arg_layers_selection"
 
         /**
          * Use this factory method to create a new instance of [LayerSettingsBottomSheetDialogFragment].
@@ -172,18 +174,19 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
          */
         @JvmStatic
         fun newInstance(
-            layersSettings: List<LayerSettings>,
-            selection: List<LayerSettings> = emptyList()
+            layers: List<LayerState>,
+            useOnlineLayers: Boolean
         ) = LayerSettingsBottomSheetDialogFragment().apply {
             arguments = Bundle().apply {
-                putParcelableArray(
-                    ARG_LAYERS,
-                    layersSettings.toTypedArray()
-                )
-                putParcelableArray(
-                    ARG_LAYERS_SELECTION,
-                    selection.toTypedArray()
-                )
+                putParcelableArray(ARG_LAYERS,
+                    layers.map {
+                        when (it) {
+                            is LayerState.Layer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
+                            is LayerState.SelectedLayer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
+                            is LayerState.Error -> it
+                        }
+                    }
+                        .toTypedArray())
             }
         }
     }

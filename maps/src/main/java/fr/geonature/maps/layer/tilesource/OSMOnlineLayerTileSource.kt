@@ -18,7 +18,7 @@ class OSMOnlineLayerTileSource(
     layerSettings.let {
         if (BASE_URLS.none { url -> layerSettings.source.any { source -> source.startsWith(url) } }) {
             throw LayerException.InvalidLayerException(
-                layerSettings.source,
+                layerSettings,
                 OSMOnlineLayerTileSource::class.java.simpleName
             )
         }
