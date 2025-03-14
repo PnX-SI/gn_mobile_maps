@@ -59,6 +59,9 @@ class LayerViewModel @Inject constructor(
     private val layerRepository: ILayerRepository
 ) : AndroidViewModel(application) {
 
+    private val _selectedLayers = MutableLiveData<Set<LayerState.SelectedLayer>>()
+    val selectedLayers: LiveData<Set<LayerState.SelectedLayer>> = _selectedLayers
+
     private val _tileProvider = MutableLiveData<MapTileProviderBase?>()
     val tileProvider: LiveData<MapTileProviderBase?> = _tileProvider
 
@@ -132,6 +135,8 @@ class LayerViewModel @Inject constructor(
                         layerRepository.setSelectedLayers(layers)
                     }
             }
+
+            _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
         }
     }
 

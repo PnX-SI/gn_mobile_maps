@@ -189,7 +189,8 @@ open class MapFragment : Fragment() {
         this.zoomFab = view.findViewById(R.id.fab_zoom)
         this.bottomSheet = view.findViewById<FrameLayout?>(R.id.bottom_sheet)
             .apply {
-                onConfigureBottomSheetListener(this,
+                onConfigureBottomSheetListener(
+                    this,
                     BottomSheetBehavior.from(this as ViewGroup)
                         .apply { state = BottomSheetBehavior.STATE_HIDDEN })
             }
@@ -322,8 +323,7 @@ open class MapFragment : Fragment() {
 
         // update map settings according to preferences
         return mapSettingsBuilder.useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
-            context,
-            mapSettingsBuilder.useOnlineLayers
+            context,            mapSettingsBuilder.useOnlineLayers
         ))
             .showCompass(showCompass(context))
             .showScale(showScale(context))
@@ -333,21 +333,25 @@ open class MapFragment : Fragment() {
     }
 
     private fun loadLayersSettings(context: Context) {
-        CoroutineScope(Main).launch {
-            val selectedLayers = layerViewModel.getSelectedLayers()
-                .ifEmpty {
-                    if (useOnlineLayers(context)) listOfNotNull(layerViewModel.getAllLayers()
-                        .filterIsInstance<LayerState.SelectedLayer>()
-                        .firstOrNull { it.settings.isOnline() }) else emptyList()
+        layerViewModel.selectedLayers.observeOnce(this@MapFragment) {
+            CoroutineScope(Main).launch {
+
+                val selectedLayers = layerViewModel.getSelectedLayers()
+                    .ifEmpty {
+                        if (useOnlineLayers(context)) listOfNotNull(
+                            layerViewModel.getAllLayers()
+                                .filterIsInstance<LayerState.SelectedLayer>()
+                                .firstOrNull { it.settings.isOnline() }) else emptyList()
+                    }
+
+                Logger.debug {
+                    "selected layer from onResume:\n${
+                        selectedLayers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
+                    }"
                 }
 
-            Logger.debug {
-                "selected layer from onResume:\n${
-                    selectedLayers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
-                }"
+                layerViewModel.load(selectedLayers)
             }
-
-            layerViewModel.load(selectedLayers)
         }
     }
 
@@ -621,7 +625,8 @@ open class MapFragment : Fragment() {
                     val markerOverlaysFirstIndex = mapView.overlays.indexOfFirst { it is Marker }
                         .coerceAtLeast(0)
 
-                    mapView.overlays.addAll(markerOverlaysFirstIndex,
+                    mapView.overlays.addAll(
+                        markerOverlaysFirstIndex,
                         selectedLayers.filterIsInstance<FeatureCollectionOverlay>()
                             .filter { layer -> mapView.overlays.none { o -> o is FeatureCollectionOverlay && o.name == layer.name } }
                             .map { layer ->
