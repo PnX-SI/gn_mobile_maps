@@ -217,7 +217,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             }
 
             override fun getNewListSize(): Int {
-                return sortedItems.size
+                return newItemsWithViewType.size
             }
 
             override fun areItemsTheSame(
