@@ -323,7 +323,8 @@ open class MapFragment : Fragment() {
 
         // update map settings according to preferences
         return mapSettingsBuilder.useOnlineLayers(mapSettingsBuilder.layersSettings.any { it.isOnline() } && useOnlineLayers(
-            context,            mapSettingsBuilder.useOnlineLayers
+            context,
+            mapSettingsBuilder.useOnlineLayers
         ))
             .showCompass(showCompass(context))
             .showScale(showScale(context))

@@ -16,7 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tinylog.Logger
 import java.io.File
+import java.util.Date
 import java.util.Locale
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Local layer factory to get the corresponding [File] from given [LayerSettings] with local source.
@@ -54,6 +57,7 @@ class LayerLocalDataSourceImpl(
     }
 
     override suspend fun buildLocalLayerFromUri(uri: Uri): LayerState {
+        val startTime = Date()
         val defaultLayerSettings = LayerSettings(
             label = uri.lastPathSegment?.substringAfterLast("/")
                 ?.substringBeforeLast(".")
@@ -109,6 +113,7 @@ class LayerLocalDataSourceImpl(
 
         // from content://
         return uri.lastPathSegment?.let {
+            Logger.debug { "resolving relative path '$it' from root path '${if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
             val files = resolvePaths(
                 if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
                 listOf(it.substringAfterLast(":"))
@@ -137,7 +142,15 @@ class LayerLocalDataSourceImpl(
                 ?.let { layer ->
                     if (layer.settings.getType() == LayerType.NOT_IMPLEMENTED) {
                         LayerState.Error(LayerException.NotSupportedException(defaultLayerSettings))
-                    } else layer
+                    } else layer.also {
+                        Logger.info {
+                            "resolve local layer '${it.settings.label}' from URI '$uri' as file '${it.source}' took ${
+                                (Date().time - startTime.time).toDuration(
+                                    DurationUnit.MILLISECONDS
+                                )
+                            }"
+                        }
+                    }
                 }
         } ?: LayerState.Error(LayerException.InvalidFileLayerException(defaultLayerSettings))
     }
@@ -218,7 +231,7 @@ class LayerLocalDataSourceImpl(
 
         // tries to resolve first any absolute paths
         layerSettings.source.mapNotNull {
-            val asUri = Uri.parse(it)
+            val asUri = it.toUri()
 
             if (asUri.isAbsolute) {
                 return@mapNotNull runCatching { asUri.toFile() }.onFailure {
@@ -229,7 +242,7 @@ class LayerLocalDataSourceImpl(
             } else null
         } +
             // then any relative paths
-            layerSettings.source.filter { Uri.parse(it).isRelative }
+            layerSettings.source.filter { it.toUri().isRelative }
                 .let { paths ->
                     resolvePaths(
                         rootPath,
