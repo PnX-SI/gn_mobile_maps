@@ -1,6 +1,7 @@
 package fr.geonature.maps.layer.data
 
 import android.net.Uri
+import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
 
@@ -12,22 +13,19 @@ import fr.geonature.maps.settings.LayerSettings
 interface ILayerLocalDataSource {
 
     /**
-     * Resolves all sources from given [LayerSettings] and returns a copy of this [LayerSettings]
-     * with these valid sources.
+     * Resolves all sources from given [LayerSettings] and returns all valid sources as URI.
      *
-     * @throws LayerException if something goes wrong or if the given
-     * [LayerSettings] is not valid.
+     * @throws LayerException if something goes wrong or if the given [LayerSettings] is not valid.
      */
     suspend fun resolvesLocalLayerFromLayerSettings(
         layerSettings: LayerSettings,
         basePath: String? = null
-    ): LayerSettings
+    ): List<Uri>
 
     /**
-     * Builds the corresponding [LayerSettings] from given URI.
+     * Builds the corresponding [LayerState] from given URI.
      *
-     * @throws LayerException if something goes wrong or if the given
-     * URI is not valid.
+     * Returns [LayerState.Error] if something goes wrong or if the given URI is not valid.
      */
-    suspend fun buildLocalLayerFromUri(uri: Uri): LayerSettings
+    suspend fun buildLocalLayerFromUri(uri: Uri): LayerState
 }

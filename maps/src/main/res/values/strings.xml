@@ -18,11 +18,17 @@
     <string name="action_poi_deleted">POI deleted</string>
     <string name="action_layer_add">Add layer</string>
 
+    <string name="layer_label_undefined">Undefined</string>
+
     <string name="snackbar_permissions_not_granted">Permissions were not granted</string>
     <string name="snackbar_permissions_rationale">Some permissions are needed</string>
     <string name="snackbar_layers_undefined">No layers defined</string>
     <string name="snackbar_base_path_undefined">Unable to load layers from path \'%1$s\'</string>
     <string name="snackbar_add_poi_zoom_min">The zoom level is insufficient to add a POI</string>
+    <string name="snackbar_add_layer_error_invalid_file">Invalid file layer \'%1$s\'</string>
+    <string name="snackbar_add_layer_error_not_supported">Unsupported file layer \'%1$s\'</string>
+    <string name="snackbar_add_layer_error_not_found">File layer \'%1$s\' not found</string>
+    <string name="snackbar_add_layer_error">Unable to load file layer \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
 

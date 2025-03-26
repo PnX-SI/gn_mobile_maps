@@ -4,8 +4,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import fr.geonature.maps.R
+import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
-import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerType
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
@@ -15,7 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tinylog.Logger
 import java.io.File
+import java.util.Date
 import java.util.Locale
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Local layer factory to get the corresponding [File] from given [LayerSettings] with local source.
@@ -23,7 +27,7 @@ import java.util.Locale
  * @author S. Grimault
  */
 class LayerLocalDataSourceImpl(
-    context: Context,
+    private val context: Context,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ILayerLocalDataSource {
 
@@ -34,8 +38,8 @@ class LayerLocalDataSourceImpl(
     override suspend fun resolvesLocalLayerFromLayerSettings(
         layerSettings: LayerSettings,
         basePath: String?
-    ): LayerSettings {
-        if (layerSettings.isOnline()) throw LayerException.InvalidFileLayerException(layerSettings.source)
+    ): List<Uri> {
+        if (layerSettings.isOnline()) throw LayerException.InvalidFileLayerException(layerSettings)
 
         return when (layerSettings.getType()) {
             LayerType.TILES, LayerType.VECTOR -> {
@@ -44,98 +48,111 @@ class LayerLocalDataSourceImpl(
                     basePath
                 ).takeIf { it.isNotEmpty() }
                     ?.let {
-                        LayerSettings.Builder()
-                            .from(layerSettings)
-                            .sources(it.map { file ->
-                                file.toUri()
-                                    .toString()
-                            })
-                            .properties(
-                                LayerPropertiesSettings.Builder.newInstance()
-                                    .from(layerSettings.properties)
-                                    .active(true)
-                                    .build()
-                            )
-                            .build()
-                    } ?: throw LayerException.NotFoundException(layerSettings.source)
+                        it.map { file -> file.toUri() }
+                    } ?: throw LayerException.NotFoundException(layerSettings)
             }
 
-            else -> {
-                throw LayerException.NotSupportedException(layerSettings.source)
-            }
+            else -> throw LayerException.NotSupportedException(layerSettings)
         }
     }
 
-    override suspend fun buildLocalLayerFromUri(uri: Uri): LayerSettings {
-        if (uri.scheme.isNullOrBlank()) throw LayerException.InvalidFileLayerException(listOf(uri.toString()))
+    override suspend fun buildLocalLayerFromUri(uri: Uri): LayerState {
+        val startTime = Date()
+        val defaultLayerSettings = LayerSettings(
+            label = uri.lastPathSegment?.substringAfterLast("/")
+                ?.substringBeforeLast(".")
+                ?.replace(
+                    "_",
+                    " "
+                )
+                ?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                ?: context.getString(R.string.layer_label_undefined),
+            source = listOf(uri.toString()),
+        )
+
+        if (uri.scheme.isNullOrBlank()) return LayerState.Error(LayerException.InvalidFileLayerException(defaultLayerSettings))
+
         if (listOf(
                 "content",
                 "file"
             ).none { uri.scheme?.startsWith(it) == true }
-        ) throw LayerException.InvalidFileLayerException(listOf(uri.toString()))
+        ) return LayerState.Error(LayerException.InvalidFileLayerException(defaultLayerSettings))
 
+        // from file://
         if (uri.scheme?.startsWith("file") == true) {
             return runCatching { uri.toFile() }.getOrNull()
                 ?.takeIf { it.exists() && it.canRead() }
                 ?.let {
-                    LayerSettings.Builder()
-                        .label(
-                            it.name.substringBeforeLast(".")
-                                .replace(
-                                    "_",
-                                    " "
-                                )
-                                .replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else it.name },
-                        )
-                        .sources(
-                            listOf(
-                                it.toUri()
-                                    .toString()
+                    LayerState.Layer(
+                        settings = LayerSettings.Builder()
+                            .label(
+                                it.name.substringAfterLast("/")
+                                    .substringBeforeLast(".")
+                                    .replace(
+                                        "_",
+                                        " "
+                                    )
+                                    .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) },
                             )
-                        )
-                        .properties(
-                            LayerPropertiesSettings.Builder.newInstance()
-                                .active(true)
-                                .build()
-                        )
-                        .build()
+                            .sources(
+                                listOf(
+                                    it.toUri()
+                                        .toString()
+                                )
+                            )
+                            .build(),
+                        source = listOf(it.toUri())
+                    )
                 }
-                ?.also {
-                    if (it.getType() == LayerType.NOT_IMPLEMENTED) {
-                        throw LayerException.NotSupportedException(listOf(uri.toString()))
-                    }
-                } ?: throw LayerException.NotFoundException(listOf(uri.toString()))
+                ?.let {
+                    if (it.settings.getType() == LayerType.NOT_IMPLEMENTED) {
+                        LayerState.Error(LayerException.NotSupportedException(defaultLayerSettings))
+                    } else it
+                } ?: LayerState.Error(LayerException.NotFoundException(defaultLayerSettings))
         }
 
+        // from content://
         return uri.lastPathSegment?.let {
+            Logger.debug { "resolving relative path '$it' from root path '${if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
             val files = resolvePaths(
                 if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
                 listOf(it.substringAfterLast(":"))
             )
 
             runCatching {
-                LayerSettings.Builder()
-                    .label(
-                        it.substringAfterLast("/")
-                            .substringBeforeLast(".")
-                            .replace(
-                                "_",
-                                " "
-                            )
-                            .replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else it },
-                    )
-                    .sources(files.map { file ->
-                        file.toUri()
-                            .toString()
-                    })
-                    .build()
+                LayerState.Layer(
+                    settings = LayerSettings.Builder()
+                        .label(
+                            it.substringAfterLast("/")
+                                .substringBeforeLast(".")
+                                .replace(
+                                    "_",
+                                    " "
+                                )
+                                .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) },
+                        )
+                        .sources(files.map { file ->
+                            file.toUri()
+                                .toString()
+                        })
+                        .build(),
+                    source = files.map { file -> file.toUri() },
+                )
             }.getOrNull()
-                ?.also { layer ->
-                    if (layer.getType() == LayerType.NOT_IMPLEMENTED) {
-                        throw LayerException.NotSupportedException(listOf(uri.toString()))
+                ?.let { layer ->
+                    if (layer.settings.getType() == LayerType.NOT_IMPLEMENTED) {
+                        LayerState.Error(LayerException.NotSupportedException(defaultLayerSettings))
+                    } else layer.also {
+                        Logger.info {
+                            "resolve local layer '${it.settings.label}' from URI '$uri' as file '${it.source}' took ${
+                                (Date().time - startTime.time).toDuration(
+                                    DurationUnit.MILLISECONDS
+                                )
+                            }"
+                        }
                     }
                 }
-        } ?: throw LayerException.InvalidFileLayerException(listOf(uri.toString()))
+        } ?: LayerState.Error(LayerException.InvalidFileLayerException(defaultLayerSettings))
     }
 
     private suspend fun resolveBasePath(basePath: String? = null): File = withContext(dispatcher) {
@@ -214,7 +231,7 @@ class LayerLocalDataSourceImpl(
 
         // tries to resolve first any absolute paths
         layerSettings.source.mapNotNull {
-            val asUri = Uri.parse(it)
+            val asUri = it.toUri()
 
             if (asUri.isAbsolute) {
                 return@mapNotNull runCatching { asUri.toFile() }.onFailure {
@@ -225,7 +242,7 @@ class LayerLocalDataSourceImpl(
             } else null
         } +
             // then any relative paths
-            layerSettings.source.filter { Uri.parse(it).isRelative }
+            layerSettings.source.filter { it.toUri().isRelative }
                 .let { paths ->
                     resolvePaths(
                         rootPath,

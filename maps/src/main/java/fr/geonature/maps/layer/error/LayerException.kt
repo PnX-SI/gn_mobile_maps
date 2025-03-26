@@ -15,35 +15,50 @@ sealed class LayerException(
     cause
 ) {
 
+    abstract val layerSettings: LayerSettings
+
     /**
-     * Thrown if the given layer URL was not eligible to use with given tile source.
+     * Thrown if the given [LayerSettings] was not eligible to use with given tile source.
      */
     data class InvalidLayerException(
-        val baseUrls: List<String>,
+        override val layerSettings: LayerSettings,
         val tileSource: String
-    ) : LayerException("invalid layer from URLs '${baseUrls.joinToString(", ")}' to use as source '$tileSource'")
+    ) : LayerException("invalid layer '${layerSettings.label}' from URLs '${layerSettings.source.joinToString(", ")}' to use as source '$tileSource'")
 
     /**
-     * Thrown if the given layer URI was not eligible to use as local file layer.
+     * Thrown if the given [LayerSettings] was not eligible to use as local file layer.
      */
-    data class InvalidFileLayerException(val baseURIs: List<String>) :
-        LayerException("invalid layer from URIs '${baseURIs.joinToString(", ")}' to use as local source")
+    data class InvalidFileLayerException(override val layerSettings: LayerSettings) :
+        LayerException("invalid layer '${layerSettings.label}' from URIs '${layerSettings.source.joinToString(", ")}' to use as local source")
 
     /**
-     * Thrown if the given layer URL was not eligible to use as online tile source.
+     * Thrown if the given [LayerSettings] was not eligible to use as online tile source.
      */
-    data class InvalidOnlineLayerException(val baseUrls: List<String>) :
-        LayerException("invalid layer from URLs '${baseUrls.joinToString(", ")}' to use as online source")
+    data class InvalidOnlineLayerException(
+        override val layerSettings: LayerSettings,
+        override val cause: Throwable? = null
+    ) : LayerException("invalid layer '${layerSettings.label}' from URLs '${layerSettings.source.joinToString(", ")}' to use as online source")
 
     /**
-     * Thrown if no implementation was found from given sources.
+     * Thrown if the given [LayerSettings] cannot be loaded.
      */
-    data class NotSupportedException(val baseURIs: List<String>) :
-        LayerException("no implementation found for layer with URIs '${baseURIs.joinToString(", ")}'")
+    data class IOException(
+        override val layerSettings: LayerSettings,
+        override val cause: Throwable? = null
+    ) : LayerException(
+        "failed to load layer '${layerSettings.label}' from URIs '${layerSettings.source.joinToString(", ")}'${cause?.message?.let { ", cause: $it" } ?: ""}",
+        cause,
+    )
 
     /**
-     * Thrown if no layer file was found locally matching the given sources.
+     * Thrown if no implementation was found from given sources of this [LayerSettings].
      */
-    data class NotFoundException(val baseURIs: List<String>) :
-        LayerException("no layer found with URIs '${baseURIs.joinToString(", ")}'")
+    data class NotSupportedException(override val layerSettings: LayerSettings) :
+        LayerException("no implementation found for layer '${layerSettings.label}' with URIs '${layerSettings.source.joinToString(", ")}'")
+
+    /**
+     * Thrown if no layer file was found locally matching the given sources. of this [LayerSettings]
+     */
+    data class NotFoundException(override val layerSettings: LayerSettings) :
+        LayerException("no layer '${layerSettings.label}' found with URIs '${layerSettings.source.joinToString(", ")}'")
 }

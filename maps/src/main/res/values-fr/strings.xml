@@ -16,11 +16,17 @@
     <string name="action_poi_deleted">Marqueur supprimé</string>
     <string name="action_layer_add">Ajouter une couche géographique</string>
 
+    <string name="layer_label_undefined">Non défini</string>
+
     <string name="snackbar_permissions_not_granted">Les permissions n\'ont pas été accordées</string>
     <string name="snackbar_permissions_rationale">L\'application requiert des permissions</string>
     <string name="snackbar_layers_undefined">Aucun fond de défini</string>
     <string name="snackbar_base_path_undefined">Impossible de charger les couches depuis \'%1$s\'</string>
     <string name="snackbar_add_poi_zoom_min">Le niveau de zoom est insuffisant pour ajouter un marqueur</string>
+    <string name="snackbar_add_layer_error_invalid_file">Couche invalide \'%1$s\'</string>
+    <string name="snackbar_add_layer_error_not_supported">Couche non supportée \'%1$s\'</string>
+    <string name="snackbar_add_layer_error_not_found">Couche \'%1$s\' non trouvée</string>
+    <string name="snackbar_add_layer_error">Impossible de charger la couche \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
 

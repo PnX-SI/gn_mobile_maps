@@ -9,8 +9,8 @@ import org.osmdroid.tileprovider.tilesource.TileSourcePolicy
 import org.osmdroid.util.MapTileIndex
 
 /**
- * Describes online tile source for [Geoportail](https://www.geoportail.gouv.fr) services. See:
- * [Tiled Images - WMTS (OGC)](https://geoservices.ign.fr/documentation/services/api-et-services-ogc/images-tuilees-wmts-ogc).
+ * Describes online tile source for [IGN Géoplateforme](https://geoservices.ign.fr) services. See:
+ * [Tiled Images - WMTS (OGC)](https://geoservices.ign.fr/documentation/services/services-geoplateforme/diffusion).
  *
  * @author S. Grimault
  */
@@ -21,7 +21,7 @@ class GeoportailWMTSOnlineLayerTileSource(
     layerSettings.let {
         if (BASE_URLS.none { url -> layerSettings.source.any { source -> source.startsWith(url) } }) {
             throw LayerException.InvalidLayerException(
-                layerSettings.source,
+                layerSettings,
                 GeoportailWMTSOnlineLayerTileSource::class.java.simpleName
             )
         }
@@ -89,6 +89,6 @@ class GeoportailWMTSOnlineLayerTileSource(
     }
 
     companion object {
-        private val BASE_URLS = arrayOf("https://wxs.ign.fr")
+        private val BASE_URLS = arrayOf("https://data.geopf.fr")
     }
 }

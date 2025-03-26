@@ -5,12 +5,15 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 /**
- * Default settings for a given layer source.
+ * Default settings for a given geographical layer source.
  *
  * @author S. Grimault
  */
 @Parcelize
 data class LayerSettings(
+    /**
+     * An human short description of this [LayerSettings]. Should be unique.
+     */
     val label: String,
     val source: List<String>,
     val properties: LayerPropertiesSettings = LayerPropertiesSettings()
@@ -31,7 +34,6 @@ data class LayerSettings(
                 .compareTo(other.getPrimarySource())
 
             this.getType() == other.getType() && this.source == other.source && this.label != other.label -> this.label.compareTo(other.label)
-            this.getType() == other.getType() && this.source == other.source && this.label == other.label -> this.properties.active.compareTo(other.properties.active)
             else -> -1
         }
     }
@@ -49,8 +51,8 @@ data class LayerSettings(
     }
 
     /**
-     * Gets all sources defined as valid URI. May returns an empty list if none is eligible as valid
-     * URI.
+     * Gets all sources defined as valid URIs. May returns an empty list if none is eligible as
+     * valid URI.
      */
     fun getSourcesAsUri() = source.mapNotNull { path ->
         Uri.parse(path)

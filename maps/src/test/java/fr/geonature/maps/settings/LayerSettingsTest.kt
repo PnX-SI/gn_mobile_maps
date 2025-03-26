@@ -4,8 +4,6 @@ import android.net.Uri
 import android.os.Parcel
 import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -226,61 +224,6 @@ class LayerSettingsTest {
     }
 
     @Test
-    fun `should activate or not layer`() {
-        assertTrue(
-            LayerSettings.Builder.newInstance()
-                .label("Nantes")
-                .addSource("nantes.mbtiles")
-                .build().properties.active
-        )
-
-        assertTrue(
-            LayerSettings.Builder.newInstance()
-                .label("Nantes")
-                .addSource("nantes.mbtiles")
-                .properties(
-                    LayerPropertiesSettings.Builder.newInstance()
-                        .active()
-                        .build()
-                )
-                .build().properties.active
-        )
-
-        assertFalse(
-            LayerSettings.Builder.newInstance()
-                .label("Nantes")
-                .addSource("nantes.mbtiles")
-                .properties(
-                    LayerPropertiesSettings.Builder.newInstance()
-                        .active(false)
-                        .build()
-                )
-                .build().properties.active
-        )
-
-        assertNotEquals(
-            LayerSettings.Builder.newInstance()
-                .label("Nantes")
-                .addSource("nantes.mbtiles")
-                .properties(
-                    LayerPropertiesSettings.Builder.newInstance()
-                        .active()
-                        .build()
-                )
-                .build(),
-            LayerSettings.Builder.newInstance()
-                .label("Nantes")
-                .addSource("nantes.mbtiles")
-                .properties(
-                    LayerPropertiesSettings.Builder.newInstance()
-                        .active(false)
-                        .build()
-                )
-                .build()
-        )
-    }
-
-    @Test
     fun `should get corresponding URIs from layer sources`() {
         // from source with only relative path
         assertTrue(
@@ -428,17 +371,6 @@ class LayerSettingsTest {
         assertTrue(
             LayerSettings(
                 "Nantes",
-                listOf("nantes.mbtiles"),
-                LayerPropertiesSettings(active = false)
-            ) < LayerSettings(
-                "Nantes",
-                listOf("nantes.mbtiles"),
-                LayerPropertiesSettings(active = true)
-            )
-        )
-        assertTrue(
-            LayerSettings(
-                "Nantes",
                 listOf("nantes.mbtiles")
             ) < LayerSettings(
                 "Nantes",
@@ -451,11 +383,7 @@ class LayerSettingsTest {
                 LayerSettings.Builder.newInstance()
                     .label("Nantes")
                     .addSource("nantes.mbtiles")
-                    .properties(
-                        LayerPropertiesSettings.Builder.newInstance()
-                            .active(false)
-                            .build()
-                    )
+                    .properties(LayerPropertiesSettings.Builder.newInstance().build())
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("OSM")
@@ -482,11 +410,7 @@ class LayerSettingsTest {
                 LayerSettings.Builder.newInstance()
                     .label("Nantes")
                     .addSource("nantes.mbtiles")
-                    .properties(
-                        LayerPropertiesSettings.Builder.newInstance()
-                            .active(false)
-                            .build()
-                    )
+                    .properties(LayerPropertiesSettings.Builder.newInstance().build())
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")

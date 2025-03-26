@@ -43,8 +43,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 2,
                 maxZoomLevel = 19,
                 tileSizePixels = 512,
@@ -112,7 +111,6 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
                 shownByDefault = true,
                 minZoomLevel = 7,
                 maxZoomLevel = 8,
@@ -160,8 +158,7 @@ class LayerPropertiesSettingsTest {
         // then
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 2,
                 maxZoomLevel = 19,
                 tileSizePixels = 512,
@@ -183,8 +180,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 0,
                 maxZoomLevel = 19
             ),
@@ -196,8 +192,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 8,
                 maxZoomLevel = 9
             ),
@@ -209,8 +204,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 19,
                 maxZoomLevel = 19
             ),
@@ -222,8 +216,7 @@ class LayerPropertiesSettingsTest {
 
         assertEquals(
             LayerPropertiesSettings(
-                active = true,
-                shownByDefault = false,
+                shownByDefault = true,
                 minZoomLevel = 7,
                 maxZoomLevel = 19
             ),
@@ -237,7 +230,6 @@ class LayerPropertiesSettingsTest {
     fun testParcelable() {
         // given a layer properties settings
         val layerPropertiesSettings = LayerPropertiesSettings(
-            active = true,
             shownByDefault = false,
             minZoomLevel = 2,
             maxZoomLevel = 19,

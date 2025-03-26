@@ -12,12 +12,7 @@ import kotlinx.parcelize.Parcelize
 data class LayerPropertiesSettings(
 
     /**
-     * Whether this layer is ready to be displayed on the map (default: `true`).
-     */
-    val active: Boolean = Builder.newInstance().active,
-
-    /**
-     * Whether to show this layer by default (default: `false`).
+     * Whether to show this layer by default (default: `true`, only applicable to vector layers).
      */
     val shownByDefault: Boolean = Builder.newInstance().shownByDefault,
 
@@ -54,7 +49,6 @@ data class LayerPropertiesSettings(
 ) : Parcelable {
 
     private constructor(builder: Builder) : this(
-        builder.active,
         builder.shownByDefault,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -65,10 +59,8 @@ data class LayerPropertiesSettings(
     )
 
     class Builder {
-        internal var active: Boolean = true
-            private set
 
-        internal var shownByDefault: Boolean = false
+        internal var shownByDefault: Boolean = true
             private set
 
         internal var minZoomLevel: Int = -1
@@ -93,7 +85,6 @@ data class LayerPropertiesSettings(
             apply {
                 if (layerPropertiesSettings == null) return@apply
 
-                active(layerPropertiesSettings.active)
                 shownByDefault(layerPropertiesSettings.shownByDefault)
                 if (layerPropertiesSettings.minZoomLevel >= 0) minZoomLevel(layerPropertiesSettings.minZoomLevel)
                 if (layerPropertiesSettings.maxZoomLevel > 0) maxZoomLevel(layerPropertiesSettings.maxZoomLevel)
@@ -103,11 +94,7 @@ data class LayerPropertiesSettings(
                 style(layerPropertiesSettings.style)
             }
 
-        fun active(active: Boolean = true) = apply {
-            this.active = active
-        }
-
-        fun shownByDefault(shownByDefault: Boolean = false) = apply {
+        fun shownByDefault(shownByDefault: Boolean = true) = apply {
             this.shownByDefault = shownByDefault
         }
 

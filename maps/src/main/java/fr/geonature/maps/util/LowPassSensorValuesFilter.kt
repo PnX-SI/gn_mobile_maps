@@ -8,7 +8,7 @@ package fr.geonature.maps.util
  * The actual amount of attenuation for each frequency varies from filter to filter.
  * It is sometimes called a high-cut filter, or treble cut filter when used in audio applications.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 object LowPassSensorValuesFilter {
 
@@ -18,7 +18,7 @@ object LowPassSensorValuesFilter {
      *
      * @see [http://en.wikipedia.org/wiki/Low-pass_filter.Discrete-time_realization](http://en.wikipedia.org/wiki/Low-pass_filter.Discrete-time_realization)
      */
-    private const val ALPHA = 0.15f
+    private const val ALPHA = 0.25f
 
     /**
      * Filter the given input values against the previous values and return a low-pass filtered result.

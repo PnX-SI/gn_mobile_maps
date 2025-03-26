@@ -22,7 +22,7 @@ object TileSourceFactory {
         context: Context,
         layerSettings: LayerSettings
     ): AbstractOnlineLayerTileSource {
-        if (!layerSettings.isOnline()) throw LayerException.InvalidOnlineLayerException(layerSettings.source)
+        if (!layerSettings.isOnline()) throw LayerException.InvalidOnlineLayerException(layerSettings)
 
         return runCatching {
             GeoportailWMTSOnlineLayerTileSource(
@@ -47,7 +47,7 @@ object TileSourceFactory {
                     layerSettings
                 )
             }
-            .onFailure { throw LayerException.NotSupportedException(layerSettings.source) }
+            .onFailure { throw LayerException.NotSupportedException(layerSettings) }
             .getOrThrow()
     }
 }
