@@ -13,6 +13,8 @@ import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.MountPointUtils
 import fr.geonature.mountpoint.util.getFile
+import io.mockk.every
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -23,6 +25,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowEnvironment
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
 /**
  * Unit tests about [ILayerLocalDataSource].
@@ -44,7 +47,20 @@ internal class LayerLocalDataSourceTest {
 
     @Before
     fun setUp() {
-        application = ApplicationProvider.getApplicationContext()
+        application = spyk(ApplicationProvider.getApplicationContext() as Application)
+
+        val externalDirectory = createTempDirectory("external_").toFile()
+            .getFile("Android")
+            .apply { mkdirs() }
+        val internalDirectory = createTempDirectory("internal_").toFile()
+            .getFile("Android")
+            .apply { mkdirs() }
+        every { application.getExternalFilesDir(null) } returns internalDirectory
+        every { application.getExternalFilesDirs(null) } returns arrayOf(
+            internalDirectory,
+            externalDirectory
+        )
+
         ShadowEnvironment.setExternalStorageState(
             File("/"),
             Environment.MEDIA_MOUNTED
@@ -205,7 +221,7 @@ internal class LayerLocalDataSourceTest {
 
         // when trying to build the corresponding layer from URI
         val layerFromUri =
-            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("content://com.android.externalstorage.documents/document/${externalRootPath.name}%3Aosmdroid%2Fnantes_pois.geojson"))
+            localLayerDataSource.buildLocalLayerFromUri(Uri.parse("content://com.android.externalstorage.documents/document/${getExternalStorageDirectory(application).name}%3Aosmdroid%2Fnantes_pois.geojson"))
 
         // then
         assertEquals(
