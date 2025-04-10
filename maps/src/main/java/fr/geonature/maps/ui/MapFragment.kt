@@ -37,6 +37,7 @@ import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.CurrentLocationLifecycleObserver
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.rotationGesture
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
@@ -72,6 +73,8 @@ import org.tinylog.Logger
 open class MapFragment : Fragment() {
 
     private val layerViewModel: LayerViewModel by viewModels()
+
+    private var currentLocationLifecycleObserver: CurrentLocationLifecycleObserver? = null
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
@@ -201,6 +204,12 @@ open class MapFragment : Fragment() {
 
         // check permissions and configure MapView
         activity?.also {
+            currentLocationLifecycleObserver = CurrentLocationLifecycleObserver(
+                it,
+                this@MapFragment.viewLifecycleOwner,
+                it.activityResultRegistry
+            )
+
             lifecycleScope.launch {
                 val granted = listener?.onStoragePermissionsGranted() ?: false
 
@@ -414,12 +423,21 @@ open class MapFragment : Fragment() {
             mapView.maxZoomLevel = mapSettings.maxZoomLevel
         }
 
-        if (mapSettings.center != null) {
-            mapView.controller.setCenter(mapSettings.center)
-        }
-
         if (mapSettings.maxBounds != null) {
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
+        }
+
+        if (mapSettings.center != null) {
+            mapView.controller.setCenter(mapSettings.center)
+        } else {
+            lifecycleScope.launch {
+                // tries to fetch current device location
+                currentLocationLifecycleObserver?.getCurrentLocation()
+                    ?.let { GeoPoint(it) }
+                    // and only it the current location is within the current map view bounds
+                    ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+                    ?.also { mapView.controller.setCenter(it) }
+            }
         }
 
         activity?.also {

@@ -11,6 +11,7 @@ hiltAndroid = "2.52"
 hiltWork = "1.2.0"
 jts = "1.20.0"
 junit = "4.13.2"
+junitVersion = "1.2.1"
 kapt = "2.0.21"
 # ksp = "2.0.20-1.0.24"
 kotlin = "2.0.21"
@@ -35,6 +36,7 @@ androidx-core-testing = { module = "androidx.arch.core:core-testing", version.re
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "lifecycleCommon" }
 androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleCommon" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleCommon" }

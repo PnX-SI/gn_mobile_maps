@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kapt)
 }
 
-version = "0.8.5"
+version = "0.8.6"
 
 android {
     namespace 'fr.geonature.maps'
@@ -79,6 +79,7 @@ dependencies {
     // Testing dependencies
     testImplementation libs.androidx.core.testing
     testImplementation libs.androidx.core
+    testImplementation libs.androidx.junit
     testImplementation libs.mockk
     testImplementation libs.mockk.agent.jvm
     testImplementation libs.junit
