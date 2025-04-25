@@ -427,18 +427,7 @@ open class MapFragment : Fragment() {
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
 
-        if (mapSettings.center != null) {
-            mapView.controller.setCenter(mapSettings.center)
-        } else {
-            lifecycleScope.launch {
-                // tries to fetch current device location
-                currentLocationLifecycleObserver?.getCurrentLocation()
-                    ?.let { GeoPoint(it) }
-                    // and only it the current location is within the current map view bounds
-                    ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
-                    ?.also { mapView.controller.setCenter(it) }
-            }
-        }
+        configureCurrentMapCenterPosition()
 
         activity?.also {
             configureLayers(it)
@@ -523,6 +512,26 @@ open class MapFragment : Fragment() {
                 }
             }
         })
+    }
+
+    /**
+     * Tries to resolve the current map center position from device location or from [MapSettings.center]
+     * parameter.
+     */
+    private fun configureCurrentMapCenterPosition() {
+        lifecycleScope.launch {
+            // tries to resolve current device location...
+            (currentLocationLifecycleObserver?.getCurrentLocation()
+                ?.let { GeoPoint(it) }
+                // and only it the current location is within the current map view bounds
+                ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+                // if not, use center parameter from settings...
+                ?: mapSettings.center
+                    // and only it the center parameter is within the current map view bounds
+                    ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+                // if not, use centroid from max bounds settings...
+                ?: mapSettings.maxBounds?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
+        }
     }
 
     private fun configureLayersSelector() {

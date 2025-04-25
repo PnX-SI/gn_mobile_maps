@@ -86,21 +86,21 @@ Example:
 
 ### Parameters description
 
-| Parameter                        | UI      | Description                                                              |
-|----------------------------------|---------|--------------------------------------------------------------------------|
-| `base_path`                      | &#9744; | Sets the default layers path (default: `null`).                          |
-| `use_default_online_tile_source` | &#9745; | Whether to use online tiles source (default: `true`).                    |
-| `show_compass`                   | &#9745; | Whether to show north compass during map rotation (default: `true`).     |
-| `show_scale`                     | &#9745; | Whether to show the map scale (default: `true`).                         |
-| `show_zoom`                      | &#9745; | Whether to show zoom control (default: `false`).                         |
-| `rotate`                         | &#9745; | Whether to activate rotation gesture (default: `false`).                 |
-| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box. |
-| `center`                         | &#9744; | Center automatically the map at given position at startup.               |
-| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                     |
-| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                      |
-| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                      |
-| `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.          |
-| `layers[]`                       | &#9744; | Define layers to display on the map.                                     |
+| Parameter                        | UI      | Description                                                              | Default value |
+|----------------------------------|---------|--------------------------------------------------------------------------|---------------|
+| `base_path`                      | &#9744; | Sets the default layers path.                                            | `null`        |
+| `use_default_online_tile_source` | &#9745; | Whether to use online tiles source.                                      | `true`        |
+| `show_compass`                   | &#9745; | Whether to show north compass during map rotation.                       | `true`        |
+| `show_scale`                     | &#9745; | Whether to show the map scale.                                           | `true`        |
+| `show_zoom`                      | &#9745; | Whether to show zoom control.                                            | `false`       |
+| `rotate`                         | &#9745; | Whether to activate rotation gesture.                                    | `false`       |
+| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box. | `null`        |
+| `center`                         | &#9744; | Center automatically the map at given position at startup.               | `null`        |
+| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                     | 0.0           |
+| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                      | 0.0           |
+| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                      | 0.0           |
+| `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.          | 0.0           |
+| `layers[]`                       | &#9744; | Define layers to display on the map.                                     | `[]`          |
 
 #### Base path
 
@@ -112,6 +112,63 @@ Example:
   path as fallback
 - If a configured layer was not found from `base_path`, tries to find it by performing a deep scan
   from external storage root path (if defined) or from internal storage root path as fallback
+
+#### Center map resolution
+
+Automatic map centering at startup is first resolved via GPS by requesting the necessary permissions
+from the user. If this resolution via GPS is not possible (e.g. permissions not granted), the `map.center`
+parameter is used as fallback value if defined.
+Here's a state diagram to illustrate the whole resolution process:
+
+```mermaid
+---
+config:
+  title: Center map resolution
+---
+stateDiagram-v2
+  direction TB
+
+  state "from GPS" as gps
+  state "permissions granted ?" as perm
+  state "position p" as position
+  state "position c" as center
+  state "from 'map.center' parameter" as param
+  state "'map.max_bounds' parameter defined ?" as p_bounds
+  state "'map.max_bounds' parameter défini ?" as c_bounds
+  state "p ⊂ map.max_bounds ?" as p_in_bounds
+  state "c ⊂ map.max_bounds ?" as c_in_bounds
+  state "compute centroid from 'map.max_bounds'" as c_from_bounds
+  state if_perm <<choice>>
+  state if_param_center <<choice>>
+  state if_param_p_bounds <<choice>>
+  state if_param_c_bounds <<choice>>
+  state if_p_in_bounds <<choice>>
+  state if_c_in_bounds <<choice>>
+
+  [*] --> gps
+  gps --> perm
+  perm --> if_perm
+  if_perm --> position: yes and position resolved
+  if_perm --> param: no
+  position --> p_bounds
+  p_bounds --> if_param_p_bounds
+  if_param_p_bounds --> p_in_bounds: yes
+  if_param_p_bounds --> [*]: p
+  p_in_bounds --> if_p_in_bounds
+  if_p_in_bounds --> [*]: p
+  if_p_in_bounds --> param: no
+  param --> if_param_center
+  if_param_center --> center
+  if_param_center --> [*]: no, undefined position
+  center --> c_bounds
+  c_bounds --> if_param_c_bounds
+  if_param_c_bounds --> c_in_bounds: yes
+  if_param_c_bounds --> [*]: c
+  c_in_bounds --> if_c_in_bounds
+  if_c_in_bounds --> [*]: c
+  if_c_in_bounds --> c_from_bounds: no
+  c_from_bounds --> [*]: c
+```
 
 ## Layer description
 

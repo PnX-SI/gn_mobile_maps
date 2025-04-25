@@ -78,7 +78,7 @@ class HomeListFragment : Fragment() {
                     getString(R.string.home_menu_entry_default),
                     MapSettings.Builder()
                         .minZoomLevel(3.0)
-                        .zoom(8.0)
+                        .zoom(12.0)
                         .editMode(EditFeatureButton.EditMode.SINGLE)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
