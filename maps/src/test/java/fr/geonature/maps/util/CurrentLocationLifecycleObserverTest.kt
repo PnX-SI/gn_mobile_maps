@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.Context
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -28,7 +29,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
-import java.util.function.Consumer
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
@@ -132,8 +132,16 @@ class CurrentLocationLifecycleObserverTest {
 
         every { locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) } returns false
         every { locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) } returns true
-        every { locationManager.getCurrentLocation(LocationManager.NETWORK_PROVIDER, null, any(), any()) } answers  {
-            lastArg<Consumer<Location>>().accept(expectedLocation)
+        every { locationManager.removeUpdates(any<LocationListener>()) } returns Unit
+        every {
+            locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER,
+                any<Long>(),
+                any<Float>(),
+                any<LocationListener>()
+            )
+        } answers {
+            lastArg<LocationListener>().onLocationChanged(expectedLocation)
         }
 
         val currentLocationLifecycleObserver = CurrentLocationLifecycleObserver(

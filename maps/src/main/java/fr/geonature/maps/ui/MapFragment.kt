@@ -519,18 +519,20 @@ open class MapFragment : Fragment() {
      * parameter.
      */
     private fun configureCurrentMapCenterPosition() {
-        lifecycleScope.launch {
-            // tries to resolve current device location...
-            (currentLocationLifecycleObserver?.getCurrentLocation()
-                ?.let { GeoPoint(it) }
-                // and only it the current location is within the current map view bounds
-                ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
-                // if not, use center parameter from settings...
-                ?: mapSettings.center
-                    // and only it the center parameter is within the current map view bounds
-                    ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
-                // if not, use centroid from max bounds settings...
-                ?: mapSettings.maxBounds?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
+        // use center parameter from settings...
+        (mapSettings.center
+            // and only it the center parameter is within the current map view bounds
+            ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+        // if not, use centroid from max bounds settings...
+            ?: mapSettings.maxBounds?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
+
+        // tries to resolve current device location...
+        with(myLocationFab) {
+            post {
+                performClick()
+                isPressed = true
+                invalidate()
+            }
         }
     }
 

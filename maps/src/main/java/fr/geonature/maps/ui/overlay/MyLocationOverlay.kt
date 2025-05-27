@@ -124,8 +124,6 @@ class MyLocationOverlay(
         location: Location?,
         source: IMyLocationProvider?
     ) {
-        Logger.debug { "onLocationChanged: $location" }
-
         if (location == null) return
 
         val isLocationInsideMaxBounds = maxBounds?.contains(GeoPoint(location)) ?: true

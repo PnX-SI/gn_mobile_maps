@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
@@ -18,6 +17,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.tinylog.Logger
+import java.util.Date
 import kotlin.coroutines.resume
 
 /**
@@ -70,6 +71,8 @@ class CurrentLocationLifecycleObserver(
     private var locationContinuation: CancellableContinuation<Location?>? = null
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            Logger.debug { "location resolved from '${location.provider}' provider${if (location.hasAccuracy()) ", with accuracy ${location.accuracy}m" else ""} (resolved at ${Date(location.time)})" }
+
             locationManager.removeUpdates(this)
             locationContinuation?.resumeWith(Result.success(location))
         }
@@ -168,45 +171,38 @@ class CurrentLocationLifecycleObserver(
     }
 
     private fun requestLocationUpdate() {
-        when {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> {
-                requestCurrentLocation(LocationManager.GPS_PROVIDER)
-            }
+        val availableProviders = listOfNotNull(
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            ) LocationManager.GPS_PROVIDER else null,
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            ) LocationManager.NETWORK_PROVIDER else null
+        )
 
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> {
-                requestCurrentLocation(LocationManager.NETWORK_PROVIDER)
-            }
-
-            else -> {
-                // no provider available
-                locationContinuation?.resume(null)
-            }
+        if (availableProviders.isEmpty()) {
+            // no provider available
+            Logger.warn { "no location provider available" }
+            locationContinuation?.resume(null)
+            return
         }
+
+        availableProviders.first()
+            .also { requestCurrentLocation(it) }
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun requestCurrentLocation(provider: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            locationManager.getCurrentLocation(
-                provider,
-                null,
-                context.mainExecutor
-            ) {
-                locationContinuation?.resumeWith(Result.success(it))
-            }
-        } else {
-            locationManager.requestSingleUpdate(
-                provider,
-                locationListener,
-                null
-            )
-        }
+        locationManager.requestLocationUpdates(
+            provider,
+            1000L,
+            0F,
+            locationListener
+        )
     }
 
     companion object {
