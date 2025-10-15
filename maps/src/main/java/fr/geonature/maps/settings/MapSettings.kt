@@ -238,8 +238,9 @@ data class MapSettings(
         }
 
         fun addLayer(layerSettings: LayerSettings) = apply {
+            val layerIndex = this.layersSettings.maxOfOrNull { it.order } ?: -1
             if (!this.layersSettings.any { it.source == layerSettings.source }) this.layersSettings.add(
-                layerSettings
+                layerSettings.copy(order = layerIndex + 1)
             )
         }
 

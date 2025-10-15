@@ -3,6 +3,7 @@ package fr.geonature.maps.settings
 import android.net.Uri
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import androidx.core.net.toUri
 
 /**
  * Default settings for a given geographical layer source.
@@ -16,12 +17,14 @@ data class LayerSettings(
      */
     val label: String,
     val source: List<String>,
+    val order: Int = 0,
     val properties: LayerPropertiesSettings = LayerPropertiesSettings()
 ) : Parcelable, Comparable<LayerSettings> {
 
     private constructor(builder: Builder) : this(
         builder.label!!,
         builder.source,
+        builder.order ?: 0,
         builder.properties!!
     )
 
@@ -30,11 +33,7 @@ data class LayerSettings(
             this == other -> 0
             this.getType() != other.getType() -> this.getType().ordinal - other.getType().ordinal
             this.getType() == other.getType() && this.isOnline() != other.isOnline() -> if (this.isOnline()) -1 else 1
-            this.getType() == other.getType() && this.source != other.source -> this.getPrimarySource()
-                .compareTo(other.getPrimarySource())
-
-            this.getType() == other.getType() && this.source == other.source && this.label != other.label -> this.label.compareTo(other.label)
-            else -> -1
+            else -> this.order - other.order
         }
     }
 
@@ -55,8 +54,8 @@ data class LayerSettings(
      * valid URI.
      */
     fun getSourcesAsUri() = source.mapNotNull { path ->
-        Uri.parse(path)
-            ?.takeIf { !it.scheme.isNullOrBlank() && (if (isOnline()) Builder.isOnline(path) else true) && getType() == Builder.layerType(path) }
+        path.toUri()
+            .takeIf { !it.scheme.isNullOrBlank() && (if (isOnline()) Builder.isOnline(path) else true) && getType() == Builder.layerType(path) }
     }
 
     class Builder {
@@ -67,6 +66,9 @@ data class LayerSettings(
         internal var source: List<String> = emptyList()
             private set
 
+        internal var order: Int? = null
+            private set
+
         internal var properties: LayerPropertiesSettings? = null
             private set
 
@@ -75,6 +77,7 @@ data class LayerSettings(
 
             label(layerSettings.label)
             sources(layerSettings.source)
+            order(layerSettings.order)
             properties(layerSettings.properties)
         }
 
@@ -92,6 +95,8 @@ data class LayerSettings(
                 .distinct()
             properties(this.properties)
         }
+
+        fun order(order: Int) = apply { this.order = order }
 
         fun properties(properties: LayerPropertiesSettings? = null) = apply {
             // set default properties

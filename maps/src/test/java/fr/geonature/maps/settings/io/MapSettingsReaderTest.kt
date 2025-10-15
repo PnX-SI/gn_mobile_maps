@@ -50,6 +50,7 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "Nantes (Data)",
                         listOf("nantes.wkt"),
+                        order = 1,
                         LayerPropertiesSettings(
                             shownByDefault = true,
                             style = LayerStyleSettings.Builder.newInstance()
@@ -68,6 +69,7 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "Nantes (Other data)",
                         listOf("nantes.geojson"),
+                        order = 2,
                         LayerPropertiesSettings(
                             style = LayerStyleSettings.Builder.newInstance()
                                 .stroke(true)
@@ -129,6 +131,7 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "Nantes (Data)",
                         listOf("nantes.wkt"),
+                        order = 0,
                         LayerPropertiesSettings(
                             style = LayerStyleSettings.Builder.newInstance()
                                 .stroke(true)
@@ -194,6 +197,7 @@ class MapSettingsReaderTest {
                     LayerSettings(
                         "nantes.wkt",
                         listOf("nantes.wkt"),
+                        order = 1,
                         LayerPropertiesSettings(
                             style = LayerStyleSettings()
                         )
@@ -250,6 +254,7 @@ class MapSettingsReaderTest {
                 LayerSettings(
                     "Nantes (Data)",
                     listOf("nantes.wkt"),
+                    order = 1,
                     LayerPropertiesSettings(
                         style = LayerStyleSettings.Builder.newInstance()
                             .stroke(true)
