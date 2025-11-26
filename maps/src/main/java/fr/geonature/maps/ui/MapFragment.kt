@@ -190,7 +190,7 @@ open class MapFragment : Fragment() {
         this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
-        this.bottomSheet = view.findViewById<FrameLayout?>(R.id.bottom_sheet)
+        this.bottomSheet = view.findViewById<FrameLayout>(R.id.bottom_sheet)
             .apply {
                 onConfigureBottomSheetListener(
                     this,
