@@ -67,6 +67,6 @@ dokka-javadoc = { id = "org.jetbrains.dokka-javadoc" , version.ref = "dokka" }
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kapt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize",  version.ref = "kotlin" }
-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.34.0" }
+maven-publish = { id = "maven-publish" }
 # TODO: Dagger’s KSP support is currently in alpha, see: https://dagger.dev/dev-guide/ksp
 # ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
