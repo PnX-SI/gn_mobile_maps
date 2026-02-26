@@ -4,13 +4,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_poi_edit"
-        android:title="@string/action_poi_edit"
-        android:icon="@drawable/ic_poi_edit"
-        app:iconTint="@android:color/white"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/action_poi_delete"
         android:title="@string/action_poi_delete"
         android:icon="@drawable/ic_delete"

@@ -15,6 +15,7 @@
     <string name="action_undo">Undo</string>
     <string name="action_done">Done</string>
     <string name="action_title_poi_edit">Edit POI</string>
+    <string name="action_poi_add">Add POI</string>
     <string name="action_poi_edit">Edit POI</string>
     <string name="action_poi_editing">Move the map according to the guide marker</string>
     <string name="action_poi_delete">Delete POI</string>

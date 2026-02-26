@@ -31,6 +31,7 @@ import fr.geonature.maps.layer.presentation.LayerViewModel
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
+import fr.geonature.maps.ui.overlay.MarkerGuideOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
 import fr.geonature.maps.ui.widget.EditFeatureButton
@@ -399,6 +400,8 @@ open class MapFragment : Fragment() {
         // configure and display scale bar
         configureScaleBarOverlay()
 
+        configureMarkerGuideOverlay()
+
         // configure and display zoom control
         if (mapSettings.showZoom) {
             zoomFab.setMapView(mapView)
@@ -448,6 +451,16 @@ open class MapFragment : Fragment() {
                 }
 
         scaleBarOverlay.isEnabled = enabled
+    }
+
+    private fun configureMarkerGuideOverlay() {
+        val markerGuideOverlay = mapView.overlays.firstOrNull { it is MarkerGuideOverlay }
+            ?: MarkerGuideOverlay()
+                .also {
+                    mapView.overlays.add(it)
+                }
+
+        markerGuideOverlay.isEnabled = true
     }
 
     private fun configureEditFeatureFab() {
