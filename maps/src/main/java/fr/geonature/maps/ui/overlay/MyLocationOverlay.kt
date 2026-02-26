@@ -174,7 +174,7 @@ class MyLocationOverlay(
         this.compassOrientation = orientation
     }
 
-    fun getLastKnownLocation(): Location {
+    fun getLastKnownLocation(): Location? {
         return location ?: myLocationProvider.lastKnownLocation
     }
 

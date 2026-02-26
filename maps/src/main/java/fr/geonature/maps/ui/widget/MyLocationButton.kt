@@ -185,10 +185,13 @@ class MyLocationButton(
             if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                 disableMyLocation()
             } else {
-                animateTo(
-                    mapView,
-                    myLocationOverlay.getLastKnownLocation()
-                )
+                myLocationOverlay.getLastKnownLocation()?.also {
+                    animateTo(
+                        mapView,
+                        it
+                    )
+
+                }
 
                 val drawable = ContextCompat.getDrawable(
                     context,
