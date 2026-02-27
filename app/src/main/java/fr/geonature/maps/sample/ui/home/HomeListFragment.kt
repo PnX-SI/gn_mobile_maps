@@ -80,6 +80,7 @@ class HomeListFragment : Fragment() {
                         .minZoomLevel(3.0)
                         .zoom(12.0)
                         .editMode(EditFeatureButton.EditMode.SINGLE)
+                        .showEditMarkerGuide(true)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
                                 .label("IGN: plan v2")

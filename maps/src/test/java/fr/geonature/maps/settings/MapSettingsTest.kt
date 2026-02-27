@@ -39,6 +39,7 @@ class MapSettingsTest {
             .showZoom(true)
             .rotationGesture(true)
             .editMode(EditFeatureButton.EditMode.SINGLE)
+            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -82,6 +83,7 @@ class MapSettingsTest {
                 showZoom = true,
                 rotationGesture = true,
                 editMode = EditFeatureButton.EditMode.SINGLE,
+                showEditMarkerGuide = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -118,6 +120,8 @@ class MapSettingsTest {
             .showScale(false)
             .showCompass(false)
             .rotationGesture(true)
+            .editMode(EditFeatureButton.EditMode.SINGLE)
+            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)

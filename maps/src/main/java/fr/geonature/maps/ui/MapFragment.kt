@@ -453,14 +453,14 @@ open class MapFragment : Fragment() {
         scaleBarOverlay.isEnabled = enabled
     }
 
-    private fun configureMarkerGuideOverlay() {
+    private fun configureMarkerGuideOverlay(enabled: Boolean = mapSettings.showEditMarkerGuide) {
         val markerGuideOverlay = mapView.overlays.firstOrNull { it is MarkerGuideOverlay }
             ?: MarkerGuideOverlay()
                 .also {
                     mapView.overlays.add(it)
                 }
 
-        markerGuideOverlay.isEnabled = true
+        markerGuideOverlay.isEnabled = enabled
     }
 
     private fun configureEditFeatureFab() {

@@ -16,12 +16,13 @@ import org.osmdroid.util.GeoPoint
 data class MapSettings(
     private val _layersSettings: List<LayerSettings>,
     val baseTilesPath: String?,
-    val useOnlineLayers: Boolean = Builder().useOnlineLayers,
-    val showCompass: Boolean = Builder().showCompass,
-    val showScale: Boolean = Builder().showScale,
-    val showZoom: Boolean = Builder().showZoom,
-    val rotationGesture: Boolean = Builder().rotationGesture,
-    val editMode: EditFeatureButton.EditMode = Builder().editMode,
+    val useOnlineLayers: Boolean = Builder.newInstance().useOnlineLayers,
+    val showCompass: Boolean = Builder.newInstance().showCompass,
+    val showScale: Boolean = Builder.newInstance().showScale,
+    val showZoom: Boolean = Builder.newInstance().showZoom,
+    val rotationGesture: Boolean = Builder.newInstance().rotationGesture,
+    val editMode: EditFeatureButton.EditMode = Builder.newInstance().editMode,
+    val showEditMarkerGuide: Boolean = Builder.newInstance().showEditMarkerGuide,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
@@ -39,6 +40,7 @@ data class MapSettings(
         builder.showZoom,
         builder.rotationGesture,
         builder.editMode,
+        builder.showEditMarkerGuide,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
@@ -46,6 +48,8 @@ data class MapSettings(
         builder.maxBounds,
         builder.center
     )
+
+    fun builder(): MapSettings.Builder = Builder.newInstance().from(this)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -61,6 +65,7 @@ data class MapSettings(
         if (showZoom != other.showZoom) return false
         if (rotationGesture != other.rotationGesture) return false
         if (editMode != other.editMode) return false
+        if (showEditMarkerGuide != other.showEditMarkerGuide) return false
         if (zoom != other.zoom) return false
         if (minZoomLevel != other.minZoomLevel) return false
         if (maxZoomLevel != other.maxZoomLevel) return false
@@ -89,6 +94,7 @@ data class MapSettings(
         result = 31 * result + showZoom.hashCode()
         result = 31 * result + rotationGesture.hashCode()
         result = 31 * result + editMode.hashCode()
+        result = 31 * result + showEditMarkerGuide.hashCode()
         result = 31 * result + zoom.hashCode()
         result = 31 * result + minZoomLevel.hashCode()
         result = 31 * result + maxZoomLevel.hashCode()
@@ -157,6 +163,12 @@ data class MapSettings(
         var editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.NONE
             private set
 
+        /**
+         * Whether to show the edit marker guide (default: `false`).
+         */
+        var showEditMarkerGuide: Boolean = false
+            private set
+
         internal var zoom: Double = 0.0
             private set
 
@@ -189,6 +201,7 @@ data class MapSettings(
             this.showZoom = mapSettings.showZoom
             this.rotationGesture = mapSettings.rotationGesture
             this.editMode = mapSettings.editMode
+            this.showEditMarkerGuide = mapSettings.showEditMarkerGuide
             this.zoom = mapSettings.zoom
             this.minZoomLevel = mapSettings.minZoomLevel
             this.maxZoomLevel = mapSettings.maxZoomLevel
@@ -211,6 +224,8 @@ data class MapSettings(
         fun rotationGesture(rotateGesture: Boolean) = apply { this.rotationGesture = rotateGesture }
 
         fun editMode(editMode: EditFeatureButton.EditMode) = apply { this.editMode = editMode }
+
+        fun showEditMarkerGuide(showEditMarkerGuide: Boolean) = apply { this.showEditMarkerGuide = showEditMarkerGuide }
 
         fun zoom(zoom: Double) = apply { this.zoom = zoom }
 
@@ -245,5 +260,9 @@ data class MapSettings(
         }
 
         fun build() = MapSettings(this)
+
+        companion object {
+            fun newInstance(): Builder = Builder()
+        }
     }
 }
