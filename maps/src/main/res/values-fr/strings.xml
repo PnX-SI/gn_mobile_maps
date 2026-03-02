@@ -33,6 +33,7 @@
     <string name="snackbar_add_layer_error">Impossible de charger la couche \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
+    <string name="toast_location_disabled">Les services de localisation sont désactivés</string>
 
     <string name="button_layers_hint">Choix des couches géographiques</string>
     <string name="button_zoom_in_hint">Zoomer</string>

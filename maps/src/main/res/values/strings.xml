@@ -35,6 +35,7 @@
     <string name="snackbar_add_layer_error">Unable to load file layer \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+    <string name="toast_location_disabled">Location services are disabled</string>
 
     <string name="button_layers_hint">Select layers</string>
     <string name="button_zoom_in_hint">Zoom in</string>
