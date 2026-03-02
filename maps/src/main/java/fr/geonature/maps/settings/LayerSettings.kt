@@ -13,7 +13,7 @@ import androidx.core.net.toUri
 @Parcelize
 data class LayerSettings(
     /**
-     * An human short description of this [LayerSettings]. Should be unique.
+     * A human short description of this [LayerSettings]. Should be unique.
      */
     val label: String,
     val source: List<String>,
