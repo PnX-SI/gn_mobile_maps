@@ -19,12 +19,6 @@ import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.tileprovider.MapTileProviderArray
@@ -201,7 +195,7 @@ class LayerViewModel @Inject constructor(
             return@liveData
         }
 
-        (if (newLayer is LayerState.SelectedLayer) newLayer else (newLayer as LayerState.Layer).select()).also {
+        (newLayer as? LayerState.SelectedLayer ?: (newLayer as LayerState.Layer).select()).also {
             centerAndZoomOnSelectedLayer = it
 
             with(layers) {
@@ -246,7 +240,7 @@ class LayerViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             val registerReceiver = SimpleRegisterReceiver(getApplication())
 
-            val offlineTileSources = layers.asFlow()
+            val offlineTileSources = layers.asSequence()
                 .filter { it.settings.getType() == LayerType.TILES }
                 .filter { !it.settings.isOnline() }
                 .map { layer ->
@@ -377,7 +371,7 @@ class LayerViewModel @Inject constructor(
         (_vectorOverlays.value
             ?: emptyList()).filter { overlay -> overlay is FeatureCollectionOverlay && layers.any { it.settings.label == overlay.name } && !forceReload } +
 
-            layers.asFlow()
+            layers.asSequence()
                 // keep only layers type as vector
                 .filter { it.settings.getType() == LayerType.VECTOR }
                 // keep only layers not already loaded on the map
