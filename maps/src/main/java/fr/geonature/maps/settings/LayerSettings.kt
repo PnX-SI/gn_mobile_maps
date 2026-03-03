@@ -1,9 +1,9 @@
 package fr.geonature.maps.settings
 
-import android.net.Uri
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 import androidx.core.net.toUri
+import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
 /**
  * Default settings for a given geographical layer source.
@@ -19,7 +19,7 @@ data class LayerSettings(
     val source: List<String>,
     val order: Int = 0,
     val properties: LayerPropertiesSettings = LayerPropertiesSettings()
-) : Parcelable, Comparable<LayerSettings> {
+) : Parcelable, Comparable<LayerSettings>, Serializable {
 
     private constructor(builder: Builder) : this(
         builder.label!!,

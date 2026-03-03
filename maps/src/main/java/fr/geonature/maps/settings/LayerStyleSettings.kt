@@ -6,6 +6,8 @@ import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.core.graphics.ColorUtils
 import kotlinx.parcelize.Parcelize
+import java.io.Serializable
+import androidx.core.graphics.toColorInt
 
 /**
  * Layer style to apply.
@@ -21,7 +23,7 @@ data class LayerStyleSettings(
     val fill: Boolean = Builder.newInstance().fill,
     @ColorInt
     val fillColor: Int = Builder.newInstance().fillColor
-) : Parcelable {
+) : Parcelable, Serializable {
 
     private constructor(builder: Builder) : this(
         builder.stroke,
@@ -88,7 +90,7 @@ data class LayerStyleSettings(
 
         fun color(colorString: String) =
             apply {
-                this.color = Color.parseColor(colorString)
+                this.color = colorString.toColorInt()
                 var opacity = (Color.alpha(color)
                     .toDouble() / 255).toFloat()
                 opacity = if (opacity == 1f) this.opacity else opacity
@@ -137,7 +139,7 @@ data class LayerStyleSettings(
 
         fun fillColor(fillColorString: String) =
             apply {
-                this.fillColor = Color.parseColor(fillColorString)
+                this.fillColor = fillColorString.toColorInt()
 
                 var fillOpacity = (Color.alpha(fillColor)
                     .toDouble() / 255).toFloat()
