@@ -9,7 +9,10 @@ import androidx.test.core.app.ApplicationProvider
 import fr.geonature.maps.CoroutineTestRule
 import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.util.ThemeUtils
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.MountPointUtils
 import fr.geonature.mountpoint.util.getFile
@@ -231,6 +234,15 @@ internal class LayerLocalDataSourceTest {
                     .addSource(
                         expectedLocalFile.toUri()
                             .toString()
+                    )
+                    .properties(
+                        LayerPropertiesSettings.Builder.newInstance()
+                            .style(
+                                LayerStyleSettings.Builder.newInstance()
+                                    .color(ThemeUtils.getAccentColor(application))
+                                    .build()
+                            )
+                            .build()
                     )
                     .build(),
                 listOf(expectedLocalFile.toUri())

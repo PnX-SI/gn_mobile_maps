@@ -7,8 +7,11 @@ import androidx.core.net.toUri
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.LayerType
+import fr.geonature.maps.util.ThemeUtils.getAccentColor
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.MountPointUtils.getInternalStorage
 import fr.geonature.mountpoint.util.find
@@ -144,6 +147,15 @@ class LayerLocalDataSourceImpl(
                             file.toUri()
                                 .toString()
                         })
+                        .properties(
+                            LayerPropertiesSettings.Builder.newInstance()
+                                .style(
+                                    LayerStyleSettings.Builder.newInstance()
+                                        .color(getAccentColor(context))
+                                        .build()
+                                )
+                                .build()
+                        )
                         .build(),
                     source = files.map { file -> file.toUri() },
                 )
