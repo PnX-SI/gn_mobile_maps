@@ -241,7 +241,8 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         diffResult.dispatchUpdatesTo(this)
 
         if (notify) {
-            listener.onSelectedLayers(this.items.filter { it.second == ViewType.LAYER }
+            listener.onSelectedLayers(
+                this.items.filter { it.second == ViewType.LAYER }
                 .map { it.first }
                 .filterIsInstance<LayerState.SelectedLayer>()
                 .filter { it.active },
@@ -265,7 +266,8 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Whether to use online layers to show on the map.
      */
     private fun useOnlineLayers(useOnlineLayers: Boolean) {
-        setItems(this.items.filter { it.second == ViewType.LAYER }
+        setItems(
+            this.items.filter { it.second == ViewType.LAYER }
             .map { it.first }
             .map {
                 when (it) {
@@ -284,7 +286,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         )
     }
 
-    abstract inner class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    abstract class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         abstract fun bind(item: LayerState)
     }
 
@@ -324,7 +326,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         }
     }
 
-    inner class LayerHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
+    class LayerHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
                 R.layout.list_layer_header,
@@ -405,6 +407,19 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                     is LayerState.SelectedLayer -> item.active
                     is LayerState.Error -> false
                 }
+
+                // show an error icon about layer in error
+                if (item is LayerState.Error) {
+                    title.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0,
+                        0,
+                        R.drawable.ic_error,
+                        0
+                    )
+                }
+
+                title.isEnabled = isEnabled
+                checkBox.isEnabled = isEnabled
             }
         }
     }
