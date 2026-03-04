@@ -57,16 +57,6 @@ internal class TileSourceFactoryTest {
                 )
             ) is OSMOnlineLayerTileSource
         )
-
-        assertTrue(
-            TileSourceFactory.getOnlineTileSource(
-                application,
-                LayerSettings(
-                    label = "Wikimedia",
-                    source = listOf("https://maps.wikimedia.org/osm-intl"),
-                )
-            ) is WikimediaOnlineLayerTileSource
-        )
     }
 
     @Test
@@ -90,6 +80,15 @@ internal class TileSourceFactoryTest {
                 LayerSettings(
                     "CloudMade",
                     listOf("http://a.tile.cloudmade.com")
+                )
+            )
+        }
+        assertThrows(LayerException.NotSupportedException::class.java) {
+            TileSourceFactory.getOnlineTileSource(
+                application,
+                LayerSettings(
+                    "Wikimedia",
+                    listOf("https://maps.wikimedia.org/osm-intl")
                 )
             )
         }

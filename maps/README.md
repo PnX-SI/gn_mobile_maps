@@ -184,7 +184,7 @@ stateDiagram-v2
   - [IGN Géoplateforme](https://geoservices.ign.fr)
   - [OpenStreetMap](https://www.openstreetmap.org)
   - [OpenTopoMap](https://www.opentopomap.org)
-  - [Wikimedia Maps](https://maps.wikimedia.org)
+  - [Wikimedia Maps](https://maps.wikimedia.org) may not be used by third-party services outside the Wikimedia projects and therefore is no longer supported as before (see: [Using maps in third-party services](https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use_for_Wikimedia_Maps#Using_maps_in_third-party_services)).
 - Local source (file), supported format are `.mbtiles` for tiles layer and `.geojson`, `.json`,
   `.wkt` for vector layer.
 

@@ -115,12 +115,6 @@ class HomeListFragment : Fragment() {
                                 .addSource("https://c.tile.opentopomap.org")
                                 .build()
                         )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("Wikimedia")
-                                .addSource("https://maps.wikimedia.org/osm-intl")
-                                .build()
-                        )
                         .build()
                 ),
                 MenuItem(getString(R.string.home_menu_entry_from_storage))
