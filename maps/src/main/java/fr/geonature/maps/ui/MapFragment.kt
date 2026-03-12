@@ -552,59 +552,54 @@ open class MapFragment : Fragment() {
     private fun configureLayersSelector() {
         with(layersFab) {
             setOnClickListener {
-                lifecycleScope.launch {
-                    val allLayers = layerViewModel.getAllLayers()
-
-                    LayerSettingsBottomSheetDialogFragment.newInstance(
-                        allLayers,
-                        mapSettings.useOnlineLayers
-                    )
-                        .apply {
-                            setOnLayerSettingsDialogFragmentListener(object :
-                                LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
-                                override fun onSelectedLayers(
-                                    layers: List<LayerState.SelectedLayer>,
-                                    useOnlineLayers: Boolean
-                                ) {
-                                    Logger.debug {
-                                        "selected layer from LayerSettingsBottomSheetDialogFragment:\n${
-                                            layers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
-                                        }"
-                                    }
-
-                                    lifecycleScope.launch {
-                                        layerViewModel.load(layers.filter { it.active })
-                                    }
+                LayerSettingsBottomSheetDialogFragment.newInstance(
+                    mapSettings.useOnlineLayers
+                )
+                    .apply {
+                        setOnLayerSettingsDialogFragmentListener(object :
+                            LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
+                            override fun onSelectedLayers(
+                                layers: List<LayerState.SelectedLayer>,
+                                useOnlineLayers: Boolean
+                            ) {
+                                Logger.debug {
+                                    "selected layer from LayerSettingsBottomSheetDialogFragment:\n${
+                                        layers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
+                                    }"
                                 }
 
-                                override fun onAddLayer() {
-                                    loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                                        addCategory(Intent.CATEGORY_OPENABLE)
-                                        type = "application/*"
-                                        putExtra(
-                                            Intent.EXTRA_MIME_TYPES,
-                                            arrayOf(
-                                                "application/geo+json",
-                                                "application/json",
-                                                "application/octet-stream",
-                                                "application/vnd.sqlite3",
-                                                "application/x-binary",
-                                                "application/x-sqlite3",
-                                                "text/plain"
-                                            )
+                                lifecycleScope.launch {
+                                    layerViewModel.useOnlineLayers(useOnlineLayers)
+                                    layerViewModel.load(layers.filter { it.active })
+                                }
+                            }
+
+                            override fun onAddLayer() {
+                                loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = "application/*"
+                                    putExtra(
+                                        Intent.EXTRA_MIME_TYPES,
+                                        arrayOf(
+                                            "application/geo+json",
+                                            "application/json",
+                                            "application/octet-stream",
+                                            "application/vnd.sqlite3",
+                                            "application/x-binary",
+                                            "application/x-sqlite3",
+                                            "text/plain"
                                         )
-                                    })
-                                }
-                            })
-
-                        }
-                        .also { dialogFragment ->
-                            dialogFragment.show(
-                                childFragmentManager,
-                                LAYER_SETTINGS_DIALOG_FRAGMENT
-                            )
-                        }
-                }
+                                    )
+                                })
+                            }
+                        })
+                    }
+                    .also { dialogFragment ->
+                        dialogFragment.show(
+                            childFragmentManager,
+                            LAYER_SETTINGS_DIALOG_FRAGMENT
+                        )
+                    }
             }
             show()
         }

@@ -38,6 +38,7 @@ import org.osmdroid.views.overlay.Overlay
 import org.tinylog.Logger
 import java.util.Date
 import javax.inject.Inject
+import kotlin.collections.any
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -52,6 +53,9 @@ class LayerViewModel @Inject constructor(
     private val featureRepository: IFeatureRepository,
     private val layerRepository: ILayerRepository
 ) : AndroidViewModel(application) {
+
+    private val _allLayers = MutableLiveData<List<LayerState>>()
+    val allLayers: LiveData<List<LayerState>> = _allLayers
 
     private val _selectedLayers = MutableLiveData<Set<LayerState.SelectedLayer>>()
     val selectedLayers: LiveData<Set<LayerState.SelectedLayer>> = _selectedLayers
@@ -85,53 +89,95 @@ class LayerViewModel @Inject constructor(
             }..."
         }
 
+        // step 1: initialize every layer as LayerState.Loading and publish immediately
+        val loadingStates = mapSettings.layersSettings.map { LayerState.Loading(it) }
+        with(layers) {
+            clear()
+            addAll(loadingStates)
+        }
+        _allLayers.postValue(layers.toList())
+
         viewModelScope.launch {
-            // loads and prepare all layers
-            val allValidLayers = layerRepository.prepareLayers(
-                mapSettings.layersSettings,
-                mapSettings.baseTilesPath
-            )
-                .also {
-                    with(layers) {
-                        clear()
-                        addAll(it)
-                    }
+            // step 2: resolve the previously-persisted selection so we can promote layers later
+            val persistedSelectedSources = layerRepository.getSelectedLayers()
+                .flatMap { it.getLayerSettings().source }
+                .toSet()
+
+            // step 3: resolve each LayerSettings one by one, posting updates as we go
+            mapSettings.layersSettings.forEach { layerSettings ->
+                val resolved = layerRepository.prepareLayerFromSettings(
+                    layerSettings,
+                    mapSettings.baseTilesPath
+                )
+
+                with(layers) {
+                    removeAll { it.isSame(resolved) }
+                    add(resolved)
                 }
-                .filterIsInstance<LayerState.Layer>()
 
-            val existingSelectedLayers = layerRepository.getSelectedLayers()
-                .filter { selectedLayer -> allValidLayers.any { it.isSame(selectedLayer) } }
-                .map { selectedLayer -> selectedLayer.copy(active = if (mapSettings.useOnlineLayers) true else if (selectedLayer.settings.isOnline()) false else true) }
+                _allLayers.postValue(layers.toList())
+            }
 
-            // loads selected layers to show on the map or use the first eligible layer
-            if (existingSelectedLayers.isNotEmpty()) {
+            // step 4: now that all layers are resolved, restore or pick the default selection
+            val allValidLayers = layers.filterIsInstance<LayerState.Layer>()
+
+            val existingSelectedLayers = allValidLayers
+                .filter { layer -> layer.getLayerSettings().source.any { it in persistedSelectedSources } }
+                .map { layer ->
+                    layer.select()
+                        .copy(active = if (mapSettings.useOnlineLayers) true else if (layer.settings.isOnline()) false else true)
+                }
+
+            val selectedLayers = if (existingSelectedLayers.isNotEmpty()) {
                 Logger.info {
                     "existing selected layers:\n${
                         existingSelectedLayers.joinToString(separator = "\n") { "\t'${it.settings.label}': ${it.source}, (active: ${it.active})" }
                     }"
                 }
-
-                with(layers) {
-                    retainAll { layer -> existingSelectedLayers.none { it.isSame(layer) } }
-                    addAll(existingSelectedLayers)
-                }
+                existingSelectedLayers
             } else {
-                ((if (mapSettings.useOnlineLayers) listOfNotNull(allValidLayers.firstOrNull { layer -> layer.settings.isOnline() && layer.settings.properties.shownByDefault }
-                    ?: allValidLayers.firstOrNull { layer -> layer.settings.isOnline() })
-                else emptyList()) + (allValidLayers.filter { layer -> !layer.settings.isOnline() && layer.settings.properties.shownByDefault }
-                    .takeIf { layers -> layers.isNotEmpty() }
-                    ?: listOfNotNull(allValidLayers.firstOrNull { layer -> !layer.settings.isOnline() }))).map { it.select() }
-                    .also { layers ->
-                        with(this@LayerViewModel.layers) {
-                            retainAll { layer -> layers.none { it.isSame(layer) } }
-                            addAll(layers)
-                        }
-                        layerRepository.setSelectedLayers(layers)
-                    }
+                val onlineCandidates: List<LayerState.Layer> =
+                    if (mapSettings.useOnlineLayers) listOfNotNull(
+                        allValidLayers.firstOrNull { it.settings.isOnline() && it.settings.properties.shownByDefault }
+                            ?: allValidLayers.firstOrNull { it.settings.isOnline() })
+                    else emptyList()
+                val localCandidates: List<LayerState.Layer> =
+                    allValidLayers.filter { !it.settings.isOnline() && it.settings.properties.shownByDefault }
+                        .takeIf { it.isNotEmpty() }
+                        ?: listOfNotNull(allValidLayers.firstOrNull { !it.settings.isOnline() })
+                (onlineCandidates + localCandidates).map { it.select() }
             }
 
+            // replace resolved layers with their selected counterparts
+            with(layers) {
+                retainAll { layer -> selectedLayers.none { it.isSame(layer) } }
+                addAll(selectedLayers)
+            }
+            layerRepository.setSelectedLayers(selectedLayers)
+
+            _allLayers.postValue(layers.toList())
             _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
         }
+    }
+
+    /**
+     * Whether we want to use online layers.
+     */
+    fun useOnlineLayers(useOnlineLayers: Boolean) {
+        layers.map {
+            when (it) {
+                is LayerState.Loading -> it
+                is LayerState.Layer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
+                is LayerState.SelectedLayer -> if (it.settings.isOnline() && !useOnlineLayers) it.toLayer().copy(active = false) else it
+                is LayerState.Error -> it
+            }
+        }
+            .also {
+                with(this@LayerViewModel.layers) {
+                    clear()
+                    addAll(it)
+                }
+            }
     }
 
     /**
@@ -151,6 +197,7 @@ class LayerViewModel @Inject constructor(
 
         layers.map {
             when (it) {
+                is LayerState.Loading -> it
                 is LayerState.Layer -> it
                 is LayerState.SelectedLayer -> if (selectedLayers.any { selectedLayer -> selectedLayer.isSame(it) }) it else it.toLayer()
                 is LayerState.Error -> it
@@ -176,6 +223,9 @@ class LayerViewModel @Inject constructor(
         )
 
         layerRepository.setSelectedLayers(layers.filterIsInstance<LayerState.SelectedLayer>())
+
+        _allLayers.postValue(layers.toList())
+        _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
 
         _tileProvider.postValue(tileProvider)
         _vectorOverlays.postValue(vectorOverlays)
@@ -211,6 +261,9 @@ class LayerViewModel @Inject constructor(
             if (loadedLayer is LayerState.Error) {
                 layers.retainAll { layer -> !layer.isSame(loadedLayer) }
             }
+
+            _allLayers.postValue(layers.toList())
+            _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
 
             emit(loadedLayer)
         }
@@ -305,6 +358,7 @@ class LayerViewModel @Inject constructor(
 
                     this@LayerViewModel.layers.map {
                         when (it) {
+                            is LayerState.Loading -> it
                             is LayerState.Layer -> if (it.isSame(layer)) layer else it
                             is LayerState.SelectedLayer -> if (it.isSame(layer)) layer else if (it.getLayerSettings()
                                     .isOnline()

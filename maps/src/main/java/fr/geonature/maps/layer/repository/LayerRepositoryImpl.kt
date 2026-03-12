@@ -57,6 +57,40 @@ class LayerRepositoryImpl(
         }
     }
 
+    override suspend fun prepareLayerFromSettings(
+        layerSettings: LayerSettings,
+        basePath: String?
+    ): LayerState {
+        val result = if (layerSettings.isOnline()) {
+            LayerState.Layer(
+                settings = layerSettings,
+                source = layerSettings.getSourcesAsUri()
+            )
+        } else {
+            val resolved = runCatching {
+                localLayerDataSource.resolvesLocalLayerFromLayerSettings(
+                    layerSettings,
+                    basePath
+                )
+            }
+            resolved.getOrNull()
+                ?.let { LayerState.Layer(layerSettings, it) }
+                ?: LayerState.Error(
+                    resolved.exceptionOrNull()
+                        ?.takeIf { it is LayerException }
+                        ?.let { it as LayerException }
+                        ?: LayerException.NotSupportedException(layerSettings)
+                )
+        }
+
+        with(layers) {
+            removeAll { it.isSame(result) }
+            add(result)
+        }
+
+        return result
+    }
+
     override suspend fun getAllLayers(): List<LayerState> {
         return layers.toList()
     }

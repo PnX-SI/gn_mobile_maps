@@ -7,18 +7,20 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils.loadAnimation
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
-import androidx.core.os.BundleCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.domain.LayerState
+import fr.geonature.maps.layer.presentation.LayerViewModel
 
 /**
- * Custom [DialogFragment] to show a bottom sheet to let the user to select [LayerState.Layer] to
- * show on the map.
+ * Custom [DialogFragment] to show a bottom sheet to let the user select [LayerState.Layer] to show
+ * on the map.
  *
  * @author S. Grimault
  */
@@ -26,6 +28,8 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private var listener: OnLayerSettingsDialogFragmentListener? = null
     private var adapter: LayerSettingsRecyclerViewAdapter? = null
+
+    private val layerViewModel: LayerViewModel by viewModels(ownerProducer = { requireParentFragment() })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -84,7 +88,7 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             }
 
             override fun showEmptyTextView(show: Boolean) {
-                if (emptyTextView.visibility == View.VISIBLE == show) {
+                if (emptyTextView.isVisible == show) {
                     return
                 }
 
@@ -120,27 +124,15 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     )
                 )
             }
+
+        // observe all layers and update adapter
+        layerViewModel.allLayers.observe(viewLifecycleOwner) { layers ->
+            adapter?.setItems(layers)
+        }
     }
 
     fun setOnLayerSettingsDialogFragmentListener(listener: OnLayerSettingsDialogFragmentListener) {
         this.listener = listener
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        adapter?.also {
-            it.setItems(
-                arguments?.let { bundle ->
-                    BundleCompat.getParcelableArray(
-                        bundle,
-                        ARG_LAYERS,
-                        LayerState::class.java
-                    )
-                }
-                    ?.map { p -> p as LayerState } ?: emptyList(),
-            )
-        }
     }
 
     /**
@@ -165,7 +157,7 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
     }
 
     companion object {
-        const val ARG_LAYERS = "arg_layers"
+        const val ARG_USE_ONLINE_LAYERS = "arg_use_online_layers"
 
         /**
          * Use this factory method to create a new instance of [LayerSettingsBottomSheetDialogFragment].
@@ -173,21 +165,15 @@ class LayerSettingsBottomSheetDialogFragment : BottomSheetDialogFragment() {
          * @return A new instance of [LayerSettingsBottomSheetDialogFragment]
          */
         @JvmStatic
-        fun newInstance(
-            layers: List<LayerState>,
-            useOnlineLayers: Boolean
-        ) = LayerSettingsBottomSheetDialogFragment().apply {
-            arguments = Bundle().apply {
-                putParcelableArray(ARG_LAYERS,
-                    layers.map {
-                        when (it) {
-                            is LayerState.Layer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
-                            is LayerState.SelectedLayer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
-                            is LayerState.Error -> it
-                        }
-                    }
-                        .toTypedArray())
+        fun newInstance(useOnlineLayers: Boolean) =
+            LayerSettingsBottomSheetDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean(
+                        ARG_USE_ONLINE_LAYERS,
+                        useOnlineLayers
+                    )
+                }
             }
-        }
     }
 }
+

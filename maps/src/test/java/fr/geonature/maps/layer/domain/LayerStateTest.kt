@@ -101,6 +101,33 @@ class LayerStateTest {
     }
 
     @Test
+    fun `should obtain LayerState Loading instance from parcelable`() {
+        // given some LayerState of type Loading
+        val layerStateLoading = LayerState.Loading(
+            LayerSettings.Builder.newInstance()
+                .label("Nantes")
+                .addSource("nantes.mbtiles")
+                .build()
+        )
+
+        // when we obtain a Parcel object to write the LayerState instance to it
+        val parcel = Parcel.obtain()
+        layerStateLoading.writeToParcel(
+            parcel,
+            0
+        )
+
+        // reset the parcel for reading
+        parcel.setDataPosition(0)
+
+        // then
+        assertEquals(
+            layerStateLoading,
+            parcelableCreator<LayerState.Loading>().createFromParcel(parcel)
+        )
+    }
+
+    @Test
     fun `should obtain LayerState Layer instance from parcelable`() {
         // given some LayerState of type Layer
         val layerStateLayer = LayerState.Layer(

@@ -22,6 +22,7 @@ sealed class LayerState : Parcelable, Comparable<LayerState> {
      */
     fun getLayerSettings(): LayerSettings {
         return when (this) {
+            is Loading -> settings
             is Layer -> settings
             is SelectedLayer -> settings
             is Error -> error.layerSettings
@@ -35,6 +36,13 @@ sealed class LayerState : Parcelable, Comparable<LayerState> {
     fun isSame(layerState: LayerState): Boolean {
         return getLayerSettings().source.any { layerState.getLayerSettings().source.contains(it) }
     }
+
+    /**
+     * Describes a layer whose resolution is still in progress.
+     * This is the initial state before the layer sources have been resolved.
+     */
+    @Parcelize
+    data class Loading(val settings: LayerSettings) : LayerState()
 
     /**
      * Describes a valid layer with its properties and layer sources as valid URIs.
