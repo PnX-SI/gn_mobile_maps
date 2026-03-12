@@ -1,7 +1,7 @@
 package fr.geonature.maps.layer.tilesource
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
@@ -43,8 +43,9 @@ class GeoportailWMTSOnlineLayerTileSource(
                     ) ?: 21,
                 tileSizePixels = 256,
                 tileMimeType = layerSettings.properties.tileMimeType ?: runCatching {
-                    Uri.parse(layerSettings.source.firstOrNull())
-                        .getQueryParameter("FORMAT")
+                    layerSettings.source.firstOrNull()
+                        ?.toUri()
+                        ?.getQueryParameter("FORMAT")
                 }.getOrNull(),
                 attribution = it.properties.attribution?.takeIf { attribution ->
                     attribution.isNotBlank()
@@ -59,7 +60,7 @@ class GeoportailWMTSOnlineLayerTileSource(
 ) {
 
     override fun getTileURLString(pMapTileIndex: Long): String {
-        return Uri.parse(baseUrl)
+        return baseUrl.toUri()
             .let {
                 val queryParameters = (it.queryParameterNames.mapNotNull { parameterName ->
                     it.getQueryParameter(parameterName)
