@@ -103,7 +103,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Sets layers.
      */
     fun setItems(
-        newItems: List<LayerState>,
+        newItems: Set<LayerState>,
         notify: Boolean = false
     ) {
         val sortedItems = newItems.sorted()
@@ -275,8 +275,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Whether to use online layers to show on the map.
      */
     private fun useOnlineLayers(useOnlineLayers: Boolean) {
-        setItems(
-            this.items.map { it.first }
+        setItems(this.items.map { it.first }
             .map {
                 when (it) {
                     is LayerState.Loading -> it
@@ -290,9 +289,9 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
                     is LayerState.Error -> it
                 }
-            },
-            notify = true
-        )
+            }
+            .toSet(),
+            notify = true)
     }
 
     abstract class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -385,19 +384,20 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
                 setItems(
                     items.map {
-                            if (it.first.getLayerSettings() == layerSettings) when (val layerState =
-                                it.first) {
-                                is LayerState.Layer -> if (checkbox.isChecked) layerState.select() else layerState
-                                is LayerState.SelectedLayer -> if (checkbox.isChecked) layerState else layerState.toLayer()
-                                else -> layerState
-                            }
-                            else when (val layerState = it.first) {
-                                is LayerState.SelectedLayer -> if (checkbox.isChecked && layerState.getLayerSettings()
-                                        .isOnline()
-                                ) layerState.toLayer() else layerState
-                                else -> layerState
-                            }
-                        },
+                        if (it.first.getLayerSettings() == layerSettings) when (val layerState =
+                            it.first) {
+                            is LayerState.Layer -> if (checkbox.isChecked) layerState.select() else layerState
+                            is LayerState.SelectedLayer -> if (checkbox.isChecked) layerState else layerState.toLayer()
+                            else -> layerState
+                        }
+                        else when (val layerState = it.first) {
+                            is LayerState.SelectedLayer -> if (checkbox.isChecked && layerState.getLayerSettings()
+                                    .isOnline() && layerSettings.isOnline()
+                            ) layerState.toLayer() else layerState
+                            else -> layerState
+                        }
+                    }
+                        .toSet(),
                     notify = true,
                 )
             }
@@ -428,7 +428,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         }
     }
 
-    class LayerErrorViewHolder(parent: ViewGroup): AbstractViewHolder(
+    class LayerErrorViewHolder(parent: ViewGroup) : AbstractViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
                 R.layout.list_item_layer_error,

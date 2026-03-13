@@ -54,8 +54,8 @@ class LayerViewModel @Inject constructor(
     private val layerRepository: ILayerRepository
 ) : AndroidViewModel(application) {
 
-    private val _allLayers = MutableLiveData<List<LayerState>>()
-    val allLayers: LiveData<List<LayerState>> = _allLayers
+    private val _allLayers = MutableLiveData<Set<LayerState>>()
+    val allLayers: LiveData<Set<LayerState>> = _allLayers
 
     private val _selectedLayers = MutableLiveData<Set<LayerState.SelectedLayer>>()
     val selectedLayers: LiveData<Set<LayerState.SelectedLayer>> = _selectedLayers
@@ -95,7 +95,7 @@ class LayerViewModel @Inject constructor(
             clear()
             addAll(loadingStates)
         }
-        _allLayers.postValue(layers.toList())
+        _allLayers.postValue(layers.toSet())
 
         viewModelScope.launch {
             // step 2: resolve the previously-persisted selection so we can promote layers later
@@ -115,18 +115,18 @@ class LayerViewModel @Inject constructor(
                     add(resolved)
                 }
 
-                _allLayers.postValue(layers.toList())
+                _allLayers.postValue(layers.toSet())
             }
 
             // step 4: now that all layers are resolved, restore or pick the default selection
             val allValidLayers = layers.filterIsInstance<LayerState.Layer>()
 
-            val existingSelectedLayers = allValidLayers
-                .filter { layer -> layer.getLayerSettings().source.any { it in persistedSelectedSources } }
-                .map { layer ->
-                    layer.select()
-                        .copy(active = if (mapSettings.useOnlineLayers) true else if (layer.settings.isOnline()) false else true)
-                }
+            val existingSelectedLayers =
+                allValidLayers.filter { layer -> layer.getLayerSettings().source.any { it in persistedSelectedSources } }
+                    .map { layer ->
+                        layer.select()
+                            .copy(active = if (mapSettings.useOnlineLayers) true else if (layer.settings.isOnline()) false else true)
+                    }
 
             val selectedLayers = if (existingSelectedLayers.isNotEmpty()) {
                 Logger.info {
@@ -137,9 +137,8 @@ class LayerViewModel @Inject constructor(
                 existingSelectedLayers
             } else {
                 val onlineCandidates: List<LayerState.Layer> =
-                    if (mapSettings.useOnlineLayers) listOfNotNull(
-                        allValidLayers.firstOrNull { it.settings.isOnline() && it.settings.properties.shownByDefault }
-                            ?: allValidLayers.firstOrNull { it.settings.isOnline() })
+                    if (mapSettings.useOnlineLayers) listOfNotNull(allValidLayers.firstOrNull { it.settings.isOnline() && it.settings.properties.shownByDefault }
+                        ?: allValidLayers.firstOrNull { it.settings.isOnline() })
                     else emptyList()
                 val localCandidates: List<LayerState.Layer> =
                     allValidLayers.filter { !it.settings.isOnline() && it.settings.properties.shownByDefault }
@@ -155,8 +154,11 @@ class LayerViewModel @Inject constructor(
             }
             layerRepository.setSelectedLayers(selectedLayers)
 
-            _allLayers.postValue(layers.toList())
-            _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
+            _allLayers.postValue(layers.toSet())
+            _selectedLayers.postValue(
+                layers.filterIsInstance<LayerState.SelectedLayer>()
+                    .toSet()
+            )
         }
     }
 
@@ -168,7 +170,9 @@ class LayerViewModel @Inject constructor(
             when (it) {
                 is LayerState.Loading -> it
                 is LayerState.Layer -> it.copy(active = if (it.settings.isOnline()) useOnlineLayers else true)
-                is LayerState.SelectedLayer -> if (it.settings.isOnline() && !useOnlineLayers) it.toLayer().copy(active = false) else it
+                is LayerState.SelectedLayer -> if (it.settings.isOnline() && !useOnlineLayers) it.toLayer()
+                    .copy(active = false) else it
+
                 is LayerState.Error -> it
             }
         }
@@ -216,19 +220,35 @@ class LayerViewModel @Inject constructor(
                 // and load all valid local layers
                 selectedLayers.filter { !it.settings.isOnline() && it.source.isNotEmpty() && it.active }
 
-        val tileProvider = buildTileProvider(validLayers)
-        val vectorOverlays = buildVectorOverlays(
+        val layersWithTileProvider = buildTileProvider(validLayers)
+        val layersWithVectorOverlays = buildVectorOverlays(
             validLayers,
             forceReload
         )
 
+        // center map automatically on the previously selected layer
+        layersWithVectorOverlays.find { it.first is LayerState.SelectedLayer && centerAndZoomOnSelectedLayer?.isSame(it.first) == true }?.second?.also {
+            centerAndZoomOnSelectedLayer = null
+            _zoomToBoundingBox.postValue(it.bounds)
+        }
+
+        with(layers) {
+            retainAll { layer ->
+                (layersWithTileProvider.first + layersWithVectorOverlays.map { it.first }).none { it.isSame(layer) }
+            }
+            addAll(layersWithTileProvider.first + layersWithVectorOverlays.map { it.first })
+        }
+
         layerRepository.setSelectedLayers(layers.filterIsInstance<LayerState.SelectedLayer>())
 
-        _allLayers.postValue(layers.toList())
-        _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
+        _allLayers.postValue(layers.toSet())
+        _selectedLayers.postValue(
+            layers.filterIsInstance<LayerState.SelectedLayer>()
+                .toSet()
+        )
 
-        _tileProvider.postValue(tileProvider)
-        _vectorOverlays.postValue(vectorOverlays)
+        _tileProvider.postValue(layersWithTileProvider.second)
+        _vectorOverlays.postValue(layersWithVectorOverlays.mapNotNull { it.second })
 
         return layers.toList()
     }
@@ -262,8 +282,11 @@ class LayerViewModel @Inject constructor(
                 layers.retainAll { layer -> !layer.isSame(loadedLayer) }
             }
 
-            _allLayers.postValue(layers.toList())
-            _selectedLayers.postValue(layers.filterIsInstance<LayerState.SelectedLayer>().toSet())
+            _allLayers.postValue(layers.toSet())
+            _selectedLayers.postValue(
+                layers.filterIsInstance<LayerState.SelectedLayer>()
+                    .toSet()
+            )
 
             emit(loadedLayer)
         }
@@ -283,13 +306,14 @@ class LayerViewModel @Inject constructor(
         return selectedLayers.filter {
             it.settings.properties.minZoomLevel.toDouble()
                 .coerceAtLeast(0.0)
-                .rangeTo(it.settings.properties.maxZoomLevel.toDouble()
-                    .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE)
+                .rangeTo(
+                    it.settings.properties.maxZoomLevel.toDouble()
+                        .takeIf { d -> d >= 0.0 } ?: Double.MAX_VALUE)
                 .contains(zoomLevel)
         }
     }
 
-    private suspend fun buildTileProvider(layers: List<LayerState.SelectedLayer>): MapTileProviderBase? =
+    private suspend fun buildTileProvider(layers: List<LayerState.SelectedLayer>): Pair<List<LayerState>, MapTileProviderBase?> =
         withContext(Dispatchers.IO) {
             val registerReceiver = SimpleRegisterReceiver(getApplication())
 
@@ -299,99 +323,85 @@ class LayerViewModel @Inject constructor(
                 .map { layer ->
                     Logger.info { "loading local tiles layer '${layer.settings.label}'..." }
 
-                    val asFiles = layer.source.map { uri ->
+                    val asFilesResults = layer.source.map { uri ->
                         runCatching { uri.toFile() }
                     }
 
-                    val result =
-                        if (asFiles.none { it.isSuccess }) LayerState.Error(LayerException.IOException(layer.settings,
-                            asFiles.firstOrNull { it.isFailure }
+                    val newLayerState = if (asFilesResults.none { it.isSuccess }) LayerState.Error(
+                        LayerException.IOException(
+                            layer.settings,
+                            asFilesResults.firstOrNull { it.isFailure }
                                 ?.exceptionOrNull()))
-                        else layer
-
-                    with(this@LayerViewModel.layers) {
-                        retainAll { layer -> !layer.isSame(result) }
-                        add(result)
-                    }
+                    else layer
 
                     Pair(
-                        layer,
-                        asFiles.mapNotNull { it.getOrNull() },
+                        newLayerState,
+                        asFilesResults.mapNotNull { it.getOrNull() },
                     )
                 }
                 .mapNotNull { pair ->
                     pair.second.firstOrNull()
                         ?.let { pair.first to it }
                 }
-                .onEach { Logger.info { "local tiles layer '${it.first.settings.label}' loaded" } }
+                .onEach { Logger.info { "local tiles layer '${it.first.getLayerSettings().label}' loaded" } }
                 .toList()
 
             val onlineTileSource = layers.find { it.settings.isOnline() }
                 ?.let { layer ->
-                    val onlineTileSource = runCatching {
+                    val onlineTileSourceResult = runCatching {
                         TileSourceFactory.getOnlineTileSource(
                             getApplication(),
                             layer.settings
                         )
-                    }.onFailure { e ->
+                    }
+
+                    if (onlineTileSourceResult.isFailure) {
                         Logger.warn {
-                            e.message
+                            onlineTileSourceResult.exceptionOrNull()?.message
                                 ?: "failed to find the corresponding online tile source from online layer '${layer.settings.label}'"
                         }
 
-                        val error = LayerState.Error(
-                            if (e is LayerException) e
-                            else LayerException.InvalidOnlineLayerException(
-                                layer.settings,
-                                e
-                            )
+                        return@let Pair(
+                            LayerState.Error(
+                                onlineTileSourceResult.exceptionOrNull() as? LayerException
+                                    ?: LayerException.InvalidOnlineLayerException(
+                                        layer.settings,
+                                        onlineTileSourceResult.exceptionOrNull()
+                                    )
+                            ),
+                            null
                         )
-
-                        with(this@LayerViewModel.layers) {
-                            retainAll { layer -> !layer.isSame(error) }
-                            add(error)
-                        }
                     }
-                        .getOrNull() ?: return@let null
+
+                    val onlineTileSource = onlineTileSourceResult.getOrNull() ?: return@let null
 
                     Logger.info { "loading online layer '${layer.settings.label}'..." }
-
-                    this@LayerViewModel.layers.map {
-                        when (it) {
-                            is LayerState.Loading -> it
-                            is LayerState.Layer -> if (it.isSame(layer)) layer else it
-                            is LayerState.SelectedLayer -> if (it.isSame(layer)) layer else if (it.getLayerSettings()
-                                    .isOnline()
-                            ) it.toLayer() else it
-
-                            is LayerState.Error -> if (it.isSame(layer)) layer else it
-                        }
-                    }
-                        .also {
-                            with(this@LayerViewModel.layers) {
-                                clear()
-                                addAll(it)
-                            }
-                        }
 
                     Pair(
                         layer,
                         onlineTileSource
                     )
-                } ?: return@withContext if (offlineTileSources.isEmpty()) null
-            else OfflineTileProvider(registerReceiver,
-                offlineTileSources.map { it.second }
-                    .toTypedArray())
+                } ?: return@withContext if (offlineTileSources.isEmpty()) Pair(
+                offlineTileSources.map { it.first },
+                null
+            ) else Pair(
+                offlineTileSources.map { it.first },
+                OfflineTileProvider(
+                    registerReceiver,
+                    offlineTileSources.map { it.second }
+                        .toTypedArray()))
 
             val cacheProvider = MapTileSqlCacheProvider(
                 registerReceiver,
                 onlineTileSource.second
             )
 
-            val offlineTileProvider = MapTileFileArchiveProvider(registerReceiver,
-                onlineTileSource.second,
-                offlineTileSources.map { ArchiveFileFactory.getArchiveFile(it.second) }
-                    .toTypedArray())
+            val offlineTileProvider =
+                MapTileFileArchiveProvider(
+                    registerReceiver,
+                    onlineTileSource.second,
+                    offlineTileSources.map { ArchiveFileFactory.getArchiveFile(it.second) }
+                        .toTypedArray())
 
             val approximationProvider = MapTileApproximater()
             approximationProvider.addProvider(cacheProvider)
@@ -403,123 +413,113 @@ class LayerViewModel @Inject constructor(
                 NetworkAvailabliltyCheck(getApplication())
             )
 
-            MapTileProviderArray(
-                onlineTileSource.second,
-                registerReceiver,
-                (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(
-                    cacheProvider
-                )
-                else emptyArray()) + arrayOf(
-                    offlineTileProvider,
-                    approximationProvider,
-                    onlineTileProvider,
-                )
-            )
+            Pair(offlineTileSources.map { it.first } + onlineTileSource.first,
+                MapTileProviderArray(
+                    onlineTileSource.second,
+                    registerReceiver,
+                    (if (offlineTileSources.isEmpty()) arrayOf<MapTileModuleProviderBase>(
+                        cacheProvider
+                    )
+                    else emptyArray()) + arrayOf(
+                        offlineTileProvider,
+                        approximationProvider,
+                        onlineTileProvider,
+                    )
+                ))
         }
 
     private suspend fun buildVectorOverlays(
         layers: List<LayerState.SelectedLayer>,
         forceReload: Boolean = false
-    ): List<Overlay> = withContext(Dispatchers.IO) {
-        // adds already loaded layers
-        (_vectorOverlays.value
-            ?: emptyList()).filter { overlay -> overlay is FeatureCollectionOverlay && layers.any { it.settings.label == overlay.name } && !forceReload } +
+    ): List<Pair<LayerState, Overlay?>> = withContext(Dispatchers.IO) {
+        // start time for metrics
+        val startTime = Date()
 
-            layers.asSequence()
-                // keep only layers type as vector
-                .filter { it.settings.getType() == LayerType.VECTOR }
-                // keep only layers not already loaded on the map
-                .filter {
-                    (_vectorOverlays.value
-                        ?: emptyList()).none { overlay -> overlay is FeatureCollectionOverlay && it.settings.label == overlay.name } || forceReload
-                }
-                // build a triple with layer, sources as files and the start time for metrics
-                .map { layer ->
-                    val startTime = Date()
-                    Logger.info { "loading vector layer '${layer.settings.label}'..." }
+        val existingOverlays = _vectorOverlays.value?.takeIf { !forceReload } ?: emptyList()
 
-                    val asFiles = layer.source.map { uri ->
-                        runCatching { uri.toFile() }
-                    }
+        layers.asSequence()
+            // keep only layers type as vector
+            .filter { it.settings.getType() == LayerType.VECTOR }
+            .map { layer ->
+                val existingOverlayForLayer =
+                    existingOverlays.find { it is FeatureCollectionOverlay && it.name == layer.settings.label }
 
-                    val result =
-                        if (asFiles.none { it.isSuccess }) LayerState.Error(LayerException.IOException(layer.settings,
-                            asFiles.firstOrNull { it.isFailure }
-                                ?.exceptionOrNull()))
-                        else layer
-
-                    with(this@LayerViewModel.layers) {
-                        retainAll { layer -> !layer.isSame(result) }
-                        add(result)
-                    }
-
-                    Triple(
+                if (existingOverlayForLayer != null) {
+                    Logger.info { "vector layer '${layer.settings.label}' already loaded" }
+                    return@map Pair(
                         layer,
-                        asFiles.mapNotNull { it.getOrNull() },
-                        startTime
+                        existingOverlayForLayer
                     )
                 }
-                // keep only triples with valid files (at least one)
-                .filter {
-                    if (it.second.isEmpty()) {
-                        Logger.warn { "cannot read vector layer '${it.first.settings.label}': no source defined..." }
-                    }
 
-                    it.second.isNotEmpty()
+                Logger.info { "loading vector layer '${layer.settings.label}'..." }
+
+                val asFilesResults = layer.source.map { uri -> runCatching { uri.toFile() } }
+                val newLayerState = if (asFilesResults.none { it.isSuccess }) LayerState.Error(
+                    LayerException.IOException(
+                        layer.settings,
+                        asFilesResults.firstOrNull { it.isFailure }
+                            ?.exceptionOrNull()))
+                else layer
+                val asFiles = asFilesResults.mapNotNull { it.getOrNull() }
+
+                if (asFiles.isEmpty()) {
+                    Logger.warn { "cannot read vector layer '${layer.settings.label}': no source defined..." }
+
+                    return@map Pair(
+                        LayerState.Error(LayerException.IOException(layer.settings)),
+                        null
+                    )
                 }
+
+                if (newLayerState is LayerState.Error) {
+                    return@map Pair(
+                        newLayerState,
+                        null
+                    )
+                }
+
                 // load features from files
-                .map { triple ->
-                    val featuresResult =
-                        featureRepository.loadFeatures(*triple.second.toTypedArray())
+                val featuresResult = featureRepository.loadFeatures(*asFiles.toTypedArray())
 
-                    with(this@LayerViewModel.layers) {
-                        retainAll { layer -> !layer.isSame(triple.first) }
-                        add(
-                            if (featuresResult.isSuccess) triple.first else LayerState.Error(
-                                LayerException.IOException(
-                                    triple.first.settings,
-                                    featuresResult.exceptionOrNull()
-                                )
+                if (featuresResult.isFailure) {
+                    return@map Pair(
+                        LayerState.Error(
+                            LayerException.IOException(
+                                layer.settings,
+                                featuresResult.exceptionOrNull()
                             )
-                        )
-                    }
-
-                    Triple(
-                        triple.first,
-                        featuresResult.getOrElse { emptyList() },
-                        triple.third
+                        ),
+                        null
                     )
                 }
-                // keep only triples with valid features (at least one)
-                .filter {
-                    if (it.second.isEmpty()) {
-                        Logger.warn { "cannot read vector layer '${it.first.settings.label}': no feature loaded" }
-                    }
 
-                    it.second.isNotEmpty()
+                val features = featuresResult.getOrElse { emptyList() }
+
+                if (features.isEmpty()) {
+                    Logger.warn { "cannot read vector layer '${layer.settings.label}': no feature loaded" }
+
+                    return@map Pair(
+                        LayerState.Error(LayerException.IOException(layer.settings)),
+                        null
+                    )
                 }
-                .map {
-                    Logger.info {
-                        "vector layer '${it.first.settings.label}' loaded (took ${
-                            (Date().time - it.third.time).toDuration(
-                                DurationUnit.MILLISECONDS
-                            )
-                        })"
-                    }
 
-                    FeatureCollectionOverlay(it.first.settings.label).apply {
+                Logger.info {
+                    "vector layer '${layer.settings.label}' loaded (took ${
+                        (Date().time - startTime.time).toDuration(DurationUnit.MILLISECONDS)
+                    })"
+                }
+
+                Pair(
+                    layer,
+                    FeatureCollectionOverlay(layer.settings.label).apply {
                         setFeatures(
-                            it.second,
-                            it.first.settings.properties.style ?: LayerStyleSettings()
+                            features,
+                            layer.settings.properties.style ?: LayerStyleSettings()
                         )
-                    }
-                        .also { overlay ->
-                            if (it.first == centerAndZoomOnSelectedLayer) {
-                                centerAndZoomOnSelectedLayer = null
-                                _zoomToBoundingBox.postValue(overlay.bounds)
-                            }
-                        }
-                }
-                .toList()
+                    })
+            }
+            .toList()
     }
 }
