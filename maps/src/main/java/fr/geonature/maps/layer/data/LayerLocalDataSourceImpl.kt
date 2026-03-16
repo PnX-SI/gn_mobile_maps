@@ -2,6 +2,7 @@ package fr.geonature.maps.layer.data
 
 import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import fr.geonature.maps.R
@@ -116,33 +117,52 @@ class LayerLocalDataSourceImpl(
         }
 
         // from content://
-        return uri.lastPathSegment?.let {
-            Logger.debug { "resolving relative path '$it' from root path '${if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
+        return uri.lastPathSegment?.let { lastPathSegment ->
+            Logger.debug { "resolving relative path '$lastPathSegment' from root path '${if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
 
-            val files = listOfNotNull(
-                // tries to resolve URI as absolute path...
-                File(
-                    (if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath),
-                    it.substringAfterLast(":")
-                ).takeIf { f -> f.isFile && f.canRead() }).takeIf { f -> f.isNotEmpty() }
-            // if not found, tries to resolve as relative path
-                ?: resolvePaths(
-                    if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
-                    listOf(it.substringAfterLast(":"))
+            val files = if (lastPathSegment.startsWith("msf:")) {
+                val displayName = context.contentResolver.query(
+                    uri,
+                    arrayOf(OpenableColumns.DISPLAY_NAME),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst())
+                        cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                    else null
+                }
+
+                resolvePaths(externalRootPath, listOfNotNull(displayName)).takeIf { it.isNotEmpty() } ?:
+                resolvePaths(internalRootPath, listOfNotNull(displayName))
+            } else {
+                listOfNotNull(
+                    // tries to resolve URI as absolute path...
+                    File(
+                        (if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath),
+                        lastPathSegment.substringAfterLast(":")
+                    ).takeIf { f -> f.isFile && f.canRead() }).takeIf { f -> f.isNotEmpty() }
+                // if not found, tries to resolve as relative path
+                    ?: resolvePaths(
+                        if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
+                        listOf(lastPathSegment.substringAfterLast(":"))
+                    )
+            }
+
+            val layerName = runCatching { files.single() }.map { it.nameWithoutExtension }
+                .getOrElse {
+                    lastPathSegment.substringAfterLast("/")
+                        .substringBeforeLast(".")
+                }
+                .replace(
+                    "_",
+                    " "
                 )
+                .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) }
 
+            files.takeIf { it.size == 1 }?.first()
             runCatching {
                 LayerState.Layer(
                     settings = LayerSettings.Builder()
-                        .label(
-                            it.substringAfterLast("/")
-                                .substringBeforeLast(".")
-                                .replace(
-                                    "_",
-                                    " "
-                                )
-                                .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) },
-                        )
+                        .label(layerName)
                         .sources(files.map { file ->
                             file.toUri()
                                 .toString()

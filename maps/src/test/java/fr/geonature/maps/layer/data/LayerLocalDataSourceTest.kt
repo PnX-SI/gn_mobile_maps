@@ -99,7 +99,7 @@ internal class LayerLocalDataSourceTest {
             .addSource("osmdroid/nantes_pois.geojson")
             .build()
 
-        // when trying to resolves local layer
+        // when trying to resolve local layer
         val uris = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
             layerSettings,
             externalRootPath.absolutePath
@@ -144,7 +144,7 @@ internal class LayerLocalDataSourceTest {
                 .addSource("osmdroid/nantes_pois.geojson")
                 .build()
 
-            // when trying to resolves local layer using external storage
+            // when trying to resolve local layer using external storage
             val uris = localLayerDataSource.resolvesLocalLayerFromLayerSettings(
                 layerSettings,
                 externalRootPath.absolutePath
@@ -184,7 +184,7 @@ internal class LayerLocalDataSourceTest {
     @Test(expected = LayerException.NotFoundException::class)
     fun `should throw NotFoundException if trying to resolve layer settings with no local file found locally`() =
         runTest {
-            // given no local file found from from storage
+            // given no local file found from storage
             val externalRootPath = getExternalStorageDirectory(application).apply {
                 getFile(
                     "Downloads",
@@ -198,7 +198,7 @@ internal class LayerLocalDataSourceTest {
                 ).mkdirs()
             }
 
-            // when trying to resolves local layer using external storage
+            // when trying to resolve local layer using external storage
             localLayerDataSource.resolvesLocalLayerFromLayerSettings(
                 LayerSettings.Builder()
                     .label("Nantes POIs")
@@ -351,7 +351,7 @@ internal class LayerLocalDataSourceTest {
     }
 
     fun `should get NotFoundException if local file was not found`() = runTest {
-        // given some non existing file from external storage
+        // given some non-existing file from external storage
         val externalRootPath = getExternalStorageDirectory(application).apply {
             getFile(
                 "osmdroid"
