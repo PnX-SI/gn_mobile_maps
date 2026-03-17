@@ -164,9 +164,9 @@ data class MapSettings(
             private set
 
         /**
-         * Whether to show the edit marker guide (default: `false`).
+         * Whether to show the edit marker guide (default: `true`).
          */
-        var showEditMarkerGuide: Boolean = false
+        var showEditMarkerGuide: Boolean = true
             private set
 
         internal var zoom: Double = 0.0
