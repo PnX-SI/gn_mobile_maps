@@ -46,10 +46,12 @@ object LayerModule {
     @Singleton
     @Provides
     fun provideLayerSettingsRepository(
+        @ApplicationContext appContext: Context,
         localLayerDataSource: ILayerLocalDataSource,
         selectedLayersLocalDataSource: ISelectedLayersLocalDataSource
     ): ILayerRepository {
         return LayerRepositoryImpl(
+            appContext,
             localLayerDataSource,
             selectedLayersLocalDataSource
         )

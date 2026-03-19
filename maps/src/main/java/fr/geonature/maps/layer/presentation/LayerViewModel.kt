@@ -381,15 +381,20 @@ class LayerViewModel @Inject constructor(
                         layer,
                         onlineTileSource
                     )
-                } ?: return@withContext if (offlineTileSources.isEmpty()) Pair(
+                } ?: return@withContext Pair(
                 offlineTileSources.map { it.first },
-                null
-            ) else Pair(
-                offlineTileSources.map { it.first },
-                OfflineTileProvider(
+                if (offlineTileSources.isEmpty()) null else OfflineTileProvider(
                     registerReceiver,
                     offlineTileSources.map { it.second }
-                        .toTypedArray()))
+                        .toTypedArray()),
+            )
+
+            // no valid layers found or no selected layer: abort
+            if ((offlineTileSources.map { it.first } + onlineTileSource.first).filterIsInstance<LayerState.SelectedLayer>()
+                    .isEmpty()) {
+                return@withContext Pair(offlineTileSources.map { it.first } + onlineTileSource.first,
+                    null)
+            }
 
             val cacheProvider = MapTileSqlCacheProvider(
                 registerReceiver,
