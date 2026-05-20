@@ -31,12 +31,14 @@ import fr.geonature.maps.layer.presentation.LayerViewModel
 import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
+import fr.geonature.maps.ui.overlay.MarkerGuideOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureCollectionOverlay
 import fr.geonature.maps.ui.overlay.feature.FeatureOverlay
 import fr.geonature.maps.ui.widget.EditFeatureButton
 import fr.geonature.maps.ui.widget.MyLocationButton
 import fr.geonature.maps.ui.widget.RotateCompassButton
 import fr.geonature.maps.ui.widget.ZoomButton
+import fr.geonature.maps.util.CurrentLocationLifecycleObserver
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.rotationGesture
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.setDefaultPreferences
 import fr.geonature.maps.util.MapSettingsPreferencesUtils.showCompass
@@ -72,6 +74,8 @@ import org.tinylog.Logger
 open class MapFragment : Fragment() {
 
     private val layerViewModel: LayerViewModel by viewModels()
+
+    private var currentLocationLifecycleObserver: CurrentLocationLifecycleObserver? = null
 
     var onSelectedPOIsListener: (pois: List<GeoPoint>) -> Unit = {}
     var onVectorLayersChangedListener: (activeVectorOverlays: List<Overlay>) -> Unit = {}
@@ -187,7 +191,7 @@ open class MapFragment : Fragment() {
         this.rotateCompassFab = view.findViewById(R.id.fab_compass)
         this.layersFab = view.findViewById(R.id.fab_layers)
         this.zoomFab = view.findViewById(R.id.fab_zoom)
-        this.bottomSheet = view.findViewById<FrameLayout?>(R.id.bottom_sheet)
+        this.bottomSheet = view.findViewById<FrameLayout>(R.id.bottom_sheet)
             .apply {
                 onConfigureBottomSheetListener(
                     this,
@@ -201,6 +205,12 @@ open class MapFragment : Fragment() {
 
         // check permissions and configure MapView
         activity?.also {
+            currentLocationLifecycleObserver = CurrentLocationLifecycleObserver(
+                it,
+                this@MapFragment.viewLifecycleOwner,
+                it.activityResultRegistry
+            )
+
             lifecycleScope.launch {
                 val granted = listener?.onStoragePermissionsGranted() ?: false
 
@@ -390,6 +400,8 @@ open class MapFragment : Fragment() {
         // configure and display scale bar
         configureScaleBarOverlay()
 
+        configureMarkerGuideOverlay()
+
         // configure and display zoom control
         if (mapSettings.showZoom) {
             zoomFab.setMapView(mapView)
@@ -414,13 +426,11 @@ open class MapFragment : Fragment() {
             mapView.maxZoomLevel = mapSettings.maxZoomLevel
         }
 
-        if (mapSettings.center != null) {
-            mapView.controller.setCenter(mapSettings.center)
-        }
-
         if (mapSettings.maxBounds != null) {
             mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
         }
+
+        configureCurrentMapCenterPosition()
 
         activity?.also {
             configureLayers(it)
@@ -441,6 +451,16 @@ open class MapFragment : Fragment() {
                 }
 
         scaleBarOverlay.isEnabled = enabled
+    }
+
+    private fun configureMarkerGuideOverlay(enabled: Boolean = mapSettings.showEditMarkerGuide) {
+        val markerGuideOverlay = mapView.overlays.firstOrNull { it is MarkerGuideOverlay }
+            ?: MarkerGuideOverlay()
+                .also {
+                    mapView.overlays.add(it)
+                }
+
+        markerGuideOverlay.isEnabled = enabled
     }
 
     private fun configureEditFeatureFab() {
@@ -507,62 +527,79 @@ open class MapFragment : Fragment() {
         })
     }
 
+    /**
+     * Tries to resolve the current map center position from device location or from [MapSettings.center]
+     * parameter.
+     */
+    private fun configureCurrentMapCenterPosition() {
+        // use center parameter from settings...
+        (mapSettings.center
+            // and only it the center parameter is within the current map view bounds
+            ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+        // if not, use centroid from max bounds settings...
+            ?: mapSettings.maxBounds?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
+
+        // tries to resolve current device location...
+        with(myLocationFab) {
+            post {
+                performClick()
+                isPressed = true
+                invalidate()
+            }
+        }
+    }
+
     private fun configureLayersSelector() {
         with(layersFab) {
             setOnClickListener {
-                lifecycleScope.launch {
-                    val allLayers = layerViewModel.getAllLayers()
-
-                    LayerSettingsBottomSheetDialogFragment.newInstance(
-                        allLayers,
-                        mapSettings.useOnlineLayers
-                    )
-                        .apply {
-                            setOnLayerSettingsDialogFragmentListener(object :
-                                LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
-                                override fun onSelectedLayers(
-                                    layers: List<LayerState.SelectedLayer>,
-                                    useOnlineLayers: Boolean
-                                ) {
-                                    Logger.debug {
-                                        "selected layer from LayerSettingsBottomSheetDialogFragment:\n${
-                                            layers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
-                                        }"
-                                    }
-
-                                    lifecycleScope.launch {
-                                        layerViewModel.load(layers.filter { it.active })
-                                    }
+                LayerSettingsBottomSheetDialogFragment.newInstance(
+                    mapSettings.useOnlineLayers
+                )
+                    .apply {
+                        setOnLayerSettingsDialogFragmentListener(object :
+                            LayerSettingsBottomSheetDialogFragment.OnLayerSettingsDialogFragmentListener {
+                            override fun onSelectedLayers(
+                                layers: List<LayerState.SelectedLayer>,
+                                useOnlineLayers: Boolean
+                            ) {
+                                Logger.debug {
+                                    "selected layer from LayerSettingsBottomSheetDialogFragment:\n${
+                                        layers.joinToString("\n") { "\t'${it.settings.label}': ${it.source}" }
+                                    }"
                                 }
 
-                                override fun onAddLayer() {
-                                    loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                                        addCategory(Intent.CATEGORY_OPENABLE)
-                                        type = "application/*"
-                                        putExtra(
-                                            Intent.EXTRA_MIME_TYPES,
-                                            arrayOf(
-                                                "application/geo+json",
-                                                "application/json",
-                                                "application/octet-stream",
-                                                "application/vnd.sqlite3",
-                                                "application/x-binary",
-                                                "application/x-sqlite3",
-                                                "text/plain"
-                                            )
+                                lifecycleScope.launch {
+                                    layerViewModel.useOnlineLayers(useOnlineLayers)
+                                    layerViewModel.load(layers.filter { it.active })
+                                }
+                            }
+
+                            override fun onAddLayer() {
+                                loadLocalLayerResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = "application/*"
+                                    putExtra(
+                                        Intent.EXTRA_MIME_TYPES,
+                                        arrayOf(
+                                            "application/geo+json",
+                                            "application/json",
+                                            "application/octet-stream",
+                                            "application/vnd.sqlite3",
+                                            "application/x-binary",
+                                            "application/x-sqlite3",
+                                            "text/plain"
                                         )
-                                    })
-                                }
-                            })
-
-                        }
-                        .also { dialogFragment ->
-                            dialogFragment.show(
-                                childFragmentManager,
-                                LAYER_SETTINGS_DIALOG_FRAGMENT
-                            )
-                        }
-                }
+                                    )
+                                })
+                            }
+                        })
+                    }
+                    .also { dialogFragment ->
+                        dialogFragment.show(
+                            childFragmentManager,
+                            LAYER_SETTINGS_DIALOG_FRAGMENT
+                        )
+                    }
             }
             show()
         }

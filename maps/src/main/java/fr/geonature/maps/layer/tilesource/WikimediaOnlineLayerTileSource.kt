@@ -4,10 +4,13 @@ import android.content.Context
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.settings.LayerSettings
+import org.osmdroid.tileprovider.tilesource.ITileSource
 import org.osmdroid.tileprovider.tilesource.TileSourcePolicy
 
 /**
  * Describes online tile source for [Wikimedia Maps](https://maps.wikimedia.org) services.
+ *
+ * **Note:** This [ITileSource] is no longer supported (see: [Using maps in third-party services from Wikimedia](https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use_for_Wikimedia_Maps#Using_maps_in_third-party_services)).
  *
  * @author S. Grimault
  */

@@ -85,7 +85,9 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                         startActivity(
                             MapActivity.newIntent(
                                 this,
-                                mapSettings,
+                                mapSettings.builder()
+                                    .showEditMarkerGuide(true)
+                                    .build(),
                                 getString(
                                     R.string.map_settings_loaded_from,
                                     uri.path

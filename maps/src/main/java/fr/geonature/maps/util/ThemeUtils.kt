@@ -1,6 +1,7 @@
 package fr.geonature.maps.util
 
 import android.content.Context
+import android.view.ContextThemeWrapper
 import androidx.annotation.ColorInt
 
 /**
@@ -46,6 +47,20 @@ object ThemeUtils {
         )
 
         typedArray.recycle()
+
+        // If the color could not be resolved (returns 0), the context is likely an ApplicationContext
+        // which has no theme applied. In that case, wrap it with the app's declared theme resource
+        // (from ApplicationInfo) so that theme attributes like colorAccent can be resolved correctly.
+        if (color == 0) {
+            val appThemeResId = context.applicationInfo.theme
+            if (appThemeResId != 0) {
+                val themedContext = ContextThemeWrapper(context, appThemeResId)
+                val themedArray = themedContext.theme.obtainStyledAttributes(intArrayOf(colorAttribute))
+                val themedColor = themedArray.getColor(0, 0)
+                themedArray.recycle()
+                return themedColor
+            }
+        }
 
         return color
     }

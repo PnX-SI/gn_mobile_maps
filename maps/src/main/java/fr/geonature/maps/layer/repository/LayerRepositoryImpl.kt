@@ -1,10 +1,12 @@
 package fr.geonature.maps.layer.repository
 
+import android.content.Context
 import android.net.Uri
 import fr.geonature.maps.layer.data.ILayerLocalDataSource
 import fr.geonature.maps.layer.data.ISelectedLayersLocalDataSource
 import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
+import fr.geonature.maps.layer.tilesource.TileSourceFactory
 import fr.geonature.maps.settings.LayerSettings
 import org.tinylog.Logger
 
@@ -14,6 +16,7 @@ import org.tinylog.Logger
  * @author S. Grimault
  */
 class LayerRepositoryImpl(
+    private val context: Context,
     private val localLayerDataSource: ILayerLocalDataSource,
     private val selectedLayersLocalDataSource: ISelectedLayersLocalDataSource
 ) : ILayerRepository {
@@ -45,7 +48,8 @@ class LayerRepositoryImpl(
                             layerSettings,
                             it
                         )
-                    } ?: LayerState.Error(result.exceptionOrNull()
+                    } ?: LayerState.Error(
+                    result.exceptionOrNull()
                     ?.takeIf { it is LayerException }
                     ?.let { it as LayerException }
                     ?: LayerException.NotSupportedException(layerSettings))
@@ -55,6 +59,59 @@ class LayerRepositoryImpl(
                 addAll(results)
             }
         }
+    }
+
+    override suspend fun prepareLayerFromSettings(
+        layerSettings: LayerSettings,
+        basePath: String?
+    ): LayerState {
+        val result = if (layerSettings.isOnline()) {
+            // check if we have a valid URI...
+            runCatching {
+                TileSourceFactory.getOnlineTileSource(
+                    context,
+                    layerSettings
+                )
+            }.map {
+                LayerState.Layer(
+                    settings = layerSettings,
+                    source = layerSettings.getSourcesAsUri(),
+                )
+            }
+                .getOrElse {
+                    LayerState.Error(
+                        it as? LayerException ?: LayerException.InvalidOnlineLayerException(
+                            layerSettings,
+                            it
+                        )
+                    )
+                }
+        } else {
+            val resolved = runCatching {
+                localLayerDataSource.resolvesLocalLayerFromLayerSettings(
+                    layerSettings,
+                    basePath
+                )
+            }
+            resolved.getOrNull()
+                ?.let {
+                    LayerState.Layer(
+                        layerSettings,
+                        it
+                    )
+                } ?: LayerState.Error(
+                resolved.exceptionOrNull()
+                ?.takeIf { it is LayerException }
+                ?.let { it as LayerException }
+                ?: LayerException.NotSupportedException(layerSettings))
+        }
+
+        with(layers) {
+            removeAll { it.isSame(result) }
+            add(result)
+        }
+
+        return result
     }
 
     override suspend fun getAllLayers(): List<LayerState> {

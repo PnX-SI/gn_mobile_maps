@@ -6,6 +6,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -167,6 +168,19 @@ class MyLocationButton(
         })
 
         setOnClickListener {
+            (context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager)?.also {
+                val isGpsEnabled = it.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                val isNetworkEnabled = it.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+
+                if (!isGpsEnabled && !isNetworkEnabled) {
+                    Toast.makeText(
+                        context,
+                        R.string.toast_location_disabled,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@setOnClickListener
+                }
+            }
             onMyLocationButtonListener?.checkPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         }
 
@@ -185,10 +199,13 @@ class MyLocationButton(
             if (myLocationState == MyLocationState.ACTIVE_TRACKER) {
                 disableMyLocation()
             } else {
-                animateTo(
-                    mapView,
-                    myLocationOverlay.getLastKnownLocation()
-                )
+                myLocationOverlay.getLastKnownLocation()?.also {
+                    animateTo(
+                        mapView,
+                        it
+                    )
+
+                }
 
                 val drawable = ContextCompat.getDrawable(
                     context,

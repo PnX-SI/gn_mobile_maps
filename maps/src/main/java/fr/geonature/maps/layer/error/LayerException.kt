@@ -1,6 +1,7 @@
 package fr.geonature.maps.layer.error
 
 import fr.geonature.maps.settings.LayerSettings
+import java.io.Serializable
 
 /**
  * Base exception about [LayerSettings].
@@ -13,7 +14,7 @@ sealed class LayerException(
 ) : RuntimeException(
     message,
     cause
-) {
+), Serializable {
 
     abstract val layerSettings: LayerSettings
 

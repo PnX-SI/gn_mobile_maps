@@ -52,6 +52,7 @@ class LayerSettingsTest {
             LayerSettings(
                 "OSM",
                 listOf("https://a.tile.openstreetmap.org"),
+                order = 0,
                 LayerPropertiesSettings(
                     minZoomLevel = 0,
                     maxZoomLevel = 19,
@@ -71,6 +72,7 @@ class LayerSettingsTest {
             LayerSettings(
                 "Nantes",
                 listOf("nantes.wkt"),
+                order = 0,
                 LayerPropertiesSettings(
                     style = LayerStyleSettings()
                 )
@@ -85,6 +87,7 @@ class LayerSettingsTest {
             LayerSettings(
                 "Nantes",
                 listOf("nantes.geojson"),
+                order = 0,
                 LayerPropertiesSettings(
                     attribution = "Some attribution",
                     style = LayerStyleSettings()
@@ -108,6 +111,7 @@ class LayerSettingsTest {
         val layerSettings = LayerSettings(
             "OSM",
             listOf("https://a.tile.openstreetmap.org"),
+            order = 0,
             LayerPropertiesSettings(
                 minZoomLevel = 0,
                 maxZoomLevel = 19,
@@ -137,6 +141,7 @@ class LayerSettingsTest {
             LayerSettings(
                 "OSM",
                 listOf("https://a.tile.openstreetmap.org"),
+                order = 0,
                 LayerPropertiesSettings(
                     minZoomLevel = 0,
                     maxZoomLevel = 19,
@@ -326,37 +331,46 @@ class LayerSettingsTest {
         assertTrue(
             LayerSettings(
                 "OSM",
-                listOf("https://a.tile.openstreetmap.org")
-            ) < LayerSettings(
+                listOf("https://a.tile.openstreetmap.org"),
+                order = 1
+            ) > LayerSettings(
                 "OSM #1",
-                listOf("https://a.tile.openstreetmap.org")
+                listOf("https://a.tile.openstreetmap.org"),
+                order = 0
             )
         )
-        assertTrue(
+        assertEquals(
+            0,
             LayerSettings(
                 "OSM",
                 listOf("https://a.tile.openstreetmap.org")
-            ) < LayerSettings(
-                "OSM",
-                listOf("https://b.tile.openstreetmap.org")
+            ).compareTo(
+                LayerSettings(
+                    "OSM",
+                    listOf("https://b.tile.openstreetmap.org")
+                )
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                listOf("nantes.mbtiles")
+                listOf("nantes.mbtiles"),
+                order = 0
             ) < LayerSettings(
                 "Nantes #1",
-                listOf("nantes2.mbtiles")
+                listOf("nantes2.mbtiles"),
+                order = 1
             )
         )
         assertTrue(
             LayerSettings(
                 "Nantes",
-                listOf("nantes.mbtiles")
+                listOf("nantes.mbtiles"),
+                order = 0
             ) < LayerSettings(
                 "Nantes",
-                listOf("nantes2.mbtiles")
+                listOf("nantes2.mbtiles"),
+                order = 1
             )
         )
         assertTrue(
@@ -381,42 +395,56 @@ class LayerSettingsTest {
         assertEquals(
             listOf(
                 LayerSettings.Builder.newInstance()
-                    .label("Nantes")
-                    .addSource("nantes.mbtiles")
-                    .properties(LayerPropertiesSettings.Builder.newInstance().build())
+                    .label("OTM")
+                    .addSource("https://a.tile.opentopomap.org")
+                    .order(0)
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("OSM")
                     .addSource("https://a.tile.openstreetmap.org")
+                    .order(1)
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("Nantes")
+                    .addSource("nantes.mbtiles")
+                    .order(2)
+                    .properties(
+                        LayerPropertiesSettings.Builder.newInstance()
+                            .build()
+                    )
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")
                     .addSource("nantes.wkt")
-                    .build(),
-                LayerSettings.Builder.newInstance()
-                    .label("OTM")
-                    .addSource("https://a.tile.opentopomap.org")
+                    .order(3)
                     .build()
-            ).sorted(),
+            ),
             listOf(
                 LayerSettings.Builder.newInstance()
-                    .label("OSM")
-                    .addSource("https://a.tile.openstreetmap.org")
-                    .build(),
-                LayerSettings.Builder.newInstance()
-                    .label("OTM")
-                    .addSource("https://a.tile.opentopomap.org")
-                    .build(),
-                LayerSettings.Builder.newInstance()
                     .label("Nantes")
                     .addSource("nantes.mbtiles")
-                    .properties(LayerPropertiesSettings.Builder.newInstance().build())
+                    .order(2)
+                    .properties(
+                        LayerPropertiesSettings.Builder.newInstance()
+                            .build()
+                    )
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("OSM")
+                    .addSource("https://a.tile.openstreetmap.org")
+                    .order(1)
                     .build(),
                 LayerSettings.Builder.newInstance()
                     .label("Nantes (WKT)")
                     .addSource("nantes.wkt")
+                    .order(3)
+                    .build(),
+                LayerSettings.Builder.newInstance()
+                    .label("OTM")
+                    .addSource("https://a.tile.opentopomap.org")
+                    .order(0)
                     .build()
-            )
+            ).sorted()
         )
     }
 }

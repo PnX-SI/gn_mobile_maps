@@ -76,8 +76,10 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         viewType: Int
     ): AbstractViewHolder {
         return when (ViewType.entries[viewType]) {
-            ViewType.HEADER_LAYER_ONLINE -> LayerOnlineHeaderViewHolder(parent)
             ViewType.HEADER_LAYER -> LayerHeaderViewHolder(parent)
+            ViewType.HEADER_LAYER_ONLINE -> LayerOnlineHeaderViewHolder(parent)
+            ViewType.LAYER_LOADING -> LayerLoadingViewHolder(parent)
+            ViewType.LAYER_ERROR -> LayerErrorViewHolder(parent)
             else -> LayerViewHolder(parent)
         }
     }
@@ -101,7 +103,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Sets layers.
      */
     fun setItems(
-        newItems: List<LayerState>,
+        newItems: Set<LayerState>,
         notify: Boolean = false
     ) {
         val sortedItems = newItems.sorted()
@@ -110,16 +112,23 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
             "layers:\n${
                 sortedItems.joinToString("\n") {
                     when (it) {
+                        is LayerState.Loading -> "\t'${it.settings.label}': (loading...)"
                         is LayerState.Layer -> "\t'${it.settings.label}': ${it.source} (active: ${it.active})"
                         is LayerState.SelectedLayer -> "\t'${it.settings.label}': ${it.source} (selected: true, active: ${it.active})"
-                        is LayerState.Error -> "\t'${it.getLayerSettings().label}': ${it.getLayerSettings().label} (error: true)"
+                        is LayerState.Error -> "\t'${it.getLayerSettings().label}': ${it.getLayerSettings().label} (error: true${it.error.message?.let { message -> ", message: $message" }})"
                     }
                 }
-            }"
+            }\nnotify: $notify"
         }
 
         val newItemsWithViewType = sortedItems.asSequence()
             .mapIndexed { index, layerState ->
+                val layerViewType = when (layerState) {
+                    is LayerState.Loading -> ViewType.LAYER_LOADING
+                    is LayerState.Error -> ViewType.LAYER_ERROR
+                    else -> ViewType.LAYER_SELECTABLE
+                }
+
                 when {
                     // first item
                     index == 0 -> mutableListOf(
@@ -131,7 +140,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                         ),
                         Pair(
                             layerState,
-                            ViewType.LAYER
+                            layerViewType
                         )
                     )
                     // same type but one of them refer to an online source
@@ -148,7 +157,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                         ),
                         Pair(
                             layerState,
-                            ViewType.LAYER
+                            layerViewType
                         )
                     )
                     // different type
@@ -163,7 +172,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                         ),
                         Pair(
                             layerState,
-                            ViewType.LAYER
+                            layerViewType
                         )
                     )
                     // same type
@@ -172,14 +181,14 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                         .getType() -> mutableListOf(
                         Pair(
                             layerState,
-                            ViewType.LAYER
+                            layerViewType
                         )
                     )
                     // default case
                     else -> mutableListOf(
                         Pair(
                             layerState,
-                            ViewType.LAYER
+                            layerViewType
                         )
                     )
                 }
@@ -241,11 +250,12 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         diffResult.dispatchUpdatesTo(this)
 
         if (notify) {
-            listener.onSelectedLayers(this.items.filter { it.second == ViewType.LAYER }
+            listener.onSelectedLayers(
+                this.items.filter { it.second == ViewType.LAYER_SELECTABLE }
                 .map { it.first }
                 .filterIsInstance<LayerState.SelectedLayer>()
                 .filter { it.active },
-                this.items.filter { it.second == ViewType.LAYER }
+                this.items.filter { it.second == ViewType.LAYER_SELECTABLE }
                     .map { it.first }
                     .any {
                         when (it) {
@@ -265,10 +275,10 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
      * Whether to use online layers to show on the map.
      */
     private fun useOnlineLayers(useOnlineLayers: Boolean) {
-        setItems(this.items.filter { it.second == ViewType.LAYER }
-            .map { it.first }
+        setItems(this.items.map { it.first }
             .map {
                 when (it) {
+                    is LayerState.Loading -> it
                     is LayerState.Layer -> if (it.getLayerSettings()
                             .isOnline()
                     ) it.copy(active = useOnlineLayers) else it
@@ -279,19 +289,19 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
                     is LayerState.Error -> it
                 }
-            },
-            notify = true
-        )
+            }
+            .toSet(),
+            notify = true)
     }
 
-    abstract inner class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    abstract class AbstractViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         abstract fun bind(item: LayerState)
     }
 
     inner class LayerOnlineHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.list_layer_header,
+                R.layout.list_item_layer_header,
                 parent,
                 false
             )
@@ -315,6 +325,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 visibility = View.VISIBLE
                 isChecked = items.any {
                     when (val layerState = it.first) {
+                        is LayerState.Loading -> false
                         is LayerState.Layer -> layerState.settings.isOnline() && layerState.active
                         is LayerState.SelectedLayer -> layerState.settings.isOnline() && layerState.active
                         is LayerState.Error -> false
@@ -324,10 +335,10 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
         }
     }
 
-    inner class LayerHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
+    class LayerHeaderViewHolder(parent: ViewGroup) : AbstractViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.list_layer_header,
+                R.layout.list_item_layer_header,
                 parent,
                 false
             )
@@ -356,7 +367,7 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
     inner class LayerViewHolder(parent: ViewGroup) : AbstractViewHolder(
         LayoutInflater.from(parent.context)
             .inflate(
-                R.layout.list_selectable_item_1,
+                R.layout.list_item_layer_selectable,
                 parent,
                 false
             )
@@ -372,23 +383,21 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
                 val layerSettings = view.tag as LayerSettings
 
                 setItems(
-                    items.filter { it.second == ViewType.LAYER }
-                        .map {
-                            if (it.first.getLayerSettings() == layerSettings) when (val layerState =
-                                it.first) {
-                                is LayerState.Layer -> if (checkbox.isChecked) layerState.select() else layerState
-                                is LayerState.SelectedLayer -> if (checkbox.isChecked) layerState else layerState.toLayer()
-                                is LayerState.Error -> layerState
-                            }
-                            else when (val layerState = it.first) {
-                                is LayerState.Layer -> layerState
-                                is LayerState.SelectedLayer -> if (checkbox.isChecked && layerState.getLayerSettings()
-                                        .isOnline()
-                                ) layerState.toLayer() else layerState
-
-                                is LayerState.Error -> layerState
-                            }
-                        },
+                    items.map {
+                        if (it.first.getLayerSettings() == layerSettings) when (val layerState =
+                            it.first) {
+                            is LayerState.Layer -> if (checkbox.isChecked) layerState.select() else layerState
+                            is LayerState.SelectedLayer -> if (checkbox.isChecked) layerState else layerState.toLayer()
+                            else -> layerState
+                        }
+                        else when (val layerState = it.first) {
+                            is LayerState.SelectedLayer -> if (checkbox.isChecked && layerState.getLayerSettings()
+                                    .isOnline() && layerSettings.isOnline()
+                            ) layerState.toLayer() else layerState
+                            else -> layerState
+                        }
+                    }
+                        .toSet(),
                     notify = true,
                 )
             }
@@ -400,19 +409,48 @@ class LayerSettingsRecyclerViewAdapter(private val listener: OnLayerRecyclerView
 
             with(itemView) {
                 tag = item.getLayerSettings()
-                isEnabled = when (item) {
-                    is LayerState.Layer -> item.active
-                    is LayerState.SelectedLayer -> item.active
-                    is LayerState.Error -> false
-                }
             }
+        }
+    }
+
+    class LayerLoadingViewHolder(parent: ViewGroup) : AbstractViewHolder(
+        LayoutInflater.from(parent.context)
+            .inflate(
+                R.layout.list_item_layer_loading,
+                parent,
+                false
+            )
+    ) {
+        private val title: TextView = itemView.findViewById(android.R.id.title)
+
+        override fun bind(item: LayerState) {
+            title.text = item.getLayerSettings().label
+        }
+    }
+
+    class LayerErrorViewHolder(parent: ViewGroup) : AbstractViewHolder(
+        LayoutInflater.from(parent.context)
+            .inflate(
+                R.layout.list_item_layer_error,
+                parent,
+                false
+            )
+    ) {
+        private val title: TextView = itemView.findViewById(android.R.id.title)
+
+        override fun bind(item: LayerState) {
+            title.text = item.getLayerSettings().label
+            itemView.isEnabled = false
+            title.isEnabled = false
         }
     }
 
     enum class ViewType {
         HEADER_LAYER_ONLINE,
         HEADER_LAYER,
-        LAYER
+        LAYER_SELECTABLE,
+        LAYER_LOADING,
+        LAYER_ERROR
     }
 
     /**

@@ -20,6 +20,15 @@ interface ILayerRepository {
     ): List<LayerState>
 
     /**
+     * Resolves a single [LayerSettings] into its final [LayerState] ([LayerState.Layer] or
+     * [LayerState.Error]).
+     */
+    suspend fun prepareLayerFromSettings(
+        layerSettings: LayerSettings,
+        basePath: String? = null
+    ): LayerState
+
+    /**
      * Gets all layers.
      */
     suspend fun getAllLayers(): List<LayerState>

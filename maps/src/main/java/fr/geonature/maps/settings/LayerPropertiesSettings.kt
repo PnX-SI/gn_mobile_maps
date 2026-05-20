@@ -2,6 +2,7 @@ package fr.geonature.maps.settings
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
 /**
  * Layer additional properties.
@@ -46,7 +47,7 @@ data class LayerPropertiesSettings(
      * Define the layer style (only applicable to vector layers).
      */
     val style: LayerStyleSettings? = Builder.newInstance().style
-) : Parcelable {
+) : Parcelable, Serializable {
 
     private constructor(builder: Builder) : this(
         builder.shownByDefault,

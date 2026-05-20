@@ -78,8 +78,9 @@ class HomeListFragment : Fragment() {
                     getString(R.string.home_menu_entry_default),
                     MapSettings.Builder()
                         .minZoomLevel(3.0)
-                        .zoom(6.0)
+                        .zoom(12.0)
                         .editMode(EditFeatureButton.EditMode.SINGLE)
+                        .showEditMarkerGuide(true)
                         .addLayer(
                             LayerSettings.Builder.newInstance()
                                 .label("IGN: plan v2")
@@ -112,12 +113,6 @@ class HomeListFragment : Fragment() {
                                 .addSource("https://a.tile.opentopomap.org")
                                 .addSource("https://b.tile.opentopomap.org")
                                 .addSource("https://c.tile.opentopomap.org")
-                                .build()
-                        )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("Wikimedia")
-                                .addSource("https://maps.wikimedia.org/osm-intl")
                                 .build()
                         )
                         .build()

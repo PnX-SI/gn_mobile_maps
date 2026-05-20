@@ -39,6 +39,7 @@ class MapSettingsTest {
             .showZoom(true)
             .rotationGesture(true)
             .editMode(EditFeatureButton.EditMode.SINGLE)
+            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -82,6 +83,7 @@ class MapSettingsTest {
                 showZoom = true,
                 rotationGesture = true,
                 editMode = EditFeatureButton.EditMode.SINGLE,
+                showEditMarkerGuide = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
@@ -118,6 +120,8 @@ class MapSettingsTest {
             .showScale(false)
             .showCompass(false)
             .rotationGesture(true)
+            .editMode(EditFeatureButton.EditMode.SINGLE)
+            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
@@ -206,8 +210,9 @@ class MapSettingsTest {
         assertArrayEquals(
             arrayOf(
                 LayerSettings(
-                    label = "OSM",
-                    source = listOf("https://a.tile.openstreetmap.org"),
+                    label = "OTM",
+                    source = listOf("https://a.tile.opentopomap.org"),
+                    order = 2,
                     properties = LayerPropertiesSettings(
                         minZoomLevel = 0,
                         maxZoomLevel = 19,
@@ -216,8 +221,9 @@ class MapSettingsTest {
                     )
                 ),
                 LayerSettings(
-                    label = "OTM",
-                    source = listOf("https://a.tile.opentopomap.org"),
+                    label = "OSM",
+                    source = listOf("https://a.tile.openstreetmap.org"),
+                    order = 3,
                     properties = LayerPropertiesSettings(
                         minZoomLevel = 0,
                         maxZoomLevel = 19,
@@ -227,15 +233,17 @@ class MapSettingsTest {
                 ),
                 LayerSettings(
                     label = "Nantes",
-                    source = listOf("nantes.mbtiles")
+                    source = listOf("nantes.mbtiles"),
+                    order = 1
                 ),
                 LayerSettings(
                     label = "nantes.wkt",
                     source = listOf("nantes.wkt"),
+                    order = 0,
                     properties = LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
-                ),
+                )
             ),
             mapSettings.layersSettings.toTypedArray()
         )
@@ -411,6 +419,7 @@ class MapSettingsTest {
                 LayerSettings(
                     "nantes.wkt",
                     listOf("nantes.wkt"),
+                    order = 1,
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
@@ -418,6 +427,7 @@ class MapSettingsTest {
                 LayerSettings(
                     "nantes.json",
                     listOf("nantes.json"),
+                    order = 2,
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )
@@ -425,6 +435,7 @@ class MapSettingsTest {
                 LayerSettings(
                     "nantes.geojson",
                     listOf("nantes.geojson"),
+                    order = 3,
                     LayerPropertiesSettings(
                         style = LayerStyleSettings()
                     )

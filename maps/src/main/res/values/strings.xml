@@ -13,7 +13,11 @@
     <string name="alert_dialog_layers_no_data">No layers to display on the map</string>
 
     <string name="action_undo">Undo</string>
+    <string name="action_done">Done</string>
     <string name="action_title_poi_edit">Edit POI</string>
+    <string name="action_poi_add">Add POI</string>
+    <string name="action_poi_edit">Edit POI</string>
+    <string name="action_poi_editing">Move the map according to the guide marker</string>
     <string name="action_poi_delete">Delete POI</string>
     <string name="action_poi_deleted">POI deleted</string>
     <string name="action_layer_add">Add layer</string>
@@ -31,6 +35,7 @@
     <string name="snackbar_add_layer_error">Unable to load file layer \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+    <string name="toast_location_disabled">Location services are disabled</string>
 
     <string name="button_layers_hint">Select layers</string>
     <string name="button_zoom_in_hint">Zoom in</string>

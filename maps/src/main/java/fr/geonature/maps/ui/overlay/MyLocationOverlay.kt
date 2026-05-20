@@ -124,8 +124,6 @@ class MyLocationOverlay(
         location: Location?,
         source: IMyLocationProvider?
     ) {
-        Logger.debug { "onLocationChanged: $location" }
-
         if (location == null) return
 
         val isLocationInsideMaxBounds = maxBounds?.contains(GeoPoint(location)) ?: true
@@ -176,7 +174,7 @@ class MyLocationOverlay(
         this.compassOrientation = orientation
     }
 
-    fun getLastKnownLocation(): Location {
+    fun getLastKnownLocation(): Location? {
         return location ?: myLocationProvider.lastKnownLocation
     }
 

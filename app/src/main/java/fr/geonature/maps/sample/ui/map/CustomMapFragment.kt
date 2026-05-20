@@ -66,7 +66,7 @@ class CustomMapFragment : MapFragment() {
                 bottomSheetContent?.text = p?.toIntString()
                 bottomSheetBehavior?.state = BottomSheetBehavior.STATE_EXPANDED
 
-                return true
+                return false
             }
 
             override fun longPressHelper(p: GeoPoint?): Boolean {

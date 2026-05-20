@@ -2,15 +2,20 @@ package fr.geonature.maps.layer.data
 
 import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import fr.geonature.maps.R
 import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
+import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
+import fr.geonature.maps.settings.LayerStyleSettings
 import fr.geonature.maps.settings.LayerType
+import fr.geonature.maps.util.ThemeUtils.getAccentColor
 import fr.geonature.mountpoint.util.FileUtils.getExternalStorageDirectory
 import fr.geonature.mountpoint.util.MountPointUtils.getInternalStorage
+import fr.geonature.mountpoint.util.find
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -112,29 +117,65 @@ class LayerLocalDataSourceImpl(
         }
 
         // from content://
-        return uri.lastPathSegment?.let {
-            Logger.debug { "resolving relative path '$it' from root path '${if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
-            val files = resolvePaths(
-                if (it.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
-                listOf(it.substringAfterLast(":"))
-            )
+        return uri.lastPathSegment?.let { lastPathSegment ->
+            Logger.debug { "resolving relative path '$lastPathSegment' from root path '${if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath}'..." }
 
+            val files = if (lastPathSegment.startsWith("msf:")) {
+                val displayName = context.contentResolver.query(
+                    uri,
+                    arrayOf(OpenableColumns.DISPLAY_NAME),
+                    null, null, null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst())
+                        cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                    else null
+                }
+
+                resolvePaths(externalRootPath, listOfNotNull(displayName)).takeIf { it.isNotEmpty() } ?:
+                resolvePaths(internalRootPath, listOfNotNull(displayName))
+            } else {
+                listOfNotNull(
+                    // tries to resolve URI as absolute path...
+                    File(
+                        (if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath),
+                        lastPathSegment.substringAfterLast(":")
+                    ).takeIf { f -> f.isFile && f.canRead() }).takeIf { f -> f.isNotEmpty() }
+                // if not found, tries to resolve as relative path
+                    ?: resolvePaths(
+                        if (lastPathSegment.startsWith(externalRootPath.name)) externalRootPath else internalRootPath,
+                        listOf(lastPathSegment.substringAfterLast(":"))
+                    )
+            }
+
+            val layerName = runCatching { files.single() }.map { it.nameWithoutExtension }
+                .getOrElse {
+                    lastPathSegment.substringAfterLast("/")
+                        .substringBeforeLast(".")
+                }
+                .replace(
+                    "_",
+                    " "
+                )
+                .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) }
+
+            files.takeIf { it.size == 1 }?.first()
             runCatching {
                 LayerState.Layer(
                     settings = LayerSettings.Builder()
-                        .label(
-                            it.substringAfterLast("/")
-                                .substringBeforeLast(".")
-                                .replace(
-                                    "_",
-                                    " "
-                                )
-                                .replaceFirstChar { c -> c.titlecase(Locale.getDefault()) },
-                        )
+                        .label(layerName)
                         .sources(files.map { file ->
                             file.toUri()
                                 .toString()
                         })
+                        .properties(
+                            LayerPropertiesSettings.Builder.newInstance()
+                                .style(
+                                    LayerStyleSettings.Builder.newInstance()
+                                        .color(getAccentColor(context))
+                                        .build()
+                                )
+                                .build()
+                        )
                         .build(),
                     source = files.map { file -> file.toUri() },
                 )
@@ -153,70 +194,6 @@ class LayerLocalDataSourceImpl(
                     }
                 }
         } ?: LayerState.Error(LayerException.InvalidFileLayerException(defaultLayerSettings))
-    }
-
-    private suspend fun resolveBasePath(basePath: String? = null): File = withContext(dispatcher) {
-        this@LayerLocalDataSourceImpl.basePath ?: (basePath?.split(File.separator)
-            ?.filter { it.isNotBlank() } ?: emptyList()).let { segments ->
-            if (segments.isEmpty()) {
-                externalRootPath.let {
-                    if (it.exists() && it.canRead()) it
-                    else internalRootPath
-                }
-            }
-            // absolute path
-            else if (basePath?.startsWith(File.separator) == true) {
-                File(
-                    segments.joinToString(
-                        separator = File.separator,
-                        prefix = File.separator
-                    )
-                )
-            }
-            // relative path
-            else {
-                // first: try to find tiles relative path from external storage
-                (externalRootPath.walkTopDown()
-                    .filter { it.isDirectory }
-                    .filter { segments.first() == it.name }
-                    .find {
-                        if (segments.size > 1) it.resolve(
-                            segments.drop(1)
-                                .joinToString(File.separator)
-                        )
-                            .let { relativeFile ->
-                                relativeFile.exists() && relativeFile.canRead()
-                            } else segments.first() == it.name
-                    }
-                // if not found, try to find tiles relative path from internal storage
-                    ?: internalRootPath.walkTopDown()
-                        .filter { it.isDirectory }
-                        .filter { segments.first() == it.name }
-                        .find {
-                            if (segments.size > 1) it.resolve(
-                                segments.drop(1)
-                                    .joinToString(File.separator)
-                            )
-                                .let { relativeFile ->
-                                    relativeFile.exists() && relativeFile.canRead()
-                                } else segments.first() == it.name
-                        })?.let {
-                    if (segments.size > 1) it.resolve(
-                        segments.drop(1)
-                            .joinToString(File.separator)
-                    ) else it
-                }
-                // use external storage as fallback
-                    ?: externalRootPath
-            }
-        }
-            .also {
-                this@LayerLocalDataSourceImpl.basePath = it
-
-                Logger.info {
-                    "base path: '$it'"
-                }
-            }
     }
 
     private suspend fun resolveLayerSettingsPath(
@@ -284,16 +261,37 @@ class LayerLocalDataSourceImpl(
                 }
     }
 
+    private suspend fun resolveBasePath(basePath: String? = null): File = withContext(dispatcher) {
+        this@LayerLocalDataSourceImpl.basePath ?: when {
+            // undefined: use external root path or internal root path as fallback
+            basePath.isNullOrBlank() -> externalRootPath.takeIf { it.canRead() } ?: internalRootPath
+            // absolute path, if not found use external root path or internal root path as fallback
+            basePath.startsWith(File.separator) -> File(basePath).takeIf { it.isDirectory && it.canRead() }
+                ?: externalRootPath.takeIf { it.canRead() } ?: internalRootPath
+            // relative path from external root path or from internal root path as fallback
+            else -> externalRootPath.find(basePath)
+                ?.takeIf { it.isDirectory && it.canRead() } ?: internalRootPath.find(basePath)
+                ?.takeIf { it.isDirectory && it.canRead() }
+            ?: externalRootPath.takeIf { it.canRead() } ?: internalRootPath
+        }.also {
+            this@LayerLocalDataSourceImpl.basePath = it
+
+            Logger.info {
+                "base path: '$it'"
+            }
+        }
+    }
+
+    /**
+     * Performs a deep scan to find files matching given paths.
+     */
     private suspend fun resolvePaths(
         rootPath: File,
         paths: List<String>
     ): List<File> = withContext(dispatcher) {
         if (paths.isEmpty()) return@withContext emptyList()
 
-        rootPath.walkTopDown()
-            .filter { f ->
-                f.isFile && f.canRead() && paths.any { f.absolutePath.endsWith(it) }
-            }
-            .toList()
+        paths.mapNotNull { rootPath.find(it) }
+            .filter { it.isFile && it.canRead() }
     }
 }

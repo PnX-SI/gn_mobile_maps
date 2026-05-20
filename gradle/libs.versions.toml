@@ -1,16 +1,18 @@
 [versions]
-agp = "8.7.1"
+agp = "8.13.0"
 annotation = "1.8.2"
 appcompat = "1.7.0"
 constraintlayout = "2.1.4"
 core = "1.6.1"
 coreKtx = "1.13.1"
 coreTesting = "2.2.0"
+dokka = "2.1.0"
 fragmentKtx = "1.8.4"
 hiltAndroid = "2.52"
 hiltWork = "1.2.0"
 jts = "1.20.0"
 junit = "4.13.2"
+junitVersion = "1.2.1"
 kapt = "2.0.21"
 # ksp = "2.0.20-1.0.24"
 kotlin = "2.0.21"
@@ -35,6 +37,7 @@ androidx-core-testing = { module = "androidx.arch.core:core-testing", version.re
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "lifecycleCommon" }
 androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleCommon" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleCommon" }
@@ -59,8 +62,11 @@ tinylog-impl = { group = "org.tinylog", name = "tinylog-impl", version.ref = "ti
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 dagger-hilt-android = { id = "com.google.dagger.hilt.android" , version.ref = "hiltAndroid" }
+dokka = { id = "org.jetbrains.dokka" , version.ref = "dokka" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc" , version.ref = "dokka" }
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kapt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize",  version.ref = "kotlin" }
+maven-publish = { id = "maven-publish" }
 # TODO: Dagger’s KSP support is currently in alpha, see: https://dagger.dev/dev-guide/ksp
 # ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

@@ -37,6 +37,7 @@
             android:layout_gravity="center"
             android:textAlignment="center"
             android:visibility="gone" />
+
     </FrameLayout>
 
 </LinearLayout>

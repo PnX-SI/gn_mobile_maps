@@ -8,6 +8,6 @@
         android:title="@string/action_poi_delete"
         android:icon="@drawable/ic_delete"
         app:iconTint="@android:color/white"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
 </menu>

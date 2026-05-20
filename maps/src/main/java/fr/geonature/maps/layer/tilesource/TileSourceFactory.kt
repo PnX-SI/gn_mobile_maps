@@ -41,12 +41,12 @@ object TileSourceFactory {
                     layerSettings
                 )
             }
-            .recoverCatching {
-                WikimediaOnlineLayerTileSource(
-                    context,
-                    layerSettings
-                )
-            }
+            // .recoverCatching {
+            //     WikimediaOnlineLayerTileSource(
+            //         context,
+            //         layerSettings
+            //     )
+            // }
             .onFailure { throw LayerException.NotSupportedException(layerSettings) }
             .getOrThrow()
     }

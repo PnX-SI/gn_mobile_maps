@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kapt)
 }
 
-version = "0.8.1"
+version = "0.8.4"
 
 android {
 
@@ -29,6 +29,7 @@ android {
         buildConfigField "String", "BUILD_DATE", "\"" + new Date().getTime() + "\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         archivesBaseName = project.name + "-" + versionName
+        resConfigs "en", "fr"
     }
 
     buildTypes {
@@ -37,7 +38,8 @@ android {
         }
         release {
             debuggable false
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

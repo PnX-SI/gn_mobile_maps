@@ -1,6 +1,6 @@
 package fr.geonature.maps.layer.tilesource
 
-import android.net.Uri
+import androidx.core.net.toUri
 import fr.geonature.maps.settings.LayerSettings
 import org.osmdroid.tileprovider.tilesource.TileSourcePolicy
 import org.osmdroid.util.MapTileIndex
@@ -21,7 +21,7 @@ open class OnlineLayerZXYTileSource(
     tileSourcePolicy
 ) {
     override fun getTileURLString(pMapTileIndex: Long): String {
-        return Uri.parse(baseUrl)
+        return baseUrl.toUri()
             .buildUpon()
             .appendPath(
                 MapTileIndex.getZoom(pMapTileIndex)

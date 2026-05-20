@@ -6,12 +6,16 @@
     <string name="alert_dialog_layers_title">Couches géographiques</string>
     <string name="alert_dialog_layers_close">Fermer</string>
     <string name="alert_dialog_layers_type_tiles_online">Fonds en ligne</string>
-    <string name="alert_dialog_layers_type_tiles">Fonds embarquées</string>
+    <string name="alert_dialog_layers_type_tiles">Fonds embarqués</string>
     <string name="alert_dialog_layers_type_vector">Couches vectorielles</string>
     <string name="alert_dialog_layers_no_data">Aucune couche géographique à afficher</string>
 
     <string name="action_undo">Annuler</string>
+    <string name="action_done">Terminer</string>
     <string name="action_title_poi_edit">Éditer le marqueur</string>
+    <string name="action_poi_add">Ajouter un marqueur</string>
+    <string name="action_poi_edit">Éditer le marqueur</string>
+    <string name="action_poi_editing">Déplacer la carte pour positionner le marqueur.</string>
     <string name="action_poi_delete">Supprimer le marqueur</string>
     <string name="action_poi_deleted">Marqueur supprimé</string>
     <string name="action_layer_add">Ajouter une couche géographique</string>
@@ -29,6 +33,7 @@
     <string name="snackbar_add_layer_error">Impossible de charger la couche \'%1$s\'</string>
 
     <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
+    <string name="toast_location_disabled">Les services de localisation sont désactivés</string>
 
     <string name="button_layers_hint">Choix des couches géographiques</string>
     <string name="button_zoom_in_hint">Zoomer</string>
