@@ -63,7 +63,9 @@ subprojects {
             }
             publications {
                 gpr(MavenPublication) {
-                    artifact("$layout.projectDirectory/build/outputs/aar/${project.name}-release.aar")
+                    artifact(layout.buildDirectory.file("outputs/aar/${project.name}-release.aar")) {
+                        builtBy tasks.matching { it.name == "bundleReleaseAar" }
+                    }
                     artifact androidSourcesJar
                     artifact dokkaJavadocJar
                     artifact dokkaHtmlJar
