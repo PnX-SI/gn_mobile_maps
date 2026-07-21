@@ -64,16 +64,16 @@ Before opening a new issue, please:
 
 A good bug report should include:
 
-| Field                | What to provide                                                            |
-|----------------------|----------------------------------------------------------------------------|
-| **Title**            | A short, descriptive title (e.g. `Map crashes when rotating on Android 14`) |
-| **Description**      | A clear description of the unexpected behavior                             |
-| **Steps to reproduce** | Step-by-step instructions to reproduce the bug                             |
-| **Expected behavior** | What you expected to happen                                                |
-| **Actual behavior**  | What actually happened                                                     |
-| **Screenshots / logs** | Any relevant screenshot, stack trace, or log output                        |
-| **Environment**      | Android version, device model, library version, `minSdk`/`targetSdk`       |
-| **Additional context** | Any other relevant information                                             |
+| Field                  | What to provide                                                             |
+|------------------------|-----------------------------------------------------------------------------|
+| **Title**              | A short, descriptive title (e.g. `Map crashes when rotating on Android 14`) |
+| **Description**        | A clear description of the unexpected behavior                              |
+| **Steps to reproduce** | Step-by-step instructions to reproduce the bug                              |
+| **Expected behavior**  | What you expected to happen                                                 |
+| **Actual behavior**    | What actually happened                                                      |
+| **Screenshots / logs** | Any relevant screenshot, stack trace, or log output                         |
+| **Environment**        | Android version, device model, library version, `minSdk`/`targetSdk`        |
+| **Additional context** | Any other relevant information                                              |
 
 > **Tip:** The more detail you provide, the easier it is for maintainers to reproduce and fix the
 > issue.
@@ -309,7 +309,7 @@ docs: update layer configuration examples in maps/README.md
 ## Questions?
 
 If you have any question that is not covered here, feel free to
-[open a discussion](../../discussions) or to reach out via the existing issue tracker.
+[open a discussion](../../issues/new) or to reach out via the existing issue tracker.
 
 Thank you for helping make `gn_mobile_maps` better! 🗺️
 
