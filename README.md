@@ -7,6 +7,8 @@ Small Android Map library based on [osmdroid](http://osmdroid.github.io/osmdroid
 
 See [settings documentation](/maps).
 
+Support at least Android 6 (API 23).
+
 ## Full Build
 
 A full build can be executed with the following command:
@@ -105,13 +107,13 @@ class is annotated with `@HiltAndroidApp` and that the Hilt plugin is applied to
 
 ```groovy
 plugins {
-    id 'com.google.dagger.hilt.android' version '2.52' apply false
-    id 'org.jetbrains.kotlin.kapt'
+    id 'com.google.dagger.hilt.android' version '2.55' apply false
+    id 'com.google.devtools.ksp'
 }
 
 dependencies {
-    implementation 'com.google.dagger:hilt-android:2.52'
-    kapt 'com.google.dagger:hilt-android-compiler:2.52'
+    implementation 'com.google.dagger:hilt-android:2.55'
+    ksp 'com.google.dagger:hilt-android-compiler:2.55'
 }
 ```
 

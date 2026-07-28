@@ -8,10 +8,8 @@ plugins {
     alias(libs.plugins.dokka.javadoc) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
-    alias(libs.plugins.kapt) apply false
+    alias(libs.plugins.ksp) apply false
     alias(libs.plugins.maven.publish)
-    // TODO: Dagger’s KSP support is currently in alpha, see: https://dagger.dev/dev-guide/ksp
-    // alias(libs.plugins.ksp) apply false
 }
 
 def localProperties = new Properties().tap {

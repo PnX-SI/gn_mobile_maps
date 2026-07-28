@@ -3,7 +3,6 @@ package fr.geonature.maps.ui.overlay
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -74,32 +73,18 @@ class AttributionOverlay(context: Context) : Overlay() {
         val width = canvas.width
         val height = canvas.height
 
-        val textLayout =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) StaticLayout.Builder.obtain(
-                attribution,
-                0,
-                attribution.length,
-                textPaint,
-                (canvas.width / 2 + yOffset)
-            )
-                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setMaxLines(2)
-                .setEllipsize(TextUtils.TruncateAt.END)
-                .setEllipsizedWidth((canvas.width / 2 + yOffset))
-                .build()
-            else StaticLayout(
-                attribution,
-                0,
-                attribution.length,
-                textPaint,
-                (canvas.width / 2 + yOffset),
-                Layout.Alignment.ALIGN_NORMAL,
-                1.0f,
-                0.0f,
-                true,
-                TextUtils.TruncateAt.END,
-                (canvas.width / 2 + yOffset),
-            )
+        val textLayout = StaticLayout.Builder.obtain(
+            attribution,
+            0,
+            attribution.length,
+            textPaint,
+            (canvas.width / 2 + yOffset)
+        )
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setMaxLines(2)
+            .setEllipsize(TextUtils.TruncateAt.END)
+            .setEllipsizedWidth((canvas.width / 2 + yOffset))
+            .build()
 
         val dx = if (alignRight) {
             textPaint.textAlign = Paint.Align.RIGHT
