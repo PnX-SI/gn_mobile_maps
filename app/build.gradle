@@ -32,9 +32,16 @@ android {
         resConfigs "en", "fr"
     }
 
+    signingConfigs {
+        release {
+            enableV3Signing true
+            readKeystoreProperties(project.name)
+        }
+    }
+
     buildTypes {
         debug {
-            versionNameSuffix ".${defaultConfig.versionCode}-DEV"
+            versionNameSuffix "-DEV"
         }
         release {
             debuggable false

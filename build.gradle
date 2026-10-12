@@ -12,6 +12,10 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}
+
 def localProperties = new Properties().tap {
     if (file("local.properties").exists()) {
         it.load(file("local.properties").newInputStream())
@@ -95,10 +99,6 @@ subprojects {
             }
         }
     }
-}
-
-tasks.register('clean', Delete) {
-    delete rootProject.layout.buildDirectory
 }
 
 private File loadVersionPropertiesFile(String moduleName) {
