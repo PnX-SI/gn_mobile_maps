@@ -31,7 +31,10 @@ Example:
   "start_zoom": 8.0,
   "min_zoom": 7.0,
   "max_zoom": 12.0,
-  "min_zoom_editing": 10.0,
+  "edit": {
+    "showEditMarkerGuide": true,
+    "minZoomEditing": 10.0
+  },
   "layers": [
     {
       "label": "Plan IGN v2",
@@ -86,21 +89,23 @@ Example:
 
 ### Parameters description
 
-| Parameter                        | UI      | Description                                                              | Default value |
-|----------------------------------|---------|--------------------------------------------------------------------------|---------------|
-| `base_path`                      | &#9744; | Sets the default layers path.                                            | `null`        |
-| `use_default_online_tile_source` | &#9745; | Whether to use online tiles source.                                      | `true`        |
-| `show_compass`                   | &#9745; | Whether to show north compass during map rotation.                       | `true`        |
-| `show_scale`                     | &#9745; | Whether to show the map scale.                                           | `true`        |
-| `show_zoom`                      | &#9745; | Whether to show zoom control.                                            | `false`       |
-| `rotate`                         | &#9745; | Whether to activate rotation gesture.                                    | `false`       |
-| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box. | `null`        |
-| `center`                         | &#9744; | Center automatically the map at given position at startup.               | `null`        |
-| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                     | 0.0           |
-| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                      | 0.0           |
-| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                      | 0.0           |
-| `min_zoom_editing`               | &#9744; | Set the minimum zoom level to allow editing feature on the map.          | 0.0           |
-| `layers[]`                       | &#9744; | Define layers to display on the map.                                     | `[]`          |
+| Parameter                        | UI      | Description                                                                                                 | Default value     |
+|----------------------------------|---------|-------------------------------------------------------------------------------------------------------------|-------------------|
+| `base_path`                      | &#9744; | Sets the default layers path.                                                                               | `null`            |
+| `use_default_online_tile_source` | &#9745; | Whether to use online tiles source.                                                                         | `true`            |
+| `show_compass`                   | &#9745; | Whether to show north compass during map rotation.                                                          | `true`            |
+| `show_scale`                     | &#9745; | Whether to show the map scale.                                                                              | `true`            |
+| `show_zoom`                      | &#9745; | Whether to show zoom control.                                                                               | `false`           |
+| `rotate`                         | &#9745; | Whether to activate rotation gesture.                                                                       | `false`           |
+| `max_bounds`                     | &#9744; | Set the map to limit it's scrollable view to the specified bounding box.                                    | `null`            |
+| `center`                         | &#9744; | Center automatically the map at given position at startup.                                                  | `null`            |
+| `start_zoom`                     | &#9744; | Set the default map zoom at startup.                                                                        | 0.0               |
+| `min_zoom`                       | &#9744; | Set the minimum allowed zoom level.                                                                         | 0.0               |
+| `max_zoom`                       | &#9744; | Set the maximum allowed zoom level.                                                                         | 0.0               |
+| `edit`                           | &#9744; | Enable editing features on the map.                                                                         | `null` (disabled) |
+| `edit.show_edit_marker_guide`    | &#9744; | Whether to show a guide when editing a marker.                                                              | `true`            |
+| `edit.min_zoom_editing`          | &#9744; | Set the minimum zoom level at which editing is allowed (legacy top-level `min_zoom_editing` is still read). | 0.0               |
+| `layers[]`                       | &#9744; | Define layers to display on the map.                                                                        | `[]`              |
 
 #### Base path
 

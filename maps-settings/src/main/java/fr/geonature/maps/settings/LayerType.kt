@@ -3,7 +3,7 @@ package fr.geonature.maps.settings
 /**
  * Layer type.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 enum class LayerType {
     TILES,

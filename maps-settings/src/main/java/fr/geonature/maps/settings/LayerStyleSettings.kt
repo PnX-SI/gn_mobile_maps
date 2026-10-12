@@ -17,11 +17,11 @@ import androidx.core.graphics.toColorInt
 @Parcelize
 data class LayerStyleSettings(
     val stroke: Boolean = Builder.newInstance().stroke,
-    @ColorInt
+    @field:ColorInt
     val color: Int = Builder.newInstance().color,
     val weight: Int = Builder.newInstance().weight,
     val fill: Boolean = Builder.newInstance().fill,
-    @ColorInt
+    @field:ColorInt
     val fillColor: Int = Builder.newInstance().fillColor
 ) : Parcelable, Serializable {
 

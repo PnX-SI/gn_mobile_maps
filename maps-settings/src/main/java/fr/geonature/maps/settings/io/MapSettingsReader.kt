@@ -5,11 +5,12 @@ import android.util.JsonToken
 import android.util.JsonToken.BEGIN_OBJECT
 import android.util.JsonToken.NULL
 import android.util.JsonToken.STRING
+import fr.geonature.maps.settings.EditModeSettings
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.jts.LatLng
 import fr.geonature.maps.settings.MapSettings
-import org.osmdroid.util.GeoPoint
 import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.io.Reader
@@ -19,7 +20,10 @@ import java.io.Reader
  *
  * @author S. Grimault
  */
-class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null) {
+class MapSettingsReader(
+    private val fromExistingMapSettings: MapSettings? = null,
+    private val onAdditionalAttributes: ((name: String, reader: JsonReader, builder: MapSettings.Builder) -> Unit)? = null
+) {
 
     /**
      * parse a `JSON` string to convert as [MapSettings].
@@ -71,13 +75,17 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
      */
     @Throws(Exception::class)
     fun read(reader: JsonReader): MapSettings {
-        val builder = MapSettings.Builder().from(fromExistingMapSettings)
+        val builder = MapSettings.Builder()
+            .from(fromExistingMapSettings)
+        var legacyShowEditMarkerGuide: Boolean? = null
+        var legacyMinZoomEditing: Double? = null
+        var hasEditObject = false
 
         reader.beginObject()
 
         while (reader.hasNext()) {
 
-            when (reader.nextName()) {
+            when (val name = reader.nextName()) {
                 "base_path" -> builder.baseTilesPath(reader.nextString())
                 "use_default_online_tile_source" -> builder.useOnlineLayers(reader.nextBoolean())
                 "show_compass" -> builder.showCompass(reader.nextBoolean())
@@ -85,7 +93,7 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
                 "show_zoom" -> builder.showZoom(reader.nextBoolean())
                 "rotate" -> builder.rotationGesture(reader.nextBoolean())
                 "max_bounds" -> {
-                    val maxBounds = mutableListOf<GeoPoint>()
+                    val maxBounds = mutableListOf<LatLng>()
 
                     reader.beginArray()
 
@@ -101,7 +109,7 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
 
                         if (tokens.size == 2) {
                             maxBounds.add(
-                                GeoPoint(
+                                LatLng(
                                     tokens[0],
                                     tokens[1]
                                 )
@@ -126,7 +134,7 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
 
                     if (tokens.size == 2) {
                         builder.center(
-                            GeoPoint(
+                            LatLng(
                                 tokens[0],
                                 tokens[1]
                             )
@@ -137,19 +145,78 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
                 "start_zoom", "zoom" -> builder.zoom(reader.nextDouble())
                 "min_zoom" -> builder.minZoomLevel(reader.nextDouble())
                 "max_zoom" -> builder.maxZoomLevel(reader.nextDouble())
-                "min_zoom_editing" -> builder.minZoomEditing(reader.nextDouble())
+                "edit" -> {
+                    hasEditObject = true
+                    builder.edit(readEditModeSettings(reader))
+                }
+                // legacy attributes: 'editMode' is deprecated and ignored
+                "editMode" -> reader.skipValue()
+                "show_edit_marker_guide" -> {
+                    Logger.warn { "property 'show_edit_marker_guide' is deprecated in favor of 'edit.show_edit_marker_guide'" }
+                    legacyShowEditMarkerGuide = reader.nextBoolean()
+                }
+                "min_zoom_editing" -> {
+                    Logger.warn { "property 'min_zoom_editing' is deprecated in favor of 'edit.min_zoom_editing'" }
+                    legacyMinZoomEditing = reader.nextDouble()
+                }
                 "layers" -> readLayerSettingsAsList(
                     reader,
                     builder
                 )
 
-                else -> reader.skipValue()
+                else -> {
+                    if (onAdditionalAttributes != null) {
+                        onAdditionalAttributes.invoke(
+                            name,
+                            reader,
+                            builder
+                        )
+                    } else {
+                        reader.skipValue()
+                    }
+                }
             }
         }
 
         reader.endObject()
 
+        if (!hasEditObject && (legacyShowEditMarkerGuide != null || legacyMinZoomEditing != null)) {
+            builder.edit(
+                EditModeSettings.Builder.newInstance()
+                .apply {
+                    legacyShowEditMarkerGuide?.also { showEditMarkerGuide(it) }
+                    legacyMinZoomEditing?.also { minZoomEditing(it) }
+                }
+                .build())
+        }
+
         return builder.build()
+    }
+
+    @Throws(IOException::class)
+    private fun readEditModeSettings(reader: JsonReader): EditModeSettings? {
+        return when (val jsonToken = reader.peek()) {
+            NULL -> {
+                reader.nextNull()
+                null
+            }
+
+            BEGIN_OBJECT -> {
+                reader.beginObject()
+                val builder = EditModeSettings.Builder.newInstance()
+                while (reader.hasNext()) {
+                    when (reader.nextName()) {
+                        "show_edit_marker_guide" -> builder.showEditMarkerGuide(reader.nextBoolean())
+                        "min_zoom_editing" -> builder.minZoomEditing(reader.nextDouble())
+                        else -> reader.skipValue()
+                    }
+                }
+                reader.endObject()
+                builder.build()
+            }
+
+            else -> throw IOException("Invalid edit settings JSON token $jsonToken")
+        }
     }
 
     @Throws(IOException::class)
@@ -157,7 +224,7 @@ class MapSettingsReader(private val fromExistingMapSettings: MapSettings? = null
         reader: JsonReader,
         builder: MapSettings.Builder
     ) {
-        if ((fromExistingMapSettings?.layersSettings?: emptyList()).isNotEmpty()) {
+        if ((fromExistingMapSettings?.layersSettings ?: emptyList()).isNotEmpty()) {
             builder.layersSettings.clear()
         }
 

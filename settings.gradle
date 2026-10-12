@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "GeoNature Android maps library"
-include ':app', ':maps', ':mountpoint'
+include ':app', ':maps', ':maps-settings', ':mountpoint'

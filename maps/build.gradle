@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-version = "0.8.9"
+version = "0.8.10"
 
 android {
     namespace 'fr.geonature.maps'
@@ -54,6 +54,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation project(':mountpoint')
+    api project(':maps-settings')
 
     implementation libs.androidx.appcompat
     implementation libs.androidx.constraintlayout

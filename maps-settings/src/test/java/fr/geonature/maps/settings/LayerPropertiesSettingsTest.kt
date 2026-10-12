@@ -19,7 +19,7 @@ import org.robolectric.RobolectricTestRunner
 class LayerPropertiesSettingsTest {
 
     @Test
-    fun testValidBuilder() {
+    fun `should build layer properties settings from its builder`() {
         // given a layer properties settings instance from its builder
         val layerPropertiesSettings = LayerPropertiesSettings.Builder.newInstance()
             .minZoomLevel(2)
@@ -68,7 +68,7 @@ class LayerPropertiesSettingsTest {
     }
 
     @Test
-    fun testFromExistingLayerPropertiesSettings() {
+    fun `should build layer properties settings from an existing instance`() {
         // given a layer properties settings instance from its builder
         val layerPropertiesSettings = LayerPropertiesSettings.Builder.newInstance()
             .minZoomLevel(2)
@@ -132,7 +132,7 @@ class LayerPropertiesSettingsTest {
     }
 
     @Test
-    fun testBuilderWithDefaultValues() {
+    fun `should build layer properties settings with default values`() {
         // given a default layer properties settings instance from its builder
         val layerPropertiesSettings = LayerPropertiesSettings.Builder.newInstance()
             .build()
@@ -145,7 +145,7 @@ class LayerPropertiesSettingsTest {
     }
 
     @Test
-    fun testBuilderWithDefaultLayerStyle() {
+    fun `should build layer properties settings with default layer style`() {
         // given a layer properties settings instance from its builder
         val layerPropertiesSettings = LayerPropertiesSettings.Builder.newInstance()
             .minZoomLevel(2)
@@ -171,7 +171,7 @@ class LayerPropertiesSettingsTest {
     }
 
     @Test
-    fun testBuilderWithMinMaxLevels() {
+    fun `should build layer properties settings with min and max zoom levels`() {
         assertEquals(
             LayerPropertiesSettings(),
             LayerPropertiesSettings.Builder.newInstance()
@@ -227,7 +227,7 @@ class LayerPropertiesSettingsTest {
     }
 
     @Test
-    fun testParcelable() {
+    fun `should be parcelable`() {
         // given a layer properties settings
         val layerPropertiesSettings = LayerPropertiesSettings(
             shownByDefault = false,

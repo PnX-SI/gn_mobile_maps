@@ -1,11 +1,10 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcelable
-import fr.geonature.maps.ui.widget.EditFeatureButton
+import fr.geonature.maps.jts.BoundingBox
+import fr.geonature.maps.jts.LatLng
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import org.osmdroid.util.BoundingBox
-import org.osmdroid.util.GeoPoint
 
 /**
  * Default settings for map configuration.
@@ -21,14 +20,12 @@ data class MapSettings(
     val showScale: Boolean = Builder.newInstance().showScale,
     val showZoom: Boolean = Builder.newInstance().showZoom,
     val rotationGesture: Boolean = Builder.newInstance().rotationGesture,
-    val editMode: EditFeatureButton.EditMode = Builder.newInstance().editMode,
-    val showEditMarkerGuide: Boolean = Builder.newInstance().showEditMarkerGuide,
     val zoom: Double = 0.0,
     val minZoomLevel: Double = 0.0,
     val maxZoomLevel: Double = 0.0,
-    val minZoomEditing: Double = 0.0,
     val maxBounds: BoundingBox?,
-    val center: GeoPoint?
+    val center: LatLng?,
+    val edit: EditModeSettings? = null
 ) : Parcelable {
 
     private constructor(builder: Builder) : this(
@@ -39,71 +36,15 @@ data class MapSettings(
         builder.showScale,
         builder.showZoom,
         builder.rotationGesture,
-        builder.editMode,
-        builder.showEditMarkerGuide,
         builder.zoom,
         builder.minZoomLevel,
         builder.maxZoomLevel,
-        builder.minZoomEditing,
         builder.maxBounds,
-        builder.center
+        builder.center,
+        builder.edit
     )
 
-    fun builder(): MapSettings.Builder = Builder.newInstance().from(this)
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as MapSettings
-
-        if (_layersSettings != other._layersSettings) return false
-        if (baseTilesPath != other.baseTilesPath) return false
-        if (useOnlineLayers != other.useOnlineLayers) return false
-        if (showCompass != other.showCompass) return false
-        if (showScale != other.showScale) return false
-        if (showZoom != other.showZoom) return false
-        if (rotationGesture != other.rotationGesture) return false
-        if (editMode != other.editMode) return false
-        if (showEditMarkerGuide != other.showEditMarkerGuide) return false
-        if (zoom != other.zoom) return false
-        if (minZoomLevel != other.minZoomLevel) return false
-        if (maxZoomLevel != other.maxZoomLevel) return false
-        if (minZoomEditing != other.minZoomEditing) return false
-
-        if (maxBounds != null && other.maxBounds != null) {
-            if (maxBounds.latNorth != other.maxBounds.latNorth) return false
-            if (maxBounds.latSouth != other.maxBounds.latSouth) return false
-            if (maxBounds.lonWest != other.maxBounds.lonWest) return false
-            if (maxBounds.lonEast != other.maxBounds.lonEast) return false
-        } else {
-            if (maxBounds != other.maxBounds) return false
-        }
-
-        if (center != other.center) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = _layersSettings.hashCode()
-        result = 31 * result + baseTilesPath.hashCode()
-        result = 31 * result + useOnlineLayers.hashCode()
-        result = 31 * result + showCompass.hashCode()
-        result = 31 * result + showScale.hashCode()
-        result = 31 * result + showZoom.hashCode()
-        result = 31 * result + rotationGesture.hashCode()
-        result = 31 * result + editMode.hashCode()
-        result = 31 * result + showEditMarkerGuide.hashCode()
-        result = 31 * result + zoom.hashCode()
-        result = 31 * result + minZoomLevel.hashCode()
-        result = 31 * result + maxZoomLevel.hashCode()
-        result = 31 * result + minZoomEditing.hashCode()
-        result = 31 * result + (maxBounds?.hashCode() ?: 0)
-        result = 31 * result + (center?.hashCode() ?: 0)
-
-        return result
-    }
+    fun builder(): Builder = Builder.newInstance().from(this)
 
     @IgnoredOnParcel
     val layersSettings: List<LayerSettings> = _layersSettings.sorted()
@@ -122,9 +63,9 @@ data class MapSettings(
 
     class Builder {
 
-        internal val layersSettings: MutableList<LayerSettings> = mutableListOf()
+        val layersSettings: MutableList<LayerSettings> = mutableListOf()
 
-        internal var baseTilesPath: String? = null
+        var baseTilesPath: String? = null
             private set
 
         /**
@@ -157,34 +98,24 @@ data class MapSettings(
         var rotationGesture: Boolean = false
             private set
 
+        var zoom: Double = 0.0
+            private set
+
+        var minZoomLevel: Double = 0.0
+            private set
+
+        var maxZoomLevel: Double = 0.0
+            private set
+
+        var maxBounds: BoundingBox? = null
+            private set
+
+        var center: LatLng? = null
+            private set
         /**
-         * Sets the edit mode when adding POIs on the map.
+         * The edit mode settings (default: `null`, meaning that the edit feature is disabled).
          */
-        var editMode: EditFeatureButton.EditMode = EditFeatureButton.EditMode.NONE
-            private set
-
-        /**
-         * Whether to show the edit marker guide (default: `true`).
-         */
-        var showEditMarkerGuide: Boolean = true
-            private set
-
-        internal var zoom: Double = 0.0
-            private set
-
-        internal var minZoomLevel: Double = 0.0
-            private set
-
-        internal var maxZoomLevel: Double = 0.0
-            private set
-
-        internal var minZoomEditing: Double = 0.0
-            private set
-
-        internal var maxBounds: BoundingBox? = null
-            private set
-
-        internal var center: GeoPoint? = null
+        var edit: EditModeSettings? = null
             private set
 
         /**
@@ -200,14 +131,12 @@ data class MapSettings(
             this.showScale = mapSettings.showScale
             this.showZoom = mapSettings.showZoom
             this.rotationGesture = mapSettings.rotationGesture
-            this.editMode = mapSettings.editMode
-            this.showEditMarkerGuide = mapSettings.showEditMarkerGuide
             this.zoom = mapSettings.zoom
             this.minZoomLevel = mapSettings.minZoomLevel
             this.maxZoomLevel = mapSettings.maxZoomLevel
-            this.minZoomEditing = mapSettings.minZoomEditing
             this.maxBounds = mapSettings.maxBounds
             this.center = mapSettings.center
+            this.edit = mapSettings.edit
         }
 
         fun baseTilesPath(baseTilesPath: String) = apply { this.baseTilesPath = baseTilesPath }
@@ -223,22 +152,19 @@ data class MapSettings(
 
         fun rotationGesture(rotateGesture: Boolean) = apply { this.rotationGesture = rotateGesture }
 
-        fun editMode(editMode: EditFeatureButton.EditMode) = apply { this.editMode = editMode }
-
-        fun showEditMarkerGuide(showEditMarkerGuide: Boolean) = apply { this.showEditMarkerGuide = showEditMarkerGuide }
-
         fun zoom(zoom: Double) = apply { this.zoom = zoom }
 
         fun minZoomLevel(minZoomLevel: Double) = apply { this.minZoomLevel = minZoomLevel }
 
         fun maxZoomLevel(maxZoomLevel: Double) = apply { this.maxZoomLevel = maxZoomLevel }
 
-        fun minZoomEditing(minZoomEditing: Double) = apply { this.minZoomEditing = minZoomEditing }
+        fun maxBounds(latLngs: List<LatLng>) =
+            apply { this.maxBounds = if (latLngs.isEmpty()) null else BoundingBox.fromLatLng(*latLngs.toTypedArray()) }
 
-        fun maxBounds(geoPoints: List<GeoPoint>) =
-            apply { this.maxBounds = BoundingBox.fromGeoPoints(geoPoints) }
+        fun maxBounds(maxBounds: BoundingBox?) = apply { this.maxBounds = maxBounds }
 
-        fun center(center: GeoPoint?) = apply { this.center = center }
+        fun center(center: LatLng?) = apply { this.center = center }
+        fun edit(edit: EditModeSettings?) = apply { this.edit = edit }
 
         fun addLayer(
             label: String,

@@ -18,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 class LayerStyleSettingsTest {
 
     @Test
-    fun testValidBuilder() {
+    fun `should build layer style settings from its builder`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -50,7 +50,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testFromExistingLayerStyleSettings() {
+    fun `should build layer style settings from an existing instance`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -96,7 +96,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testStrokeColorWithOpacity() {
+    fun `should apply stroke color to opacity`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -118,7 +118,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testOpacityToStrokeColor() {
+    fun `should apply opacity to stroke color`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -140,7 +140,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testStrokeColorWithAlphaChannel() {
+    fun `should apply stroke color with alpha channel`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -162,7 +162,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testOpacityToStrokeColorWithAlphaChannel() {
+    fun `should apply opacity to stroke color with alpha channel`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .stroke(true)
@@ -184,7 +184,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testFillColorWithOpacity() {
+    fun `should apply fill color with opacity`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .fill(true)
@@ -209,7 +209,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testOpacityToFillColor() {
+    fun `should apply opacity to fill color`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .fill(true)
@@ -234,7 +234,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testFillColorWithAlphaChannel() {
+    fun `should apply fill color with alpha channel`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .fill(true)
@@ -259,7 +259,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testOpacityToFillColorWithAlphaChannel() {
+    fun `should apply opacity to fill color with alpha channel`() {
         // given a layer style settings instance from its builder
         val layerStyleSettings = LayerStyleSettings.Builder.newInstance()
             .fill(true)
@@ -284,7 +284,7 @@ class LayerStyleSettingsTest {
     }
 
     @Test
-    fun testParcelable() {
+    fun `should be parcelable`() {
         // given a layer style settings
         val layerStyleSettings = LayerStyleSettings(
             true,

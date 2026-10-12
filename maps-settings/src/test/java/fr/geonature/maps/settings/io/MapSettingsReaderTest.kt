@@ -1,6 +1,9 @@
 package fr.geonature.maps.settings.io
 
 import fr.geonature.maps.FixtureHelper.getFixture
+import fr.geonature.maps.jts.BoundingBox
+import fr.geonature.maps.settings.EditModeSettings
+import fr.geonature.maps.jts.LatLng
 import fr.geonature.maps.settings.LayerPropertiesSettings
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerStyleSettings
@@ -11,8 +14,6 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.osmdroid.util.BoundingBox
-import org.osmdroid.util.GeoPoint
 import org.robolectric.RobolectricTestRunner
 
 /**
@@ -93,22 +94,23 @@ class MapSettingsReaderTest {
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
+                maxBounds = BoundingBox.fromLatLng(
+                    LatLng(
+                        47.253369,
+                        -1.605721
+                    ),
+                    LatLng(
+                        47.173845,
+                        -1.482811
                     )
                 ),
-                center = GeoPoint(
+                center = LatLng(
                     47.225827,
                     -1.554470
+                ),
+                edit = EditModeSettings(
+                    showEditMarkerGuide = false,
+                    minZoomEditing = 10.0
                 )
             ),
             mapSettings
@@ -155,22 +157,23 @@ class MapSettingsReaderTest {
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
+                maxBounds = BoundingBox.fromLatLng(
+                    LatLng(
+                        47.253369,
+                        -1.605721
+                    ),
+                    LatLng(
+                        47.173845,
+                        -1.482811
                     )
                 ),
-                center = GeoPoint(
+                center = LatLng(
                     47.225827,
                     -1.554470
+                ),
+                edit = EditModeSettings(
+                    showEditMarkerGuide = true,
+                    minZoomEditing = 10.0
                 )
             ),
             mapSettings
@@ -211,26 +214,67 @@ class MapSettingsReaderTest {
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
+                maxBounds = BoundingBox.fromLatLng(
+                    LatLng(
+                        47.253369,
+                        -1.605721
+                    ),
+                    LatLng(
+                        47.173845,
+                        -1.482811
                     )
                 ),
-                center = GeoPoint(
+                center = LatLng(
                     47.225827,
                     -1.554470
+                ),
+                edit = EditModeSettings(
+                    showEditMarkerGuide = true,
+                    minZoomEditing = 10.0
                 )
             ),
             mapSettings
         )
+    }
+
+    @Test
+    fun `should read legacy edit attributes as edit mode settings`() {
+        // given a JSON settings with legacy edit attributes
+        val json = getFixture("map_settings_legacy_edit.json")
+        // when read the JSON as MapSettings
+        val mapSettings = mapSettingsReader.read(json)
+        // then
+        assertEquals(
+            EditModeSettings(
+                showEditMarkerGuide = false,
+                minZoomEditing = 10.0
+            ),
+            mapSettings?.edit
+        )
+    }
+
+    @Test
+    fun `should use default edit mode settings values from partial legacy edit attributes`() {
+        // given a JSON settings with only the legacy 'min_zoom_editing' attribute
+        val json = getFixture("map_settings_legacy_edit_min_zoom_only.json")
+        // when read the JSON as MapSettings
+        val mapSettings = mapSettingsReader.read(json)
+        // then
+        assertEquals(
+            EditModeSettings(
+                showEditMarkerGuide = true,
+                minZoomEditing = 10.0
+            ),
+            mapSettings?.edit
+        )
+    }
+
+    @Test
+    fun `should not enable edit mode if no edit settings are defined`() {
+        // when read a JSON without edit settings
+        val mapSettings = mapSettingsReader.read("""{"show_zoom": true}""")
+        // then
+        assertNull(mapSettings?.edit)
     }
 
     @Test
@@ -278,20 +322,17 @@ class MapSettingsReaderTest {
             zoom = 8.0,
             minZoomLevel = 7.0,
             maxZoomLevel = 12.0,
-            minZoomEditing = 10.0,
-            maxBounds = BoundingBox.fromGeoPoints(
-                arrayListOf(
-                    GeoPoint(
-                        47.253369,
-                        -1.605721
-                    ),
-                    GeoPoint(
-                        47.173845,
-                        -1.482811
-                    )
+            maxBounds = BoundingBox.fromLatLng(
+                LatLng(
+                    47.253369,
+                    -1.605721
+                ),
+                LatLng(
+                    47.173845,
+                    -1.482811
                 )
             ),
-            center = GeoPoint(
+            center = LatLng(
                 47.225827,
                 -1.554470
             )
@@ -321,20 +362,17 @@ class MapSettingsReaderTest {
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        GeoPoint(
-                            47.253369,
-                            -1.605721
-                        ),
-                        GeoPoint(
-                            47.173845,
-                            -1.482811
-                        )
+                maxBounds = BoundingBox.fromLatLng(
+                    LatLng(
+                        47.253369,
+                        -1.605721
+                    ),
+                    LatLng(
+                        47.173845,
+                        -1.482811
                     )
                 ),
-                center = GeoPoint(
+                center = LatLng(
                     47.225827,
                     -1.554470
                 )

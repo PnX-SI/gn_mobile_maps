@@ -1,15 +1,14 @@
 package fr.geonature.maps.settings
 
 import android.os.Parcel
-import fr.geonature.maps.ui.widget.EditFeatureButton
+import fr.geonature.maps.jts.BoundingBox
+import fr.geonature.maps.jts.LatLng
 import kotlinx.parcelize.parcelableCreator
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.osmdroid.util.BoundingBox
-import org.osmdroid.util.GeoPoint
 import org.robolectric.RobolectricTestRunner
 
 /**
@@ -22,11 +21,11 @@ class MapSettingsTest {
 
     @Test
     fun `should instantiate map settings from builder`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -38,22 +37,19 @@ class MapSettingsTest {
             .showCompass(false)
             .showZoom(true)
             .rotationGesture(true)
-            .editMode(EditFeatureButton.EditMode.SINGLE)
-            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -82,21 +78,18 @@ class MapSettingsTest {
                 showCompass = false,
                 showZoom = true,
                 rotationGesture = true,
-                editMode = EditFeatureButton.EditMode.SINGLE,
-                showEditMarkerGuide = true,
                 zoom = 8.0,
                 minZoomLevel = 7.0,
                 maxZoomLevel = 12.0,
-                minZoomEditing = 10.0,
-                maxBounds = BoundingBox.fromGeoPoints(
-                    arrayListOf(
-                        nwGeoPoint,
-                        seGeoPoint
+                maxBounds = BoundingBox.fromLatLng(
+                    *arrayOf(
+                        nwLatLng,
+                        seLatLng
                     )
                 ),
-                center = GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                center = LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             ),
             mapSettings
@@ -105,11 +98,11 @@ class MapSettingsTest {
 
     @Test
     fun `should instantiate a new map settings from existing instance`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -120,22 +113,19 @@ class MapSettingsTest {
             .showScale(false)
             .showCompass(false)
             .rotationGesture(true)
-            .editMode(EditFeatureButton.EditMode.SINGLE)
-            .showEditMarkerGuide(true)
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -160,11 +150,11 @@ class MapSettingsTest {
 
     @Test
     fun `should add layers from builder`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -175,17 +165,16 @@ class MapSettingsTest {
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -251,11 +240,11 @@ class MapSettingsTest {
 
     @Test
     fun `should add online layers from builder`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -266,17 +255,16 @@ class MapSettingsTest {
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -314,11 +302,11 @@ class MapSettingsTest {
 
     @Test
     fun `should get tiles layers from map settings`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -329,17 +317,16 @@ class MapSettingsTest {
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -367,11 +354,11 @@ class MapSettingsTest {
 
     @Test
     fun `should get vector layers`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -382,17 +369,16 @@ class MapSettingsTest {
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(
@@ -448,11 +434,11 @@ class MapSettingsTest {
 
     @Test
     fun `should obtain map settings instance from parcelable`() {
-        val nwGeoPoint = GeoPoint(
+        val nwLatLng = LatLng(
             47.253369,
             -1.605721
         )
-        val seGeoPoint = GeoPoint(
+        val seLatLng = LatLng(
             47.173845,
             -1.482811
         )
@@ -467,17 +453,16 @@ class MapSettingsTest {
             .zoom(8.0)
             .minZoomLevel(7.0)
             .maxZoomLevel(12.0)
-            .minZoomEditing(10.0)
             .maxBounds(
                 arrayListOf(
-                    nwGeoPoint,
-                    seGeoPoint
+                    nwLatLng,
+                    seLatLng
                 )
             )
             .center(
-                GeoPoint.fromCenterBetween(
-                    nwGeoPoint,
-                    seGeoPoint
+                LatLng(
+                    (nwLatLng.latitude + seLatLng.latitude) / 2,
+                    (nwLatLng.longitude + seLatLng.longitude) / 2
                 )
             )
             .addLayer(

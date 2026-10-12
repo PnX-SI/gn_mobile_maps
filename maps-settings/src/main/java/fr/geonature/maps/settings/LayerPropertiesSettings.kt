@@ -18,12 +18,12 @@ data class LayerPropertiesSettings(
     val shownByDefault: Boolean = Builder.newInstance().shownByDefault,
 
     /**
-     * The minimum zoom level where the layer is visible (default: -1, ie. no restriction).
+     * The minimum zoom level where the layer is visible (default: -1, i.e. no restriction).
      */
     val minZoomLevel: Int = Builder.newInstance().minZoomLevel,
 
     /**
-     * The maximum zoom level where the layer is visible (default: -1, ie. no restriction).
+     * The maximum zoom level where the layer is visible (default: -1, i.e. no restriction).
      */
     val maxZoomLevel: Int = Builder.newInstance().maxZoomLevel,
 

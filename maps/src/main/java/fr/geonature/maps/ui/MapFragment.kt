@@ -29,6 +29,8 @@ import fr.geonature.maps.layer.domain.LayerState
 import fr.geonature.maps.layer.error.LayerException
 import fr.geonature.maps.layer.presentation.LayerViewModel
 import fr.geonature.maps.settings.MapSettings
+import fr.geonature.maps.settings.toGeoPoint
+import fr.geonature.maps.settings.toOsmdroidBoundingBox
 import fr.geonature.maps.ui.dialog.LayerSettingsBottomSheetDialogFragment
 import fr.geonature.maps.ui.overlay.AttributionOverlay
 import fr.geonature.maps.ui.overlay.MarkerGuideOverlay
@@ -426,8 +428,8 @@ open class MapFragment : Fragment() {
             mapView.maxZoomLevel = mapSettings.maxZoomLevel
         }
 
-        if (mapSettings.maxBounds != null) {
-            mapView.setScrollableAreaLimitDouble(mapSettings.maxBounds)
+        mapSettings.maxBounds?.also {
+            mapView.setScrollableAreaLimitDouble(it.toOsmdroidBoundingBox())
         }
 
         configureCurrentMapCenterPosition()
@@ -453,7 +455,7 @@ open class MapFragment : Fragment() {
         scaleBarOverlay.isEnabled = enabled
     }
 
-    private fun configureMarkerGuideOverlay(enabled: Boolean = mapSettings.showEditMarkerGuide) {
+    private fun configureMarkerGuideOverlay(enabled: Boolean = mapSettings.edit?.showEditMarkerGuide ?: false) {
         val markerGuideOverlay = mapView.overlays.firstOrNull { it is MarkerGuideOverlay }
             ?: MarkerGuideOverlay()
                 .also {
@@ -470,7 +472,7 @@ open class MapFragment : Fragment() {
             }
 
             override fun getEditMode(): EditFeatureButton.EditMode {
-                return mapSettings.editMode
+                return if (mapSettings.edit != null) EditFeatureButton.EditMode.SINGLE else EditFeatureButton.EditMode.NONE
             }
 
             override fun getMinZoom(): Double {
@@ -478,7 +480,7 @@ open class MapFragment : Fragment() {
             }
 
             override fun getMinZoomEditing(): Double {
-                return mapSettings.minZoomEditing
+                return mapSettings.edit?.minZoomEditing ?: 0.0
             }
 
             override fun startActionMode(callback: ActionMode.Callback): ActionMode? {
@@ -509,7 +511,7 @@ open class MapFragment : Fragment() {
             }
 
             override fun getMaxBounds(): BoundingBox? {
-                return mapSettings.maxBounds
+                return mapSettings.maxBounds?.toOsmdroidBoundingBox()
             }
 
             override fun checkPermissions(permission: String) {
@@ -534,10 +536,11 @@ open class MapFragment : Fragment() {
     private fun configureCurrentMapCenterPosition() {
         // use center parameter from settings...
         (mapSettings.center
+            ?.toGeoPoint()
             // and only it the center parameter is within the current map view bounds
-            ?.takeIf { mapSettings.maxBounds?.contains(it) ?: true }
+            ?.takeIf { mapSettings.maxBounds?.toOsmdroidBoundingBox()?.contains(it) ?: true }
         // if not, use centroid from max bounds settings...
-            ?: mapSettings.maxBounds?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
+            ?: mapSettings.maxBounds?.toOsmdroidBoundingBox()?.centerWithDateLine)?.also { mapView.controller.setCenter(it) }
 
         // tries to resolve current device location...
         with(myLocationFab) {
