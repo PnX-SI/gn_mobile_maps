@@ -7,6 +7,7 @@ plugins {
 }
 
 version = "0.8.10"
+description = "GeoNature Android maps library components based on osmdroid (map view, layers, tiles and vector overlays)"
 
 android {
     namespace 'fr.geonature.maps'

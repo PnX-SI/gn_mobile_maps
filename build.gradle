@@ -76,8 +76,8 @@ subprojects {
                     version = project.findProperty('version') ?: '0.0.1'
 
                     pom {
-                        name = 'GeoNature Android maps library'
-                        description = 'Small Android Map library based on osmdroid'
+                        name = project.name
+                        description = project.description
                         url = 'https://github.com/PnX-SI/gn_mobile_maps'
 
                         licenses {

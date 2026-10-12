@@ -5,6 +5,7 @@ plugins {
 }
 
 version = "0.0.1"
+description = "GeoNature Android library defining maps settings (tile sources, layers and preferences)"
 
 android {
     namespace 'fr.geonature.maps.settings'
