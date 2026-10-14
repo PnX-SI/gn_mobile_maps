@@ -1,14 +1,14 @@
 package fr.geonature.maps.ui.overlay.feature
 
 import android.graphics.Color
-import fr.geonature.maps.jts.geojson.GeometryUtils
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.util.toGeoPoints
 import org.locationtech.jts.geom.Polygon
 
 /**
  * Draws Polygon on the map.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class PolygonOverlay :
     AbstractGeometryOverlay<Polygon, org.osmdroid.views.overlay.Polygon>(org.osmdroid.views.overlay.Polygon()) {
@@ -18,14 +18,14 @@ class PolygonOverlay :
         layerStyle: LayerStyleSettings
     ) {
         backendOverlay.apply {
-            points = GeometryUtils.fromCoordinateSequence(geometry.exteriorRing.coordinateSequence)
+            points = geometry.exteriorRing.coordinateSequence.toGeoPoints()
 
             if (geometry.numInteriorRing > 0) {
                 holes = IntRange(
                     0,
                     geometry.numInteriorRing - 1
                 ).map {
-                    GeometryUtils.fromCoordinateSequence(geometry.getInteriorRingN(it).coordinateSequence)
+                    geometry.getInteriorRingN(it).coordinateSequence.toGeoPoints()
                 }
             }
         }

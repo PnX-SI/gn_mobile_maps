@@ -10,13 +10,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.locationtech.jts.geom.GeometryFactory
-import org.osmdroid.util.GeoPoint
 import org.robolectric.RobolectricTestRunner
 
 /**
  * Unit tests about [NearestFeaturesFilter].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class NearestFeaturesFilterTest {
@@ -29,9 +28,10 @@ class NearestFeaturesFilterTest {
     }
 
     @Test
-    fun testNearestFeaturesFromFeatures() {
-        // given a GeoPoint
-        val geoPoint = GeoPoint(
+    fun `should get nearest features from features`() {
+        // given a Point
+        val point = createPoint(
+            gf,
             47.225782,
             -1.554476
         )
@@ -57,7 +57,7 @@ class NearestFeaturesFilterTest {
 
         // when applying filter
         val filteredFeatures = getFilteredFeatures(
-            geoPoint,
+            point,
             45.0,
             features
         )
@@ -75,9 +75,10 @@ class NearestFeaturesFilterTest {
     }
 
     @Test
-    fun testNearestFeaturesFromFeatureCollection() {
-        // given a GeoPoint
-        val geoPoint = GeoPoint(
+    fun `should get nearest features from feature collection`() {
+        // given a Point
+        val point = createPoint(
+            gf,
             47.225782,
             -1.554476
         )
@@ -108,7 +109,7 @@ class NearestFeaturesFilterTest {
 
         // when applying filter
         val filteredFeatures = getFilteredFeatures(
-            geoPoint,
+            point,
             45.0,
             featureCollection
         )

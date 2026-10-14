@@ -4,16 +4,16 @@ import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.FeatureCollection
 import fr.geonature.maps.jts.geojson.GeometryUtils
 import java.util.TreeMap
-import org.osmdroid.util.GeoPoint
+import org.locationtech.jts.geom.Point
 
 /**
  * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
- * of a given [GeoPoint].
+ * of a given [Point].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class NearestFeaturesFilter(
-    private val geoPoint: GeoPoint,
+    private val point: Point,
     private val maxDistance: Double
 ) : IFeatureFilterVisitor {
 
@@ -24,7 +24,7 @@ class NearestFeaturesFilter(
 
     override fun filter(feature: Feature): Boolean {
         val distanceFromFeature = GeometryUtils.distanceTo(
-            GeometryUtils.toPoint(geoPoint),
+            point,
             feature.geometry
         )
 
@@ -42,19 +42,19 @@ class NearestFeaturesFilter(
         /**
          * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
          *
-         * @param geoPoint the current [GeoPoint] to use.
+         * @param point the current [Point] to use.
          * @param maxDistance the max distance in meters as filter
          * @param features a `List` of [Feature]s on which to apply the filter
          *
          * @return an ordered `List` of nearest filtered [Feature]s found
          */
         fun getFilteredFeatures(
-            geoPoint: GeoPoint,
+            point: Point,
             maxDistance: Double,
             features: List<Feature>
         ): List<Feature> {
             val nearestFeaturesFilter = NearestFeaturesFilter(
-                geoPoint,
+                point,
                 maxDistance
             )
 
@@ -68,19 +68,19 @@ class NearestFeaturesFilter(
         /**
          * Gets an ordered `List` of nearest [Feature]s located at a given distance (in meters)
          *
-         * @param geoPoint the current [GeoPoint] to use.
+         * @param point the current [Point] to use.
          * @param maxDistance the max distance in meters as filter
          * @param featureCollection the [FeatureCollection] on which to apply the filter
          *
          * @return an ordered `List` of nearest filtered [Feature]s found
          */
         fun getFilteredFeatures(
-            geoPoint: GeoPoint,
+            point: Point,
             maxDistance: Double,
             featureCollection: FeatureCollection
         ): List<Feature> {
             val nearestFeaturesFilter = NearestFeaturesFilter(
-                geoPoint,
+                point,
                 maxDistance
             )
             featureCollection.apply(nearestFeaturesFilter)

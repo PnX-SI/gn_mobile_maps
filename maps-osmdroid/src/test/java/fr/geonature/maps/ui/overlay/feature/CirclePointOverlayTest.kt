@@ -1,8 +1,8 @@
 package fr.geonature.maps.ui.overlay.feature
 
-import fr.geonature.maps.jts.geojson.GeometryUtils.fromPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.util.toGeoPoint
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -14,7 +14,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests about [CirclePointOverlay].
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 @RunWith(RobolectricTestRunner::class)
 class CirclePointOverlayTest {
@@ -27,7 +27,7 @@ class CirclePointOverlayTest {
     }
 
     @Test
-    fun testCreateOverlayFromPoint() {
+    fun `should create overlay from Point`() {
         // given Point
         val point = JTSTestHelper.createPoint(
             gf,
@@ -40,12 +40,12 @@ class CirclePointOverlayTest {
 
         // then
         assertEquals(
-            fromPoint(point).longitude,
+            point.toGeoPoint().longitude,
             BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.actualPoints).centerLongitude,
             0.00001
         )
         assertEquals(
-            fromPoint(point).latitude,
+            point.toGeoPoint().latitude,
             BoundingBox.fromGeoPoints(circlePointOverlay.backendOverlay.actualPoints).centerLatitude,
             0.00001
         )
@@ -64,7 +64,7 @@ class CirclePointOverlayTest {
     }
 
     @Test
-    fun testCreateOverlayFromPointWithStyle() {
+    fun `should create overlay from Point with style`() {
         // given Point
         val point = JTSTestHelper.createPoint(
             gf,

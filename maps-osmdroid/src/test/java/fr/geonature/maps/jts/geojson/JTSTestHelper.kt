@@ -15,7 +15,7 @@ import org.locationtech.jts.geom.Polygon
 /**
  * Helper class about JTS.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 object JTSTestHelper {
 

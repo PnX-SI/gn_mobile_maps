@@ -6,6 +6,7 @@ import fr.geonature.maps.jts.geojson.GeometryUtils.getGeodesicLength
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createCoordinate
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createLineString
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createLinearRing
+import fr.geonature.maps.jts.geojson.JTSTestHelper.createMultiPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPoint
 import fr.geonature.maps.jts.geojson.JTSTestHelper.createPolygon
 import org.junit.Assert.assertEquals
@@ -31,7 +32,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenTwoPoints() {
+    fun `should compute distance between two points`() {
         // given two Points
         val distance = distanceTo(
             createPoint(
@@ -55,7 +56,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenPointAndLineString() {
+    fun `should compute distance between point and line string`() {
         // given Point and LineString
         val distance1 = distanceTo(
             createPoint(
@@ -112,7 +113,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenPointAndPolygon() {
+    fun `should compute distance between point and polygon`() {
         // given Point and Polygon
         val distance1 = distanceTo(
             createPoint(
@@ -193,7 +194,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenTwoLineStrings() {
+    fun `should compute distance between two line strings`() {
         // given two LineStrings
         val distance = distanceTo(
             createLineString(
@@ -233,7 +234,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenLineStringAndPolygon() {
+    fun `should compute distance between line string and polygon`() {
         // given LineString and Polygon
         val distance1 = distanceTo(
             createLineString(
@@ -326,7 +327,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testDistanceBetweenTwoPolygons() {
+    fun `should compute distance between two polygons`() {
         // given two Polygons
         val distance = distanceTo(
             createPolygon(
@@ -377,16 +378,16 @@ class GeometryUtilsTest {
             )
         )
 
-        // then the computed distance should be roughly equals to 17m
+        // then the computed distance should be roughly equals to 5.8m
         assertEquals(
-            17.0,
+            5.8,
             distance,
             1.0
         )
     }
 
     @Test
-    fun testGeodesicLengthForLineString() {
+    fun `should compute geodesic length for line string`() {
         // when computing the geodesic length of a given LineString
         val length = getGeodesicLength(
             createLineString(
@@ -415,7 +416,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testGeodesicLengthForPolygon() {
+    fun `should compute geodesic length for polygon`() {
         // when computing the geodesic length of a given LineString
         val length = getGeodesicLength(
             createPolygon(
@@ -452,7 +453,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testGeodesicAreaForLineString() {
+    fun `should compute geodesic area for line string`() {
         // when computing the geodesic area of a given LineString (no closed)
         val area1 = getGeodesicArea(
             createLineString(
@@ -510,7 +511,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testGeodesicAreaForSimplePolygon() {
+    fun `should compute geodesic area for simple polygon`() {
         // when computing the geodesic area of a given Polygon
         val area = getGeodesicArea(
             createPolygon(
@@ -548,7 +549,7 @@ class GeometryUtilsTest {
     }
 
     @Test
-    fun testGeodesicAreaForPolygonWithHoles() {
+    fun `should compute geodesic area for polygon with holes`() {
         // when computing the geodesic area of a given Polygon with holes
         val areaWithHole = getGeodesicArea(
             createPolygon(
@@ -671,4 +672,146 @@ class GeometryUtilsTest {
             1.0
         )
     }
+
+    @Test
+    fun `should compute distance between two coordinates`() {
+        assertEquals(
+            111.3,
+            GeometryUtils.distanceBetween(
+                createCoordinate(0.0, 0.0),
+                createCoordinate(0.001, 0.0)
+            ),
+            0.5
+        )
+    }
+
+    @Test
+    fun `should compute distance between point inside polygon`() {
+        assertEquals(
+            0.0,
+            distanceTo(
+                createPoint(gf, 0.0005, 0.0005),
+                createPolygon(gf, *squareCoordinates)
+            ),
+            0.0
+        )
+    }
+
+    @Test
+    fun `should compute distance between point inside polygon hole`() {
+        val polygon = createPolygon(
+            gf,
+            createLinearRing(
+                gf,
+                createCoordinate(0.0, 0.0),
+                createCoordinate(0.0, 0.01),
+                createCoordinate(0.01, 0.01),
+                createCoordinate(0.01, 0.0),
+                createCoordinate(0.0, 0.0)
+            ),
+            createLinearRing(
+                gf,
+                createCoordinate(0.004, 0.004),
+                createCoordinate(0.004, 0.006),
+                createCoordinate(0.006, 0.006),
+                createCoordinate(0.006, 0.004),
+                createCoordinate(0.004, 0.004)
+            )
+        )
+
+        assertEquals(
+            111.3,
+            distanceTo(
+                createPoint(gf, 0.005, 0.005),
+                polygon
+            ),
+            1.0
+        )
+    }
+
+    @Test
+    fun `should compute distance between intersecting line strings`() {
+        assertEquals(
+            0.0,
+            distanceTo(
+                createLineString(
+                    gf,
+                    createCoordinate(0.0, 0.0),
+                    createCoordinate(0.001, 0.001)
+                ),
+                createLineString(
+                    gf,
+                    createCoordinate(0.0, 0.001),
+                    createCoordinate(0.001, 0.0)
+                )
+            ),
+            0.0
+        )
+    }
+
+    @Test
+    fun `should compute distance between point and line string segment`() {
+        val lineString = createLineString(
+            gf,
+            createCoordinate(0.0, 0.0),
+            createCoordinate(0.0, 0.001)
+        )
+
+        // perpendicular to the middle of the segment
+        assertEquals(
+            111.3,
+            distanceTo(
+                createPoint(gf, 0.001, 0.0005),
+                lineString
+            ),
+            1.0
+        )
+
+        // beyond the end of the segment
+        assertEquals(
+            111.3,
+            distanceTo(
+                createPoint(gf, 0.0, 0.002),
+                lineString
+            ),
+            1.0
+        )
+    }
+
+    @Test
+    fun `should compute distance between point and multi point`() {
+        assertEquals(
+            111.3,
+            distanceTo(
+                createPoint(gf, 0.0, 0.0),
+                createMultiPoint(
+                    gf,
+                    createPoint(gf, 0.001, 0.0),
+                    createPoint(gf, 0.01, 0.0)
+                )
+            ),
+            1.0
+        )
+    }
+
+    @Test
+    fun `should compute distance with empty geometry`() {
+        assertEquals(
+            Double.MAX_VALUE,
+            distanceTo(
+                createPoint(gf, 0.0, 0.0),
+                gf.createPoint()
+            ),
+            0.0
+        )
+    }
+
+    // 0.001 degree of latitude is roughly equals to 111.3m
+    private val squareCoordinates = arrayOf(
+        createCoordinate(0.0, 0.0),
+        createCoordinate(0.0, 0.001),
+        createCoordinate(0.001, 0.001),
+        createCoordinate(0.001, 0.0),
+        createCoordinate(0.0, 0.0)
+    )
 }

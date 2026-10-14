@@ -1,14 +1,14 @@
 package fr.geonature.maps.ui.overlay.feature
 
-import fr.geonature.maps.jts.geojson.GeometryUtils
 import fr.geonature.maps.settings.LayerStyleSettings
+import fr.geonature.maps.util.toGeoPoints
 import org.locationtech.jts.geom.LineString
 import org.osmdroid.views.overlay.Polyline
 
 /**
  * Draws LineString on the map.
  *
- * @author [S. Grimault](mailto:sebastien.grimault@gmail.com)
+ * @author S. Grimault
  */
 class LineStringOverlay : AbstractGeometryOverlay<LineString, Polyline>(Polyline()) {
 
@@ -16,7 +16,7 @@ class LineStringOverlay : AbstractGeometryOverlay<LineString, Polyline>(Polyline
         geometry: LineString,
         layerStyle: LayerStyleSettings
     ) {
-        backendOverlay.setPoints(GeometryUtils.fromCoordinateSequence(geometry.coordinateSequence))
+        backendOverlay.setPoints(geometry.coordinateSequence.toGeoPoints())
         setStyle(layerStyle)
     }
 
