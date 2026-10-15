@@ -37,7 +37,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         savedInstanceState: Bundle?,
         rootKey: String?
     ) {
-        addPreferencesFromResource(fr.geonature.maps.R.xml.map_preferences)
+        addPreferencesFromResource(fr.geonature.maps.osmdroid.R.xml.map_preferences)
         addPreferencesFromResource(R.xml.preferences_permissions)
         addPreferencesFromResource(R.xml.preferences_storage)
         addPreferencesFromResource(R.xml.preferences_about)

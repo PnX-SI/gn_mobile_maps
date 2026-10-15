@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <fr.geonature.maps.ui.widget.ZoomButton
+    <fr.geonature.maps.osmdroid.ui.widget.ZoomButton
         android:id="@+id/fab_zoom"
         android:layout_width="48dp"
         android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
             app:fabSize="mini"
             app:tint="@android:color/primary_text_light" />
 
-        <fr.geonature.maps.ui.widget.RotateCompassButton
+        <fr.geonature.maps.osmdroid.ui.widget.RotateCompassButton
             android:id="@+id/fab_compass"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -84,7 +84,7 @@
         app:layout_anchorGravity="top|end"
         app:layout_dodgeInsetEdges="bottom">
 
-        <fr.geonature.maps.ui.widget.MyLocationButton
+        <fr.geonature.maps.osmdroid.ui.widget.MyLocationButton
             android:id="@+id/fab_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -95,7 +95,7 @@
             app:elevation="@dimen/fab_elevation"
             app:tint="@android:color/primary_text_light" />
 
-        <fr.geonature.maps.ui.widget.EditFeatureButton
+        <fr.geonature.maps.osmdroid.ui.widget.EditFeatureButton
             android:id="@+id/fab_poi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

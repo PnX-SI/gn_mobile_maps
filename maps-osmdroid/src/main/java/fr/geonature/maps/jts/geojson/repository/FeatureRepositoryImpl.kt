@@ -4,13 +4,12 @@ import fr.geonature.maps.jts.geojson.Feature
 import fr.geonature.maps.jts.geojson.error.FeatureException
 import fr.geonature.maps.jts.geojson.io.GeoJsonReader
 import fr.geonature.maps.jts.geojson.io.WKTReader
-import fr.geonature.maps.layer.repository.ILayerRepository
 import org.tinylog.Logger
 import java.io.File
 import java.io.FileReader
 
 /**
- * Default implementation of [ILayerRepository].
+ * Default implementation of [IFeatureRepository].
  *
  * @author S. Grimault
  */

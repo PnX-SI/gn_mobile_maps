@@ -6,11 +6,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-version = "0.8.10"
+version = "0.9.0"
 description = "GeoNature Android maps library components based on osmdroid (map view, layers, tiles and vector overlays)"
 
 android {
-    namespace 'fr.geonature.maps'
+    namespace 'fr.geonature.maps.osmdroid'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

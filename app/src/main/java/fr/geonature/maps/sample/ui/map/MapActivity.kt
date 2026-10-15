@@ -17,7 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.settings.PreferencesActivity
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.MapFragment
+import fr.geonature.maps.osmdroid.ui.MapFragment
 import fr.geonature.maps.util.CheckPermissionLifecycleObserver
 import fr.geonature.maps.util.ManageExternalStoragePermissionLifecycleObserver
 import kotlinx.coroutines.launch

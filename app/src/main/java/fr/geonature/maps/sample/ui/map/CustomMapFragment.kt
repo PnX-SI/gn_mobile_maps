@@ -10,7 +10,7 @@ import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.settings.MapSettings
-import fr.geonature.maps.ui.MapFragment
+import fr.geonature.maps.osmdroid.ui.MapFragment
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent

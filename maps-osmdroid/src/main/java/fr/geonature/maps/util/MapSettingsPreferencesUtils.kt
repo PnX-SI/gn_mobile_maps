@@ -5,7 +5,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
-import fr.geonature.maps.R
+import fr.geonature.maps.osmdroid.R
 import fr.geonature.maps.settings.MapSettings
 
 /**
