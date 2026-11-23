@@ -76,49 +76,60 @@ class HomeListFragment : Fragment() {
             listOf(
                 MenuItem(
                     getString(R.string.home_menu_entry_default),
-                    MapSettings.Builder()
-                        .minZoomLevel(3.0)
-                        .zoom(12.0)
-                        .edit(EditModeSettings())
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("IGN: plan v2")
-                                .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
-                                .build()
-                        )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("IGN: ortho 20cm")
-                                .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS")
-                                .build()
-                        )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("IGN: cadastral")
-                                .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS")
-                                .build()
-                        )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("OSM")
-                                .addSource("https://a.tile.openstreetmap.org")
-                                .addSource("https://b.tile.openstreetmap.org")
-                                .addSource("https://c.tile.openstreetmap.org")
-                                .build()
-                        )
-                        .addLayer(
-                            LayerSettings.Builder.newInstance()
-                                .label("OTM")
-                                .addSource("https://a.tile.opentopomap.org")
-                                .addSource("https://b.tile.opentopomap.org")
-                                .addSource("https://c.tile.opentopomap.org")
-                                .build()
-                        )
-                        .build()
+                    defaultMapSettings(MapSettings.Builder().edit(EditModeSettings()))
                 ),
-                MenuItem(getString(R.string.home_menu_entry_from_storage))
+                MenuItem(
+                    getString(R.string.home_menu_entry_default_maplibre),
+                    defaultMapSettings(MapSettings.Builder()),
+                    MenuItem.MapEngine.MAPLIBRE
+                ),
+                MenuItem(getString(R.string.home_menu_entry_from_storage)),
+                MenuItem(
+                    getString(R.string.home_menu_entry_from_storage_maplibre),
+                    engine = MenuItem.MapEngine.MAPLIBRE
+                )
             )
         )
+    }
+    private fun defaultMapSettings(builder: MapSettings.Builder): MapSettings {
+        return builder
+            .minZoomLevel(3.0)
+            .zoom(12.0)
+            .addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label("IGN: plan v2")
+                    .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2")
+                    .build()
+            )
+            .addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label("IGN: ortho 20cm")
+                    .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/jpeg&LAYER=ORTHOIMAGERY.ORTHOPHOTOS")
+                    .build()
+            )
+            .addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label("IGN: cadastral")
+                    .addSource("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=CADASTRALPARCELS.PARCELS")
+                    .build()
+            )
+            .addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label("OSM")
+                    .addSource("https://a.tile.openstreetmap.org")
+                    .addSource("https://b.tile.openstreetmap.org")
+                    .addSource("https://c.tile.openstreetmap.org")
+                    .build()
+            )
+            .addLayer(
+                LayerSettings.Builder.newInstance()
+                    .label("OTM")
+                    .addSource("https://a.tile.opentopomap.org")
+                    .addSource("https://b.tile.opentopomap.org")
+                    .addSource("https://c.tile.opentopomap.org")
+                    .build()
+            )
+            .build()
     }
 
     /**

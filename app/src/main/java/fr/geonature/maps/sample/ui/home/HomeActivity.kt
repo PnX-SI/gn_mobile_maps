@@ -6,8 +6,10 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
+import fr.geonature.maps.maplibre.ui.MapLibreActivity
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
+import fr.geonature.maps.settings.MapSettings
 import fr.geonature.maps.settings.io.MapSettingsReader
 import fr.geonature.mountpoint.util.FileUtils
 import fr.geonature.mountpoint.util.getFile
@@ -23,6 +25,7 @@ import java.io.InputStreamReader
 class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentListener {
 
     private lateinit var mapSettingsResultLauncher: ActivityResultLauncher<Intent>
+    private var selectedMapEngine = MenuItem.MapEngine.OSMDROID
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,14 +85,12 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
                         val mapSettings =
                             MapSettingsReader().read(InputStreamReader(contentResolver.openInputStream(uri)))
 
-                        startActivity(
-                            MapActivity.newIntent(
-                                this,
-                                mapSettings,
-                                getString(
-                                    R.string.map_settings_loaded_from,
-                                    uri.path
-                                )
+                        startMap(
+                            selectedMapEngine,
+                            mapSettings,
+                            getString(
+                                R.string.map_settings_loaded_from,
+                                uri.path
                             )
                         )
                     } catch (e: Exception) {
@@ -111,6 +112,7 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
     }
 
     override fun onSelectedMenuItem(menuItem: MenuItem) {
+        selectedMapEngine = menuItem.engine
         if (menuItem.mapSettings == null) {
             mapSettingsResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -120,12 +122,30 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
             return
         }
 
+        startMap(
+            menuItem.engine,
+            menuItem.mapSettings,
+            menuItem.label
+        )
+    }
+    private fun startMap(
+        engine: MenuItem.MapEngine,
+        mapSettings: MapSettings,
+        title: String
+    ) {
         startActivity(
-            MapActivity.newIntent(
-                this,
-                menuItem.mapSettings,
-                menuItem.label
-            )
+            when (engine) {
+                MenuItem.MapEngine.OSMDROID -> MapActivity.newIntent(
+                    this,
+                    mapSettings,
+                    title
+                )
+                MenuItem.MapEngine.MAPLIBRE -> MapLibreActivity.newIntent(
+                    this,
+                    mapSettings,
+                    title
+                )
+            }
         )
     }
 }

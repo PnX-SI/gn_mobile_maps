@@ -1,0 +1,73 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+}
+
+version = "0.0.1"
+description = "GeoNature Android maps library components based on MapLibre (map view and base layers)"
+
+android {
+    namespace 'fr.geonature.maps.maplibre'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+        // MapLibre Android SDK is built with Kotlin 2.2 (metadata 2.2.0) while this project uses Kotlin 2.0
+        freeCompilerArgs += ["-Xskip-metadata-version-check"]
+    }
+
+    defaultConfig {
+        compileSdk 34
+        minSdkVersion 23
+        targetSdkVersion 34
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+    publishing {
+        singleVariant("release")
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation project(':mountpoint')
+    api project(':maps-settings')
+
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.fragment.ktx
+    implementation libs.androidx.lifecycle.common
+    implementation libs.androidx.lifecycle.livedata.ktx
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.maplibre.android
+
+    // Logging
+    implementation libs.tinylog.api.kotlin
+    runtimeOnly libs.tinylog.impl
+
+    // Testing dependencies
+    testImplementation libs.androidx.core
+    testImplementation libs.androidx.junit
+    testImplementation libs.junit
+    testImplementation libs.robolectric
+    testImplementation libs.slf4j.tinylog
+}

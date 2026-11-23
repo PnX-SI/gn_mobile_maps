@@ -5,7 +5,9 @@
     <string name="activity_preferences_title">Paramètres</string>
 
     <string name="home_menu_entry_default">Configuration par défaut avec des fonds en ligne</string>
+    <string name="home_menu_entry_default_maplibre">Configuration par défaut avec des fonds en ligne (MapLibre)</string>
     <string name="home_menu_entry_from_storage">Depuis la mémoire interne</string>
+    <string name="home_menu_entry_from_storage_maplibre">Depuis la mémoire interne (MapLibre)</string>
 
     <string name="map_settings_loaded_from">From \'%1$s\'</string>
 

@@ -146,7 +146,10 @@ data class LayerSettings(
 
             internal val layerType: (source: String?) -> LayerType = { source ->
                 when {
-                    isOnline(source) || source?.endsWith("mbtiles") == true -> LayerType.TILES
+                    isOnline(source) || arrayOf(
+                        ".mbtiles",
+                        ".pmtiles"
+                    ).any { source?.endsWith(it) == true } -> LayerType.TILES
                     arrayOf(
                         ".geojson",
                         ".json",

@@ -320,6 +320,8 @@ class LayerViewModel @Inject constructor(
             val offlineTileSources = layers.asSequence()
                 .filter { it.settings.getType() == LayerType.TILES }
                 .filter { !it.settings.isOnline() }
+                // PMTiles archives are not supported by osmdroid
+                .filter { layer -> layer.settings.source.none { it.endsWith(".pmtiles") } }
                 .map { layer ->
                     Logger.info { "loading local tiles layer '${layer.settings.label}'..." }
 

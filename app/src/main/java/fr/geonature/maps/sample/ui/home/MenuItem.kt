@@ -7,4 +7,16 @@ import fr.geonature.maps.settings.MapSettings
  *
  * @author S. Grimault
  */
-data class MenuItem(val label: String, val mapSettings: MapSettings? = null)
+data class MenuItem(
+    val label: String,
+    val mapSettings: MapSettings? = null,
+    val engine: MapEngine = MapEngine.OSMDROID
+) {
+    /**
+     * The map engine used to display the map.
+     */
+    enum class MapEngine {
+        OSMDROID,
+        MAPLIBRE
+    }
+}
