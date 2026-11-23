@@ -20,9 +20,9 @@ android {
     }
 
     defaultConfig {
-        compileSdk 34
+        compileSdk 36
         minSdkVersion 19
-        targetSdkVersion 34
+        targetSdkVersion 36
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
     }

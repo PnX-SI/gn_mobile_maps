@@ -21,9 +21,9 @@ android {
 
     defaultConfig {
         applicationId "fr.geonature.maps.sample"
-        compileSdk 34
+        compileSdk 36
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 36
         versionCode updateVersionCode(project.name)
         versionName version
         buildConfigField "String", "BUILD_DATE", "\"" + new Date().getTime() + "\""

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- dark surface used by the action bar in night mode: keeps the status bar consistent with it -->
+    <color name="primary_dark">#121212</color>
+
+</resources>

@@ -22,9 +22,9 @@ android {
     }
 
     defaultConfig {
-        compileSdk 34
+        compileSdk 36
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion 36
         buildConfigField "String", "VERSION_NAME", "\"$version\""
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

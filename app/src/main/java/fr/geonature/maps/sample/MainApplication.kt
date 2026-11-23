@@ -3,6 +3,7 @@ package fr.geonature.maps.sample
 import android.app.Application
 import android.os.Environment
 import dagger.hilt.android.HiltAndroidApp
+import fr.geonature.maps.sample.ui.EdgeToEdgeCallbacks
 import fr.geonature.mountpoint.util.FileUtils.getRelativeSharedPath
 import fr.geonature.mountpoint.util.MountPointUtils
 import fr.geonature.mountpoint.util.getFile
@@ -20,6 +21,9 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // register edge-to-edge enforcement callbacks
+        registerActivityLifecycleCallbacks(EdgeToEdgeCallbacks())
 
         configureLogger()
 
