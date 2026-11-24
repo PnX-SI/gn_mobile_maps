@@ -16,6 +16,7 @@ import fr.geonature.maps.maplibre.layer.BaseLayerStyleFactory
 import fr.geonature.maps.maplibre.layer.LocalLayerResolver
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLng
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLngBounds
+import fr.geonature.maps.maplibre.ui.widget.ScaleBarView
 import fr.geonature.maps.maplibre.ui.widget.ZoomButton
 import fr.geonature.maps.settings.MapSettings
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package fr.geonature.maps.maplibre.ui
+package fr.geonature.maps.maplibre.ui.widget
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

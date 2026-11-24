@@ -1,4 +1,4 @@
-package fr.geonature.maps.maplibre.ui
+package fr.geonature.maps.maplibre.ui.widget
 
 import android.content.Context
 import android.graphics.Canvas
@@ -43,10 +43,14 @@ internal class ScaleBarView(context: Context) : View(context) {
     /**
      * Updates the scale from the given resolution.
      *
-     * @param metersPerPixel the number of meters represented by one pixel
+     * @param metersPerDp the number of meters represented by one density-independent pixel, as
+     * returned by `Projection.getMetersPerPixelAtLatitude()` (MapLibre works in logical pixels, not
+     * physical ones)
      */
-    fun update(metersPerPixel: Double) {
-        if (metersPerPixel <= 0.0 || metersPerPixel.isNaN()) return
+    fun update(metersPerDp: Double) {
+        if (metersPerDp <= 0.0 || metersPerDp.isNaN()) return
+
+        val metersPerPixel = metersPerDp / density
 
         val distance = niceDistance(maxBarWidth * metersPerPixel)
 
