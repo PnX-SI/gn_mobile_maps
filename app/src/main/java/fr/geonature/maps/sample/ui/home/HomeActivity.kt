@@ -6,7 +6,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
-import fr.geonature.maps.maplibre.ui.MapLibreActivity
+import fr.geonature.maps.sample.ui.map.MapLibreActivity
 import fr.geonature.maps.sample.R
 import fr.geonature.maps.sample.ui.map.MapActivity
 import fr.geonature.maps.settings.MapSettings
@@ -113,6 +113,7 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
 
     override fun onSelectedMenuItem(menuItem: MenuItem) {
         selectedMapEngine = menuItem.engine
+
         if (menuItem.mapSettings == null) {
             mapSettingsResultLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -128,6 +129,7 @@ class HomeActivity : AppCompatActivity(), HomeListFragment.OnHomeListFragmentLis
             menuItem.label
         )
     }
+
     private fun startMap(
         engine: MenuItem.MapEngine,
         mapSettings: MapSettings,

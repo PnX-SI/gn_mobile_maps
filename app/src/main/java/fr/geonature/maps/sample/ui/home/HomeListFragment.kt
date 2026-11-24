@@ -91,6 +91,7 @@ class HomeListFragment : Fragment() {
             )
         )
     }
+
     private fun defaultMapSettings(builder: MapSettings.Builder): MapSettings {
         return builder
             .minZoomLevel(3.0)

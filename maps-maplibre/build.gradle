@@ -58,7 +58,9 @@ dependencies {
     implementation libs.androidx.lifecycle.common
     implementation libs.androidx.lifecycle.livedata.ktx
     implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.preference.ktx
     implementation libs.maplibre.android
+    implementation libs.material
 
     // Logging
     implementation libs.tinylog.api.kotlin

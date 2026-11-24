@@ -28,6 +28,9 @@
             android:name=".ui.map.MapActivity"
             android:label="@string/activity_map_title" />
         <activity
+            android:name="fr.geonature.maps.sample.ui.map.MapLibreActivity"
+            android:label="@string/activity_map_title" />
+        <activity
             android:name=".ui.settings.PreferencesActivity"
             android:label="@string/activity_preferences_title" />
 

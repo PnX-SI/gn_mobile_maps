@@ -67,6 +67,7 @@ object TileUrlTemplates {
             "TILECOL={x}",
             "TILEROW={y}"
         )
+
         return "${source.substringBefore('?')}?${parameters.joinToString("&")}"
     }
 
@@ -79,6 +80,7 @@ object TileUrlTemplates {
             "png"
         )
             ?.takeIf { it.isNotBlank() } ?: "png"
+
         return "${source.removeSuffix("/")}/{z}/{x}/{y}.$extension"
     }
 
