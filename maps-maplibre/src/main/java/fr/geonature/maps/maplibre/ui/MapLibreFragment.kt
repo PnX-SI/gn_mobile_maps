@@ -1,21 +1,21 @@
 package fr.geonature.maps.maplibre.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import fr.geonature.maps.maplibre.R
 import fr.geonature.maps.maplibre.layer.BaseLayer
 import fr.geonature.maps.maplibre.layer.BaseLayerSelector
 import fr.geonature.maps.maplibre.layer.BaseLayerStyleFactory
 import fr.geonature.maps.maplibre.layer.LocalLayerResolver
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLng
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLngBounds
+import fr.geonature.maps.maplibre.ui.widget.AttributionButton
 import fr.geonature.maps.maplibre.ui.widget.ScaleBarView
 import fr.geonature.maps.maplibre.ui.widget.ZoomButton
 import fr.geonature.maps.settings.MapSettings
@@ -46,6 +46,7 @@ class MapLibreFragment : Fragment() {
     private var mapLibreMap: MapLibreMap? = null
     private var scaleBarView: ScaleBarView? = null
     private var zoomButton: ZoomButton? = null
+    private var attributionButton: AttributionButton? = null
 
     private lateinit var mapSettings: MapSettings
 
@@ -67,50 +68,13 @@ class MapLibreFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val context = requireContext()
-        MapLibre.getInstance(context)
+        MapLibre.getInstance(requireContext())
 
-        val density = resources.displayMetrics.density
-        val margin = (16 * density).toInt()
-
-        val mapView = MapView(context).also {
-            this.mapView = it
-            it.onCreate(savedInstanceState)
-        }
-
-        return FrameLayout(context).apply {
-            addView(
-                mapView,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            )
-
-            scaleBarView = ScaleBarView(context).also {
-                addView(
-                    it,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.START
-                    ).apply { setMargins(margin, margin, margin, margin) }
-                )
-            }
-
-            zoomButton = ZoomButton(context).also {
-                addView(
-                    it,
-                    FrameLayout.LayoutParams(
-                        (48 * density).toInt(),
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.TOP or Gravity.START
-                    ).apply { setMargins(margin, margin, margin, margin) }
-                )
-            }
-
-            applyPreferences()
-        }
+        return inflater.inflate(
+            R.layout.fragment_map_libre,
+            container,
+            false
+        )
     }
 
     override fun onViewCreated(
@@ -121,6 +85,12 @@ class MapLibreFragment : Fragment() {
             view,
             savedInstanceState
         )
+
+        mapView = view.findViewById<MapView>(R.id.map).also { it.onCreate(savedInstanceState) }
+        zoomButton = view.findViewById(R.id.zoom_button)
+        attributionButton = view.findViewById(R.id.attribution_button)
+        scaleBarView = view.findViewById(R.id.scale_bar)
+        applyPreferences()
 
         mapView?.getMapAsync { map ->
             mapLibreMap = map
@@ -167,6 +137,7 @@ class MapLibreFragment : Fragment() {
         mapLibreMap = null
         scaleBarView = null
         zoomButton = null
+        attributionButton = null
 
         super.onDestroyView()
     }
@@ -220,6 +191,8 @@ class MapLibreFragment : Fragment() {
         ) View.VISIBLE else View.GONE
 
         mapLibreMap?.uiSettings?.apply {
+            isLogoEnabled = false
+            isAttributionEnabled = false
             isCompassEnabled = preferences.getBoolean(
                 PREF_SHOW_COMPASS,
                 mapSettings.showCompass
@@ -256,6 +229,9 @@ class MapLibreFragment : Fragment() {
             }
 
             map.setStyle(BaseLayerStyleFactory.build(baseLayer))
+
+            val attribution = BaseLayerStyleFactory.attribution(baseLayer)
+            attributionButton?.attribution = attribution
         }
     }
 

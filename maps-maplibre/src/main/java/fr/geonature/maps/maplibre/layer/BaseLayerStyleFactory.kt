@@ -32,8 +32,7 @@ object BaseLayerStyleFactory {
                         .toFloat()
                     maxZoom = baseLayer.settings.properties.maxZoomLevel.takeIf { it >= 0 }
                         ?.toFloat() ?: DEFAULT_MAX_ZOOM.toFloat()
-                    attribution = baseLayer.settings.properties.attribution?.takeIf { it.isNotBlank() }
-                        ?: baseLayer.tileUrls.firstNotNullOfOrNull { TileUrlTemplates.defaultAttribution(it) }
+                    attribution = attribution(baseLayer)
                 },
                 tileSize
             )
@@ -46,6 +45,18 @@ object BaseLayerStyleFactory {
 
         return builder.withSource(source)
             .withLayer(RasterLayer(LAYER_ID, SOURCE_ID))
+    }
+
+    /**
+     * Gets the attribution notice of the given base layer, if any.
+     */
+    fun attribution(baseLayer: BaseLayer?): String? {
+        return when (baseLayer) {
+            null -> null
+            is BaseLayer.Online -> baseLayer.settings.properties.attribution?.takeIf { it.isNotBlank() }
+                ?: baseLayer.tileUrls.firstNotNullOfOrNull { TileUrlTemplates.defaultAttribution(it) }
+            is BaseLayer.Local -> baseLayer.settings.properties.attribution?.takeIf { it.isNotBlank() }
+        }
     }
 
     internal fun localSourceUri(baseLayer: BaseLayer.Local): String {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.util.AttributeSet
 import android.view.View
 import kotlin.math.log10
 import kotlin.math.pow
@@ -13,7 +14,13 @@ import kotlin.math.pow
  *
  * @author S. Grimault
  */
-internal class ScaleBarView(context: Context) : View(context) {
+internal class ScaleBarView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null
+) : View(
+    context,
+    attrs
+) {
 
     private val density = resources.displayMetrics.density
     private val maxBarWidth = MAX_BAR_WIDTH_DP * density
@@ -66,7 +73,7 @@ internal class ScaleBarView(context: Context) : View(context) {
     ) {
         setMeasuredDimension(
             (maxBarWidth + 8 * density).toInt(),
-            (32 * density).toInt()
+            (28 * density).toInt()
         )
     }
 
