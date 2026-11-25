@@ -22,13 +22,14 @@ internal class AttributionButton @JvmOverloads constructor(
     context,
     attrs
 ) {
+
+    private var snackbar: Snackbar? = null
+
     var attribution: String? = null
         set(value) {
             field = value?.takeIf { it.isNotBlank() }
             visibility = if (field == null) GONE else VISIBLE
         }
-
-    private var snackbar: Snackbar? = null
 
     init {
         setImageResource(R.drawable.ic_attribution)

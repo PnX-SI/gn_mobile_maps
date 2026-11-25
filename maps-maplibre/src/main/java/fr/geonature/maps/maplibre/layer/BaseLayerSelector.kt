@@ -1,4 +1,5 @@
 package fr.geonature.maps.maplibre.layer
+
 import fr.geonature.maps.settings.LayerSettings
 import fr.geonature.maps.settings.LayerType
 import fr.geonature.maps.settings.MapSettings

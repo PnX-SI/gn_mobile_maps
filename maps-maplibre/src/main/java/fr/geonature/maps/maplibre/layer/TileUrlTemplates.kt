@@ -14,6 +14,7 @@ import fr.geonature.maps.settings.LayerSettings
  * @author S. Grimault
  */
 object TileUrlTemplates {
+
     private val WMTS_PARAMETERS = listOf(
         "TILEMATRIX",
         "TILECOL",

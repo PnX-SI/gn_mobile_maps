@@ -1,4 +1,5 @@
 package fr.geonature.maps.maplibre.layer
+
 import fr.geonature.maps.settings.LayerSettings
 import java.io.File
 
@@ -8,6 +9,7 @@ import java.io.File
  * @author S. Grimault
  */
 sealed class BaseLayer {
+
     abstract val settings: LayerSettings
 
     /**

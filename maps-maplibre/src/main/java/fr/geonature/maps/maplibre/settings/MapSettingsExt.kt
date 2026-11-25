@@ -1,4 +1,5 @@
 package fr.geonature.maps.maplibre.settings
+
 import fr.geonature.maps.jts.BoundingBox
 import fr.geonature.maps.jts.LatLng
 import org.maplibre.android.geometry.LatLngBounds

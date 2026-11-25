@@ -23,6 +23,7 @@ class LocalLayerResolver(
     context: Context,
     private val baseTilesPath: String?
 ) {
+
     private val externalRootPath = FileUtils.getExternalStorageDirectory(context)
     private val internalRootPath = MountPointUtils.getInternalStorage(context).mountPath
 

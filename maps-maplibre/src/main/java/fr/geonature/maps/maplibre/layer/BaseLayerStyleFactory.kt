@@ -1,4 +1,5 @@
 package fr.geonature.maps.maplibre.layer
+
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.sources.RasterSource
@@ -10,10 +11,12 @@ import org.maplibre.android.style.sources.TileSet
  * @author S. Grimault
  */
 object BaseLayerStyleFactory {
+
     private const val SOURCE_ID = "base-layer-source"
     private const val LAYER_ID = "base-layer"
     private const val DEFAULT_TILE_SIZE = 256
     private const val DEFAULT_MAX_ZOOM = 22
+    private const val EMPTY_STYLE = """{"version":8,"sources":{},"layers":[]}"""
 
     fun build(baseLayer: BaseLayer?): Style.Builder {
         val builder = Style.Builder()
@@ -65,6 +68,4 @@ object BaseLayerStyleFactory {
             else -> "mbtiles://${baseLayer.file.absolutePath}"
         }
     }
-
-    private const val EMPTY_STYLE = """{"version":8,"sources":{},"layers":[]}"""
 }
