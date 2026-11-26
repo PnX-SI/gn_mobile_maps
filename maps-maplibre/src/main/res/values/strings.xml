@@ -4,4 +4,8 @@
     <string name="button_zoom_out_hint">Zoom out</string>
     <string name="button_attribution_hint">Map data attribution</string>
     <string name="attribution_ok">OK</string>
+    <string name="button_my_location_hint">My location</string>
+    <string name="toast_location_outside_map_boundaries">Your position is outside map boundaries</string>
+    <string name="toast_location_disabled">Location services are disabled</string>
+    <string name="toast_location_unavailable">No known position yet</string>
 </resources>

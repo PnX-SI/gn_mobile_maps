@@ -4,4 +4,8 @@
     <string name="button_zoom_out_hint">Dézoomer</string>
     <string name="button_attribution_hint">Attribution des données cartographiques</string>
     <string name="attribution_ok">OK</string>
+    <string name="button_my_location_hint">Ma position</string>
+    <string name="toast_location_outside_map_boundaries">Votre position est en dehors des limites de la carte</string>
+    <string name="toast_location_disabled">Les services de localisation sont désactivés</string>
+    <string name="toast_location_unavailable">Aucune position connue pour le moment</string>
 </resources>

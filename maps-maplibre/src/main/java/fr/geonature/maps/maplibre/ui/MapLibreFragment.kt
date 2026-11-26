@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +17,7 @@ import fr.geonature.maps.maplibre.layer.LocalLayerResolver
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLng
 import fr.geonature.maps.maplibre.settings.toMapLibreLatLngBounds
 import fr.geonature.maps.maplibre.ui.widget.AttributionButton
+import fr.geonature.maps.maplibre.ui.widget.MyLocationButton
 import fr.geonature.maps.maplibre.ui.widget.ScaleBarView
 import fr.geonature.maps.maplibre.ui.widget.ZoomButton
 import fr.geonature.maps.settings.MapSettings
@@ -24,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.tinylog.kotlin.Logger
@@ -47,6 +50,12 @@ class MapLibreFragment : Fragment() {
     private var scaleBarView: ScaleBarView? = null
     private var zoomButton: ZoomButton? = null
     private var attributionButton: AttributionButton? = null
+    private var myLocationButton: MyLocationButton? = null
+
+    private val requestLocationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            myLocationButton?.onPermissionResult(granted)
+        }
 
     private lateinit var mapSettings: MapSettings
 
@@ -90,6 +99,7 @@ class MapLibreFragment : Fragment() {
         zoomButton = view.findViewById(R.id.zoom_button)
         attributionButton = view.findViewById(R.id.attribution_button)
         scaleBarView = view.findViewById(R.id.scale_bar)
+        myLocationButton = view.findViewById(R.id.fab_location)
         applyPreferences()
 
         mapView?.getMapAsync { map ->
@@ -97,6 +107,16 @@ class MapLibreFragment : Fragment() {
             configure(map)
             zoomButton?.setMap(map)
             loadBaseLayer(map)
+            myLocationButton?.setListener(object : MyLocationButton.OnMyLocationButtonListener {
+                override fun getMap() = map
+
+                override fun getMaxBounds(): LatLngBounds? =
+                    mapSettings.maxBounds?.toMapLibreLatLngBounds()
+
+                override fun checkPermissions(permission: String) {
+                    requestLocationPermission.launch(permission)
+                }
+            })
         }
     }
 
@@ -109,9 +129,11 @@ class MapLibreFragment : Fragment() {
         super.onResume()
         mapView?.onResume()
         applyPreferences()
+        myLocationButton?.onResume()
     }
 
     override fun onPause() {
+        myLocationButton?.onPause()
         mapView?.onPause()
         super.onPause()
     }
@@ -132,6 +154,8 @@ class MapLibreFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        myLocationButton?.onDestroy()
+        myLocationButton = null
         mapView?.onDestroy()
         mapView = null
         mapLibreMap = null
@@ -228,7 +252,9 @@ class MapLibreFragment : Fragment() {
                 }
             }
 
-            map.setStyle(BaseLayerStyleFactory.build(baseLayer))
+            map.setStyle(BaseLayerStyleFactory.build(baseLayer)) { style ->
+                myLocationButton?.onStyleLoaded(style)
+            }
 
             val attribution = BaseLayerStyleFactory.attribution(baseLayer)
             attributionButton?.attribution = attribution
